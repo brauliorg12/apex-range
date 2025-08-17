@@ -2,7 +2,7 @@ import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
 import { readState } from './state-manager';
 import { APEX_RANKS } from '../constants';
 import { getOnlineMembersByRole } from './player-stats';
-import { createRankButtons } from './button-helper';
+import { createRankButtons, createManagementButtons } from './button-helper';
 
 export async function updateRoleCountMessage(guild: Guild) {
   try {
@@ -64,8 +64,14 @@ export async function updateRoleCountMessage(guild: Guild) {
       }
     );
 
-    await statsMessage.edit({ content: '', embeds: [embed] });
+    const managementButtons = createManagementButtons();
+    await statsMessage.edit({
+      content: '',
+      embeds: [embed],
+      components: [managementButtons],
+    });
   } catch (error) {
     console.error('Error al actualizar el mensaje de conteo de roles:', error);
   }
 }
+

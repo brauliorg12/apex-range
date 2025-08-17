@@ -37,7 +37,11 @@ export function createRankButtons(
   const row2Buttons = buildButtons(APEX_RANKS.slice(4));
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
 
-  const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  return [row1, row2];
+}
+
+export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId('manage_rank_menu')
       .setLabel('Gestionar mi Rango')
@@ -49,6 +53,4 @@ export function createRankButtons(
       .setEmoji('🟢')
       .setStyle(ButtonStyle.Success)
   );
-
-  return [row1, row2, row3];
 }
