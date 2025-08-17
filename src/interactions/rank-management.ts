@@ -58,7 +58,8 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
     row2.addComponents(
       new ButtonBuilder()
         .setCustomId('remove_apex_rank')
-        .setLabel('X')
+        .setLabel('Eliminar Rango')
+        .setEmoji('🗑️')
         .setStyle(ButtonStyle.Danger)
     );
   }
