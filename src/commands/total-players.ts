@@ -21,7 +21,7 @@ export async function execute(interaction: CommandInteraction) {
   try {
     const totalPlayers = await getTotalUniquePlayers(interaction.guild);
     await interaction.editReply({
-      content: `Total de jugadores con un rol de rango de Apex Legends: **${totalPlayers}**`,
+      content: `Hay un total de **${totalPlayers}** jugadores con un rol de rango de Apex Legends.`,
     });
   } catch (error) {
     console.error('Error al obtener el total de jugadores:', error);

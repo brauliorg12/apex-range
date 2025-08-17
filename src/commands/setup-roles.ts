@@ -2,16 +2,13 @@ import {
   SlashCommandBuilder,
   PermissionsBitField,
   TextChannel,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ChatInputCommandInteraction,
   EmbedBuilder,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
-import { getRankEmoji } from '../utils/emoji-helper';
+import { createRankButtons } from '../utils/button-helper';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -53,23 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel as TextChannel;
   if (!channel) return;
 
-  const row1Buttons = APEX_RANKS.slice(0, 4).map((rank) =>
-    new ButtonBuilder()
-      .setCustomId(rank.shortId)
-      .setLabel(rank.label)
-      .setEmoji(getRankEmoji(interaction.client, rank))
-      .setStyle(ButtonStyle.Secondary)
-  );
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
-
-  const row2Buttons = APEX_RANKS.slice(4).map((rank) =>
-    new ButtonBuilder()
-      .setCustomId(rank.shortId)
-      .setLabel(rank.label)
-      .setEmoji(getRankEmoji(interaction.client, rank))
-      .setStyle(ButtonStyle.Secondary)
-  );
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
+  const buttonRows = createRankButtons(interaction.client, interaction.guild);
 
   const roleSelectionEmbed = new EmbedBuilder()
     .setColor('#95a5a6') // Color gris
@@ -80,11 +61,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const roleSelectionMessage = await channel.send({
     embeds: [roleSelectionEmbed],
-    components: [row1, row2],
+    components: buttonRows,
   });
 
   const roleCountMessage = await channel.send({
-    content: 'Calculando listado de roles...',
+    content: 'Generando estadísticas...',
   });
 
   try {

@@ -11,6 +11,7 @@ import * as path from 'path';
 import { updateRoleCountMessage } from './utils/update-status-message';
 import { readState } from './utils/state-manager';
 import { handleButtonInteraction } from './button-interactions';
+import { updateBotPresence } from './utils/presence-helper';
 
 dotenv.config();
 
@@ -62,6 +63,13 @@ client.once(Events.ClientReady, async (readyClient) => {
     if (state.guildId) {
       const guild = await readyClient.guilds.fetch(state.guildId);
       await updateRoleCountMessage(guild);
+      await updateBotPresence(readyClient, guild); // Presencia inicial
+
+      // Actualizar presencia periódicamente
+      setInterval(
+        () => updateBotPresence(readyClient, guild),
+        60000 // cada 60 segundos
+      );
     }
   } catch (error) {
     console.error('Error durante la inicialización del bot:', error);
@@ -70,15 +78,18 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 client.on(Events.GuildMemberAdd, (member) => {
   updateRoleCountMessage(member.guild);
+  updateBotPresence(client, member.guild);
 });
 
 client.on(Events.GuildMemberRemove, (member) => {
   updateRoleCountMessage(member.guild);
+  updateBotPresence(client, member.guild);
 });
 
 client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
   if (newPresence.guild) {
     updateRoleCountMessage(newPresence.guild);
+    updateBotPresence(client, newPresence.guild);
   }
 });
 
