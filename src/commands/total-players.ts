@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, CommandInteraction } from 'discord.js';
-import { getTotalUniquePlayers } from '../utils/player-stats';
+import { getPlayerStats } from '../utils/player-stats';
 
 export const data = new SlashCommandBuilder()
   .setName('total-jugadores')
@@ -19,9 +19,9 @@ export async function execute(interaction: CommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const totalPlayers = await getTotalUniquePlayers(interaction.guild);
+    const stats = await getPlayerStats(interaction.guild);
     await interaction.editReply({
-      content: `Hay un total de **${totalPlayers}** jugadores con un rol de rango de Apex Legends.`,
+      content: `Hay un total de **${stats.total}** jugadores con un rol de rango de Apex Legends.`,
     });
   } catch (error) {
     console.error('Error al obtener el total de jugadores:', error);

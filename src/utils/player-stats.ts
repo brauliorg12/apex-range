@@ -1,40 +1,44 @@
 import { Guild, Role, GuildMember } from 'discord.js';
 import { APEX_RANKS } from '../constants';
 
-async function getMembersWithRankRole(guild: Guild): Promise<GuildMember[]> {
-  await guild.members.fetch();
+async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
   const rankRoleNames = new Set(APEX_RANKS.map((rank) => rank.roleName));
-  const membersWithRankRole: GuildMember[] = [];
-  const memberSet = new Set<string>();
+  const rankRoles = guild.roles.cache.filter((role) =>
+    rankRoleNames.has(role.name)
+  );
 
-  guild.roles.cache
-    .filter((role) => rankRoleNames.has(role.name))
-    .forEach((role) => {
-      role.members.forEach((member) => {
-        if (!memberSet.has(member.id)) {
-          membersWithRankRole.push(member);
-          memberSet.add(member.id);
-        }
-      });
+  if (rankRoles.size === 0) {
+    return [];
+  }
+
+  // Fetch all members in parallel
+  await guild.members.fetch();
+
+  const uniqueMembers = new Map<string, GuildMember>();
+  rankRoles.forEach((role) => {
+    role.members.forEach((member) => {
+      if (!uniqueMembers.has(member.id)) {
+        uniqueMembers.set(member.id, member);
+      }
     });
+  });
 
-  return membersWithRankRole;
+  return Array.from(uniqueMembers.values());
 }
 
-export async function getTotalUniquePlayers(guild: Guild): Promise<number> {
-  const membersWithRankRole = await getMembersWithRankRole(guild);
-  return membersWithRankRole.length;
-}
-
-export async function getOnlinePlayerCount(guild: Guild): Promise<number> {
-  const membersWithRankRole = await getMembersWithRankRole(guild);
-  const onlineMembers = membersWithRankRole.filter(
+export async function getPlayerStats(guild: Guild) {
+  const rankedMembers = await getRankedMembers(guild);
+  const onlineMembers = rankedMembers.filter(
     (member) =>
       member.presence?.status === 'online' ||
       member.presence?.status === 'dnd' ||
       member.presence?.status === 'idle'
   );
-  return onlineMembers.length;
+
+  return {
+    total: rankedMembers.length,
+    online: onlineMembers.length,
+  };
 }
 
 export function getOnlineMembersByRole(role: Role) {

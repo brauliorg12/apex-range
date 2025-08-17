@@ -4,9 +4,10 @@ import {
   Events,
   Interaction,
   Collection,
+  Guild,
 } from 'discord.js';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 import { updateRoleCountMessage } from './utils/update-status-message';
 import { readState } from './utils/state-manager';
@@ -28,35 +29,46 @@ const client = new CustomClient({
   ],
 });
 
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs
-  .readdirSync(commandsPath)
-  .filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+async function loadCommands() {
+  const commandsPath = path.join(__dirname, 'commands');
+  const commandFiles = await fs.readdir(commandsPath);
 
-for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = require(filePath);
-  if ('data' in command && 'execute' in command) {
-    client.commands.set(command.data.name, command);
-  } else {
-    console.log(
-      `[ADVERTENCIA] Al comando en ${filePath} le falta una propiedad \"data\" o \"execute\" requerida.`
-    );
+  for (const file of commandFiles) {
+    if (file.endsWith('.ts') || file.endsWith('.js')) {
+      const filePath = path.join(commandsPath, file);
+      try {
+        const command = require(filePath);
+        if ('data' in command && 'execute' in command) {
+          client.commands.set(command.data.name, command);
+        } else {
+          console.log(
+            `[ADVERTENCIA] Al comando en ${filePath} le falta una propiedad \"data\" o \"execute\" requerida.`
+          );
+        }
+      } catch (error) {
+        console.error(`Error al cargar el comando en ${filePath}:`, error);
+      }
+    }
   }
 }
 
+const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
+  let timeout: NodeJS.Timeout;
+
+  return (...args: Parameters<F>): void => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), waitFor);
+  };
+};
+
+const debouncedUpdate = debounce((guild: Guild) => {
+  updateRoleCountMessage(guild);
+  updateBotPresence(client, guild);
+}, 5000);
+
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`¡Listo! Logueado como ${readyClient.user.tag}`);
-
-  // --- INICIO: CÓDIGO DE DEPURACIÓN ---
-  console.log(`[DEPURACIÓN] Emojis en caché: ${readyClient.emojis.cache.size}`);
-  const serverNames = readyClient.guilds.cache.map((g) => g.name);
-  console.log(
-    `[DEPURACIÓN] El bot está en los siguientes servidores: ${serverNames.join(
-      ', '
-    )}`
-  );
-  // --- FIN: CÓDIGO DE DEPURACIÓN ---
+  await loadCommands();
 
   try {
     const state = await readState();
@@ -77,19 +89,16 @@ client.once(Events.ClientReady, async (readyClient) => {
 });
 
 client.on(Events.GuildMemberAdd, (member) => {
-  updateRoleCountMessage(member.guild);
-  updateBotPresence(client, member.guild);
+  debouncedUpdate(member.guild);
 });
 
 client.on(Events.GuildMemberRemove, (member) => {
-  updateRoleCountMessage(member.guild);
-  updateBotPresence(client, member.guild);
+  debouncedUpdate(member.guild);
 });
 
 client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
   if (newPresence.guild) {
-    updateRoleCountMessage(newPresence.guild);
-    updateBotPresence(client, newPresence.guild);
+    debouncedUpdate(newPresence.guild);
   }
 });
 

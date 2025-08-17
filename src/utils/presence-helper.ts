@@ -1,15 +1,12 @@
 import { ActivityType, Client, Guild } from 'discord.js';
-import { getTotalUniquePlayers, getOnlinePlayerCount } from './player-stats';
+import { getPlayerStats } from './player-stats';
 
 export async function updateBotPresence(client: Client, guild: Guild) {
   try {
-    const [registered, online] = await Promise.all([
-      getTotalUniquePlayers(guild),
-      getOnlinePlayerCount(guild),
-    ]);
+    const stats = await getPlayerStats(guild);
 
     client.user?.setActivity(
-      `👥 ${registered} registrados | 🟢 ${online} en línea`,
+      `👥 ${stats.total} registrados | 🟢 ${stats.online} en línea`,
       {
         type: ActivityType.Watching,
       }
