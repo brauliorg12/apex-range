@@ -19,11 +19,5 @@ export function getRankEmoji(client: Client, rank: ApexRank): string {
   // Buscamos en la caché global del cliente, que contiene emojis de todos los servidores.
   const emoji = client.emojis.cache.get(emojiId);
 
-  if (!emoji) {
-    console.warn(
-      `[Advertencia de caché] No se pudo encontrar el emoji con ID ${emojiId} en la caché global. ¿El bot está en el servidor que contiene este emoji?`
-    );
-  }
-
   return emoji?.toString() ?? rank.icon;
 }

@@ -55,7 +55,11 @@ export async function updateRoleCountMessage(guild: Guild) {
       new ButtonBuilder()
         .setCustomId('show_online_players_menu')
         .setLabel('Ver jugadores en línea')
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('manage_rank_menu')
+        .setLabel('Gestionar mi Rango')
+        .setStyle(ButtonStyle.Primary)
     );
 
     await message
@@ -86,7 +90,7 @@ export async function updateRoleCountMessage(guild: Guild) {
         const memberCount = role ? role.members.size : 0;
         return new ButtonBuilder()
           .setCustomId(rank.shortId)
-          .setLabel(`${rank.label} (${memberCount})`)
+          .setLabel(`${rank.label} - ${memberCount}`)
           .setEmoji(getRankEmoji(guild.client, rank))
           .setStyle(ButtonStyle.Secondary);
       });
@@ -99,7 +103,7 @@ export async function updateRoleCountMessage(guild: Guild) {
         const memberCount = role ? role.members.size : 0;
         return new ButtonBuilder()
           .setCustomId(rank.shortId)
-          .setLabel(`${rank.label} (${memberCount})`)
+          .setLabel(`${rank.label} - ${memberCount}`)
           .setEmoji(getRankEmoji(guild.client, rank))
           .setStyle(ButtonStyle.Secondary);
       });

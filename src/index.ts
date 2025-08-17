@@ -48,11 +48,13 @@ client.once(Events.ClientReady, async (readyClient) => {
   console.log(`¡Listo! Logueado como ${readyClient.user.tag}`);
 
   // --- INICIO: CÓDIGO DE DEPURACIÓN ---
-  console.log(
-    `[DEPURACIÓN] Emojis en caché: ${readyClient.emojis.cache.size}`
-  );
+  console.log(`[DEPURACIÓN] Emojis en caché: ${readyClient.emojis.cache.size}`);
   const serverNames = readyClient.guilds.cache.map((g) => g.name);
-  console.log(`[DEPURACIÓN] El bot está en los siguientes servidores: ${serverNames.join(', ')}`);
+  console.log(
+    `[DEPURACIÓN] El bot está en los siguientes servidores: ${serverNames.join(
+      ', '
+    )}`
+  );
   // --- FIN: CÓDIGO DE DEPURACIÓN ---
 
   try {
