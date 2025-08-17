@@ -3,9 +3,3 @@
 
 # Environment variables
 .env
-
-# State Bot
-bot-state.json
-
-# Si Git sigue rastreando bot-state.json, ejecuta este comando para dejar de rastrearlo:
-# git rm --cached bot-state.json
