@@ -81,32 +81,28 @@ export async function updateRoleCountMessage(guild: Guild) {
           'Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.'
         );
 
-      const row1Buttons = await Promise.all(
-        APEX_RANKS.slice(0, 4).map(async (rank) => {
-          const role = guild.roles.cache.find((r) => r.name === rank.roleName);
-          const memberCount = role ? role.members.size : 0;
-          return new ButtonBuilder()
-            .setCustomId(rank.id)
-            .setLabel(`${rank.label} (${memberCount})`)
-            .setEmoji(await getRankEmoji(guild, rank))
-            .setStyle(ButtonStyle.Secondary);
-        })
-      );
+      const row1Buttons = APEX_RANKS.slice(0, 4).map((rank) => {
+        const role = guild.roles.cache.find((r) => r.name === rank.roleName);
+        const memberCount = role ? role.members.size : 0;
+        return new ButtonBuilder()
+          .setCustomId(rank.shortId)
+          .setLabel(`${rank.label} (${memberCount})`)
+          .setEmoji(getRankEmoji(guild.client, rank))
+          .setStyle(ButtonStyle.Secondary);
+      });
       const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
         row1Buttons
       );
 
-      const row2Buttons = await Promise.all(
-        APEX_RANKS.slice(4).map(async (rank) => {
-          const role = guild.roles.cache.find((r) => r.name === rank.roleName);
-          const memberCount = role ? role.members.size : 0;
-          return new ButtonBuilder()
-            .setCustomId(rank.id)
-            .setLabel(`${rank.label} (${memberCount})`)
-            .setEmoji(await getRankEmoji(guild, rank))
-            .setStyle(ButtonStyle.Secondary);
-        })
-      );
+      const row2Buttons = APEX_RANKS.slice(4).map((rank) => {
+        const role = guild.roles.cache.find((r) => r.name === rank.roleName);
+        const memberCount = role ? role.members.size : 0;
+        return new ButtonBuilder()
+          .setCustomId(rank.shortId)
+          .setLabel(`${rank.label} (${memberCount})`)
+          .setEmoji(getRankEmoji(guild.client, rank))
+          .setStyle(ButtonStyle.Secondary);
+      });
       const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
         row2Buttons
       );

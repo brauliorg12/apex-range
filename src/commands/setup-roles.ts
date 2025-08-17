@@ -53,25 +53,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel as TextChannel;
   if (!channel) return;
 
-  const row1Buttons = await Promise.all(
-    APEX_RANKS.slice(0, 4).map(async (rank) =>
-      new ButtonBuilder()
-        .setCustomId(rank.id)
-        .setLabel(rank.label)
-        .setEmoji(await getRankEmoji(interaction.guild!, rank))
-        .setStyle(ButtonStyle.Secondary)
-    )
+  const row1Buttons = APEX_RANKS.slice(0, 4).map((rank) =>
+    new ButtonBuilder()
+      .setCustomId(rank.shortId)
+      .setLabel(rank.label)
+      .setEmoji(getRankEmoji(interaction.client, rank))
+      .setStyle(ButtonStyle.Secondary)
   );
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
 
-  const row2Buttons = await Promise.all(
-    APEX_RANKS.slice(4).map(async (rank) =>
-      new ButtonBuilder()
-        .setCustomId(rank.id)
-        .setLabel(rank.label)
-        .setEmoji(await getRankEmoji(interaction.guild!, rank))
-        .setStyle(ButtonStyle.Secondary)
-    )
+  const row2Buttons = APEX_RANKS.slice(4).map((rank) =>
+    new ButtonBuilder()
+      .setCustomId(rank.shortId)
+      .setLabel(rank.label)
+      .setEmoji(getRankEmoji(interaction.client, rank))
+      .setStyle(ButtonStyle.Secondary)
   );
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
 

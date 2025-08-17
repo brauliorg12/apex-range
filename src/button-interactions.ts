@@ -24,8 +24,8 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
   );
 
   const title = currentRank
-    ? `Rango actual: ${await getRankEmoji(
-        guild,
+    ? `Rango actual: ${getRankEmoji(
+        guild.client,
         currentRank
       )} **${currentRank.label}**`
     : 'Selección de Rango';
@@ -38,25 +38,21 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
     .setTitle(title)
     .setDescription(description);
 
-  const row1Buttons = await Promise.all(
-    APEX_RANKS.slice(0, 4).map(async (rank) =>
-      new ButtonBuilder()
-        .setCustomId(rank.id)
-        .setLabel(rank.label)
-        .setEmoji(await getRankEmoji(guild, rank))
-        .setStyle(ButtonStyle.Secondary)
-    )
+  const row1Buttons = APEX_RANKS.slice(0, 4).map((rank) =>
+    new ButtonBuilder()
+      .setCustomId(rank.shortId)
+      .setLabel(rank.label)
+      .setEmoji(getRankEmoji(guild.client, rank))
+      .setStyle(ButtonStyle.Secondary)
   );
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
 
-  const row2Buttons = await Promise.all(
-    APEX_RANKS.slice(4).map(async (rank) =>
-      new ButtonBuilder()
-        .setCustomId(rank.id)
-        .setLabel(rank.label)
-        .setEmoji(await getRankEmoji(guild, rank))
-        .setStyle(ButtonStyle.Secondary)
-    )
+  const row2Buttons = APEX_RANKS.slice(4).map((rank) =>
+    new ButtonBuilder()
+      .setCustomId(rank.shortId)
+      .setLabel(rank.label)
+      .setEmoji(getRankEmoji(guild.client, rank))
+      .setStyle(ButtonStyle.Secondary)
   );
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
 
@@ -88,7 +84,7 @@ async function handleRoleAssignment(interaction: ButtonInteraction) {
   const { customId, member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
 
-  const selectedRank = APEX_RANKS.find((rank) => rank.id === customId);
+  const selectedRank = APEX_RANKS.find((rank) => rank.shortId === customId);
   if (!selectedRank) return;
 
   await interaction.deferReply({ ephemeral: true });
@@ -188,20 +184,18 @@ async function handleShowOnlinePlayersMenu(interaction: ButtonInteraction) {
   // Actualizar los contadores antes de mostrar el menú
   await updateRoleCountMessage(interaction.guild);
 
-  const rankButtons = await Promise.all(
-    APEX_RANKS.map(async (rank) => {
-      const role = interaction.guild!.roles.cache.find(
-        (r) => r.name === rank.roleName
-      );
-      const onlineMemberCount = role ? getOnlineMembersByRole(role).size : 0;
-      const emoji = await getRankEmoji(interaction.guild!, rank);
-      return new ButtonBuilder()
-        .setCustomId(`show_online_rank_${rank.id}`)
-        .setLabel(`${rank.label} (${onlineMemberCount})`)
-        .setEmoji(emoji)
-        .setStyle(ButtonStyle.Secondary);
-    })
-  );
+  const rankButtons = APEX_RANKS.map((rank) => {
+    const role = interaction.guild!.roles.cache.find(
+      (r) => r.name === rank.roleName
+    );
+    const onlineMemberCount = role ? getOnlineMembersByRole(role).size : 0;
+    const emoji = getRankEmoji(interaction.client, rank);
+    return new ButtonBuilder()
+      .setCustomId(`show_online_rank_${rank.shortId}`)
+      .setLabel(`${rank.label} (${onlineMemberCount})`)
+      .setEmoji(emoji)
+      .setStyle(ButtonStyle.Secondary);
+  });
 
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (let i = 0; i < rankButtons.length; i += 5) {
@@ -225,8 +219,8 @@ async function handleShowOnlinePlayersMenu(interaction: ButtonInteraction) {
 
 async function handleShowOnlineByRank(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
-  const rankId = interaction.customId.replace('show_online_rank_', '');
-  const selectedRank = APEX_RANKS.find((rank) => rank.id === rankId);
+  const rankShortId = interaction.customId.replace('show_online_rank_', '');
+  const selectedRank = APEX_RANKS.find((rank) => rank.shortId === rankShortId);
 
   if (!selectedRank) {
     await interaction.reply({
@@ -252,7 +246,7 @@ async function handleShowOnlineByRank(interaction: ButtonInteraction) {
     }
 
     const onlineMembers = getOnlineMembersByRole(role);
-    const emoji = await getRankEmoji(interaction.guild, selectedRank);
+    const emoji = getRankEmoji(interaction.client, selectedRank);
 
     const embed = new EmbedBuilder()
       .setColor(role.color || '#95a5a6')
@@ -302,7 +296,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
 
   if (customId === 'manage_rank_menu') {
     await handleManageRankMenu(interaction);
-  } else if (APEX_RANKS.some((rank) => rank.id === customId)) {
+  } else if (APEX_RANKS.some((rank) => rank.shortId === customId)) {
     await handleRoleAssignment(interaction);
   } else if (customId === 'remove_apex_rank') {
     await handleRemoveRank(interaction);

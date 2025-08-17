@@ -1,32 +1,29 @@
-import { Guild } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { Client } from 'discord.js';
+import { ApexRank } from '../constants';
 
 /**
- * Obtiene el emoji personalizado para un rango de Apex.
- * Si no lo encuentra, devuelve el icono de texto de respaldo.
- * @param guild El servidor donde buscar el emoji.
+ * Obtiene la representación del emoji para un rango de Apex.
+ * Intenta encontrar el emoji personalizado en la caché global del cliente. Si no lo encuentra,
+ * devuelve el emoji de Unicode de respaldo.
+ * @param client El cliente del bot para acceder a la caché global de emojis.
  * @param rank El objeto de rango de Apex.
- * @returns Una promesa que resuelve al emoji como string o el icono de texto.
+ * @returns Una cadena con el emoji personalizado o el emoji de respaldo.
  */
-export async function getRankEmoji(
-  guild: Guild,
-  rank: (typeof APEX_RANKS)[0]
-): Promise<string> {
+export function getRankEmoji(client: Client, rank: ApexRank): string {
   const match = rank.id.match(/<a?:.*:(\d+)>/);
   if (!match || !match[1]) {
-    // Si el ID en constants.ts no tiene el formato de emoji, usa el icono de texto.
     return rank.icon;
   }
   const emojiId = match[1];
 
-  try {
-    const emoji = await guild.emojis.fetch(emojiId);
-    return emoji.toString();
-  } catch (error) {
-    console.error(
-      `No se pudo encontrar el emoji con ID ${emojiId}. Usando icono de texto de respaldo.`
+  // Buscamos en la caché global del cliente, que contiene emojis de todos los servidores.
+  const emoji = client.emojis.cache.get(emojiId);
+
+  if (!emoji) {
+    console.warn(
+      `[Advertencia de caché] No se pudo encontrar el emoji con ID ${emojiId} en la caché global. ¿El bot está en el servidor que contiene este emoji?`
     );
-    // Si fetch falla, devuelve el icono de texto como alternativa.
-    return rank.icon;
   }
+
+  return emoji?.toString() ?? rank.icon;
 }
