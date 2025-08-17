@@ -53,18 +53,18 @@ export async function handleShowOnlinePlayersMenu(
 
 export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
+
+  await interaction.deferReply({ ephemeral: true });
+
   const rankShortId = interaction.customId.replace('show_online_rank_', '');
   const selectedRank = APEX_RANKS.find((rank) => rank.shortId === rankShortId);
 
   if (!selectedRank) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Rango no encontrado.',
-      ephemeral: true,
     });
     return;
   }
-
-  await interaction.deferReply({ ephemeral: true });
 
   try {
     const role = interaction.guild.roles.cache.find(
