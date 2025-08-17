@@ -3,3 +3,6 @@
 
 # Environment variables
 .env
+
+# State Bot
+bot-state.json
