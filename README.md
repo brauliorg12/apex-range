@@ -40,9 +40,15 @@ Para poner en marcha este bot, sigue estos pasos:
     npm run build
     ```
 
-5.  **Ejecuta el bot**:
+5.  **Despliega los comandos de barra (slash commands)**:
+
     ```bash
-    npm start
+    npx ts-node src/deploy-commands.ts
+    ```
+
+6.  **Ejecuta el bot**:
+    ```bash
+    npm run dev
     ```
 
 ## Uso
@@ -50,6 +56,7 @@ Para poner en marcha este bot, sigue estos pasos:
 Una vez que el bot esté en funcionamiento y añadido a tu servidor de Discord, puedes usar los siguientes comandos:
 
 - `/setup-roles`: Comando para configurar roles (los detalles dependen de la implementación en `src/commands/setup-roles.ts`).
+- `/total-players`: Muestra el número total de jugadores en línea por rol de Apex Legends.
 
 ## Contribución
 
