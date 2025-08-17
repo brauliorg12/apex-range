@@ -220,7 +220,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
               .map((role) => role.name)
               .join(', ');
             const rolesDisplay = allRoles ? ` (${allRoles})` : '';
-            return `- ${member.user.username}${rolesDisplay}`;
+            return `- **${member.user.username}**${rolesDisplay}`;
           })
           .join('\n');
         await interaction.editReply({
