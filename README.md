@@ -51,6 +51,49 @@ Para poner en marcha este bot, sigue estos pasos:
     npm run dev
     ```
 
+## Configuración del Servidor de Discord
+
+Antes de ejecutar el bot, es crucial configurar correctamente tu servidor de Discord para asegurar que todas las funcionalidades operen como se espera.
+
+### 1. Creación de Roles
+
+El bot utiliza roles para identificar el rango de los jugadores de Apex Legends. Debes crear los siguientes roles en tu servidor, asegurándote de que los nombres coincidan exactamente:
+
+-   Bronce
+-   Plata
+-   Oro
+-   Platino
+-   Diamante
+-   Maestro
+-   Apex Predator
+
+Puedes crearlos manualmente desde `Ajustes del servidor > Roles > Crear rol`.
+
+### 2. Subida de Emojis de Rango
+
+Para una mejor experiencia visual, el bot utiliza emojis personalizados para cada rango. Debes subir los siguientes iconos a tu servidor:
+
+-   `Ranked_Tier1_Bronze.webp` como `:Ranked_Tier1_Bronze:`
+-   `Ranked_Tier2_Silver.webp` como `:Ranked_Tier2_Silver:`
+-   `Ranked_Tier3_Gold.webp` como `:Ranked_Tier3_Gold:`
+-   `Ranked_Tier4_Platinum.webp` como `:Ranked_Tier4_Platinum:`
+-   `Ranked_Tier5_Diamond.webp` como `:Ranked_Tier5_Diamond:`
+-   `Ranked_Tier6_Master.webp` como `:Ranked_Tier6_Master:`
+-   `Ranked_Tier7_Apex_Predator.webp` como `:Ranked_Tier7_Apex_Predator:`
+
+Puedes subirlos desde `Ajustes del servidor > Emoji > Subir emoji`. Es vital que los nombres de los emojis coincidan con los IDs definidos en `src/constants.ts` para que el bot pueda encontrarlos.
+
+### 3. Permisos del Bot
+
+Asegúrate de que el rol del bot tenga los siguientes permisos para que pueda funcionar correctamente:
+
+-   **Gestionar roles**: Para asignar y desasignar roles de rango a los usuarios.
+-   **Enviar mensajes**: Para responder a comandos e interactuar con los usuarios.
+-   **Leer el historial de mensajes**: Para procesar comandos y respuestas.
+-   **Usar emojis externos**: Para poder mostrar los emojis de rango personalizados.
+
+Estos permisos se pueden configurar en `Ajustes del servidor > Roles`, seleccionando el rol del bot.
+
 ## Uso
 
 Una vez que el bot esté en funcionamiento y añadido a tu servidor de Discord, puedes usar los siguientes comandos:
