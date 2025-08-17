@@ -84,7 +84,9 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
 
     const embed = new EmbedBuilder()
       .setColor(role.color || '#95a5a6')
-      .setTitle(`${emoji} Jugadores en línea en ${selectedRank.label}`);
+      .setTitle(
+        `${onlineMembers.size} - Jugadores en línea en ${emoji} ${selectedRank.label}`
+      );
 
     if (onlineMembers.size === 0) {
       embed.setDescription(
@@ -105,7 +107,7 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
           .map((role) => role.name)
           .join(', ');
         const rolesDisplay = allRoles ? ` (${allRoles})` : '';
-        return `- **${member.displayName}**${rolesDisplay}`;
+        return `- <@${member.id}>${rolesDisplay}`;
       })
       .join('\n');
 
