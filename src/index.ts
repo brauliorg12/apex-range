@@ -150,7 +150,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     } else if (customId === 'show_online_players_menu') {
       await interaction.deferReply({ ephemeral: true });
 
-      const rankButtons = APEX_RANKS.map(rank =>
+      const rankButtons = APEX_RANKS.map((rank) =>
         new ButtonBuilder()
           .setCustomId(`show_online_rank_${rank.id}`)
           .setLabel(rank.label)
@@ -159,7 +159,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
       const rows: ActionRowBuilder<ButtonBuilder>[] = [];
       for (let i = 0; i < rankButtons.length; i += 5) {
-        rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(rankButtons.slice(i, i + 5)));
+        rows.push(
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            rankButtons.slice(i, i + 5)
+          )
+        );
       }
 
       await interaction.editReply({
@@ -206,10 +210,24 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         }
 
         const memberList = onlineMembers
-          .map((member) => `- ${member.user.username}`)
+          .map((member) => {
+            const allRoles = member.roles.cache
+              .filter(
+                (role) =>
+                  role.name !== '@everyone' &&
+                  !APEX_RANKS.some((rank) => rank.roleName === role.name)
+              )
+              .map((role) => role.name)
+              .join(', ');
+            const rolesDisplay = allRoles ? ` (${allRoles})` : '';
+            return `- ${member.user.username}${rolesDisplay}`;
+          })
           .join('\n');
         await interaction.editReply({
-          content: `**Jugadores en línea en ${selectedRank.label}:**\n${memberList}`,
+          content: `**Jugadores en línea en ${selectedRank.label}:**
+${memberList}
+
+`,
         });
       } catch (error) {
         console.error('Error al obtener miembros en línea:', error);

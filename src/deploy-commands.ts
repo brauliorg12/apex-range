@@ -7,31 +7,27 @@ const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
 
 if (!token || !clientId) {
-    throw new Error("DISCORD_TOKEN y CLIENT_ID deben estar definidos en el archivo .env");
+  throw new Error(
+    'DISCORD_TOKEN y CLIENT_ID deben estar definidos en el archivo .env'
+  );
 }
 
-const commands = [
-    new SlashCommandBuilder()
-        .setName('setup-roles')
-        .setDescription('Configura el panel de selección de roles y el mensaje de conteo.')
-        .setDefaultMemberPermissions(8) // Requiere permisos de Administrador
-        .toJSON(),
-];
+import { data as setupRolesCommand } from './commands/setup-roles';
+import { data as totalPlayersCommand } from './commands/total-players';
+
+const commands = [setupRolesCommand.toJSON(), totalPlayersCommand.toJSON()];
 
 const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
-    try {
-        console.log('Empezando a registrar los comandos de aplicación (/).');
+  try {
+    console.log('Empezando a registrar los comandos de aplicación (/).');
 
-        // El método put se usa para refrescar todos los comandos en el servidor con el set actual
-        await rest.put(
-            Routes.applicationCommands(clientId),
-            { body: commands },
-        );
+    // El método put se usa para refrescar todos los comandos en el servidor con el set actual
+    await rest.put(Routes.applicationCommands(clientId), { body: commands });
 
-        console.log('¡Comandos de aplicación (/) registrados exitosamente!.');
-    } catch (error) {
-        console.error(error);
-    }
+    console.log('¡Comandos de aplicación (/) registrados exitosamente!.');
+  } catch (error) {
+    console.error(error);
+  }
 })();
