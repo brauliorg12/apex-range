@@ -6,9 +6,10 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChatInputCommandInteraction,
+  EmbedBuilder,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
-import { writeState } from '../utils/state-manager';
+import { writeState, readState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 
 export const data = new SlashCommandBuilder()
@@ -67,8 +68,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         .setStyle(ButtonStyle.Secondary)
     )
   );
-  await channel.send({
-    content: `**Panel de Selección de Rango de Apex Legends**\nPor favor, selecciona tu rango para obtener el rol correspondiente.`,
+
+  const roleSelectionEmbed = new EmbedBuilder()
+    .setColor('#95a5a6') // Color gris
+    .setTitle('Selección de Rango')
+    .setDescription('Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.');
+
+  const roleSelectionMessage = await channel.send({
+    embeds: [roleSelectionEmbed],
     components: [row1, row2],
   });
 
@@ -90,6 +97,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await writeState({
     roleCountMessageId: roleCountMessage.id,
+    roleSelectionMessageId: roleSelectionMessage.id,
     channelId: channel.id,
     guildId: interaction.guild.id,
   });

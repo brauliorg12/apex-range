@@ -3,6 +3,7 @@ import * as path from 'path';
 
 export interface BotState {
   roleCountMessageId?: string;
+  roleSelectionMessageId?: string;
   channelId?: string;
   guildId?: string;
 }

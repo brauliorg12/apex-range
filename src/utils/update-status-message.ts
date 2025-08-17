@@ -5,9 +5,11 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  EmbedBuilder,
 } from 'discord.js';
 import { readState } from './state-manager';
 import { APEX_RANKS } from '../constants';
+import { getTotalUniquePlayers, getOnlinePlayersCount } from './player-stats';
 
 export async function updateRoleCountMessage(guild: Guild) {
   const state = await readState();
@@ -24,62 +26,81 @@ export async function updateRoleCountMessage(guild: Guild) {
     .catch(() => null)) as TextChannel | null;
   if (!channel) return;
 
-  let message: Message;
+  // Update role count message
   try {
-    message = await channel.messages.fetch(state.roleCountMessageId);
+    const message = await channel.messages.fetch(state.roleCountMessageId);
+
+    const totalPlayers = await getTotalUniquePlayers(guild);
+    const onlinePlayers = await getOnlinePlayersCount(guild);
+
+    const embed = new EmbedBuilder()
+      .setColor('#0099ff') // Color azul
+      .setTitle('Estadísticas del Servidor')
+      .setDescription(
+        `**📊 Jugadores Registrados:** **${totalPlayers}**\n**🟢 Jugadores en Línea:** **${onlinePlayers}**`
+      )
+      .setTimestamp();
+
+    const components: ActionRowBuilder<ButtonBuilder>[] = [];
+    const showOnlineButton = new ButtonBuilder()
+      .setCustomId('show_online_players_menu')
+      .setLabel('Ver jugadores en línea')
+      .setStyle(ButtonStyle.Primary);
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      showOnlineButton
+    );
+    components.push(actionRow);
+
+    await message.edit({ content: '', embeds: [embed], components }).catch(console.error);
   } catch (error) {
     console.error(
-      'No se pudo encontrar el mensaje de conteo. Quizás fue borrado.'
+      'No se pudo encontrar o actualizar el mensaje de conteo. Quizás fue borrado.'
     );
-    return;
   }
 
-  await guild.members.fetch();
+  // Update role selection panel
+  if (state.roleSelectionMessageId) {
+    try {
+      const roleSelectionMessage = await channel.messages.fetch(
+        state.roleSelectionMessageId
+      );
 
-  const allRankRoleNames = APEX_RANKS.map((rank) => rank.roleName);
-  const uniquePlayersWithRank = new Set<string>();
+      const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        APEX_RANKS.slice(0, 4).map((rank) => {
+          const role = guild.roles.cache.find((r) => r.name === rank.roleName);
+          const memberCount = role ? role.members.size : 0;
+          return new ButtonBuilder()
+            .setCustomId(rank.id)
+            .setLabel(`${rank.icon} ${rank.label} (${memberCount})`)
+            .setStyle(ButtonStyle.Secondary);
+        })
+      );
+      const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        APEX_RANKS.slice(4).map((rank) => {
+          const role = guild.roles.cache.find((r) => r.name === rank.roleName);
+          const memberCount = role ? role.members.size : 0;
+          return new ButtonBuilder()
+            .setCustomId(rank.id)
+            .setLabel(`${rank.icon} ${rank.label} (${memberCount})`)
+            .setStyle(ButtonStyle.Secondary);
+        })
+      );
 
-  for (const roleName of allRankRoleNames) {
-    const role = guild.roles.cache.find((r) => r.name === roleName);
-    if (role) {
-      role.members.forEach((member) => {
-        uniquePlayersWithRank.add(member.id);
+      const removeRankButton = new ButtonBuilder()
+        .setCustomId('remove_apex_rank')
+        .setLabel('X')
+        .setStyle(ButtonStyle.Danger);
+
+      row2.addComponents(removeRankButton);
+
+      await roleSelectionMessage.edit({
+        embeds: roleSelectionMessage.embeds, // Preserve existing embeds
+        components: [row1, row2],
       });
+    } catch (error) {
+      console.error(
+        'No se pudo encontrar o actualizar el panel de selección de roles. Quizás fue borrado.'
+      );
     }
   }
-
-  let content = `**📊 Listado (${uniquePlayersWithRank.size} jugadores registrados)**\n\n`;
-
-  const components: ActionRowBuilder<ButtonBuilder>[] = [];
-
-  // Add a single button to show online players menu
-  const showOnlineButton = new ButtonBuilder()
-    .setCustomId('show_online_players_menu')
-    .setLabel('Ver jugadores en línea')
-    .setStyle(ButtonStyle.Primary);
-
-  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    showOnlineButton
-  );
-
-  components.push(actionRow);
-
-  for (let i = 0; i < APEX_RANKS.length; i++) {
-    const rank = APEX_RANKS[i];
-    const role = guild.roles.cache.find((r) => r.name === rank.roleName);
-
-    if (role) {
-      const onlineMembers = role.members.filter(
-        (m) =>
-          m.presence?.status === 'online' ||
-          m.presence?.status === 'dnd' ||
-          m.presence?.status === 'idle'
-      ).size;
-      content += `${rank.icon} **${rank.label}:** **${role.members.size}** jugadores (**${onlineMembers}** en línea)\n`;
-    } else {
-      content += `${rank.icon} **${rank.label}:** (Rol no encontrado)\n`;
-    }
-  }
-
-  await message.edit({ content, components }).catch(console.error);
 }
