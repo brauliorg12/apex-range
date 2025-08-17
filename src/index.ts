@@ -2,7 +2,6 @@ import {
   Client,
   GatewayIntentBits,
   Events,
-  GuildMember,
   Interaction,
   Collection,
 } from 'discord.js';

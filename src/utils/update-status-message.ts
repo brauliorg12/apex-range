@@ -1,7 +1,6 @@
 import {
   Guild,
   TextChannel,
-  Message,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -51,7 +50,9 @@ export async function updateRoleCountMessage(guild: Guild) {
     );
     components.push(actionRow);
 
-    await message.edit({ content: '', embeds: [embed], components }).catch(console.error);
+    await message
+      .edit({ content: '', embeds: [embed], components })
+      .catch(console.error);
   } catch (error) {
     console.error(
       'No se pudo encontrar o actualizar el mensaje de conteo. Quizás fue borrado.'

@@ -9,7 +9,7 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
-import { writeState, readState } from '../utils/state-manager';
+import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 
 export const data = new SlashCommandBuilder()
@@ -72,7 +72,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const roleSelectionEmbed = new EmbedBuilder()
     .setColor('#95a5a6') // Color gris
     .setTitle('Selección de Rango')
-    .setDescription('Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.');
+    .setDescription(
+      'Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.'
+    );
 
   const roleSelectionMessage = await channel.send({
     embeds: [roleSelectionEmbed],
