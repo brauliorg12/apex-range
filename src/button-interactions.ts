@@ -4,11 +4,86 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  EmbedBuilder,
+  Guild,
 } from 'discord.js';
 import { APEX_RANKS } from './constants';
 import { updateRoleCountMessage } from './utils/update-status-message';
 import { getOnlineMembersByRole } from './utils/player-stats';
+import { getRankEmoji } from './utils/emoji-helper';
 
+// Construye el payload (embed y botones) para el menú de rango privado
+async function buildManageRankPayload(guild: Guild, member: GuildMember) {
+  const memberRankRoles = member.roles.cache.filter((role) =>
+    APEX_RANKS.some((rank) => rank.roleName === role.name)
+  );
+  const currentRank = APEX_RANKS.find(
+    (rank) =>
+      memberRankRoles.size > 0 &&
+      rank.roleName === memberRankRoles.first()!.name
+  );
+
+  const title = currentRank
+    ? `Rango actual: ${await getRankEmoji(
+        guild,
+        currentRank
+      )} **${currentRank.label}**`
+    : 'Selección de Rango';
+  const description = currentRank
+    ? 'Puede actualizar su rango seleccionando una nueva opción.'
+    : 'Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.';
+
+  const embed = new EmbedBuilder()
+    .setColor('#95a5a6')
+    .setTitle(title)
+    .setDescription(description);
+
+  const row1Buttons = await Promise.all(
+    APEX_RANKS.slice(0, 4).map(async (rank) =>
+      new ButtonBuilder()
+        .setCustomId(rank.id)
+        .setLabel(rank.label)
+        .setEmoji(await getRankEmoji(guild, rank))
+        .setStyle(ButtonStyle.Secondary)
+    )
+  );
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
+
+  const row2Buttons = await Promise.all(
+    APEX_RANKS.slice(4).map(async (rank) =>
+      new ButtonBuilder()
+        .setCustomId(rank.id)
+        .setLabel(rank.label)
+        .setEmoji(await getRankEmoji(guild, rank))
+        .setStyle(ButtonStyle.Secondary)
+    )
+  );
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
+
+  // Solo añadir el botón de quitar si el usuario tiene un rango
+  if (currentRank) {
+    row2.addComponents(
+      new ButtonBuilder()
+        .setCustomId('remove_apex_rank')
+        .setLabel('X')
+        .setStyle(ButtonStyle.Danger)
+    );
+  }
+
+  return { embeds: [embed], components: [row1, row2] };
+}
+
+// Muestra el menú de rangos como un mensaje efímero
+async function handleManageRankMenu(interaction: ButtonInteraction) {
+  if (!interaction.guild || !interaction.member) return;
+  const member = interaction.member as GuildMember;
+
+  await interaction.deferReply({ ephemeral: true });
+  const payload = await buildManageRankPayload(interaction.guild, member);
+  await interaction.editReply(payload);
+}
+
+// Asigna un rol y actualiza el menú efímero
 async function handleRoleAssignment(interaction: ButtonInteraction) {
   const { customId, member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
@@ -23,9 +98,13 @@ async function handleRoleAssignment(interaction: ButtonInteraction) {
       (role) => role.name === selectedRank.roleName
     );
     if (!roleToAssign) {
-      await interaction.editReply({
-        content: `El rol "${selectedRank.roleName}" no existe. Por favor, avisa a un administrador.`,
-      });
+      const errorEmbed = new EmbedBuilder()
+        .setColor('#e74c3c') // Rojo
+        .setTitle('❌ Error de Configuración')
+        .setDescription(
+          `El rol "${selectedRank.roleName}" no existe. Por favor, avisa a un administrador.`
+        );
+      await interaction.editReply({ embeds: [errorEmbed] });
       return;
     }
 
@@ -37,20 +116,28 @@ async function handleRoleAssignment(interaction: ButtonInteraction) {
     await member.roles.remove(rolesToRemove);
     await member.roles.add(roleToAssign);
 
-    await interaction.editReply({
-      content: `¡Se te ha asignado el rol de ${roleToAssign.name}!`,
-    });
+    const successEmbed = new EmbedBuilder()
+      .setColor('#2ecc71') // Verde
+      .setTitle('✅ Rango Asignado')
+      .setDescription(`Se te ha asignado el rol **${roleToAssign.name}**.`);
 
+    await interaction.editReply({ embeds: [successEmbed] });
+
+    // Solo actualizamos los contadores del panel público
     await updateRoleCountMessage(guild);
   } catch (error) {
     console.error('Error al asignar el rol:', error);
-    await interaction.editReply({
-      content:
-        'Hubo un error al intentar asignar tu rol. Asegúrate de que tengo permisos para gestionar roles.',
-    });
+    const errorEmbed = new EmbedBuilder()
+      .setColor('#e74c3c') // Rojo
+      .setTitle('❌ Error')
+      .setDescription(
+        'Hubo un error al intentar asignar tu rol. Asegúrate de que tengo los permisos necesarios.'
+      );
+    await interaction.editReply({ embeds: [errorEmbed] });
   }
 }
 
+// Quita el rol y actualiza el menú efímero
 async function handleRemoveRank(interaction: ButtonInteraction) {
   const { member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
@@ -64,25 +151,33 @@ async function handleRemoveRank(interaction: ButtonInteraction) {
     );
 
     if (rolesToRemove.size === 0) {
-      await interaction.editReply({
-        content: 'No tienes ningún rol de rango de Apex para quitar.',
-      });
+      const warningEmbed = new EmbedBuilder()
+        .setColor('#f1c40f') // Amarillo
+        .setTitle('⚠️ Sin Rango')
+        .setDescription('No tienes ningún rol de rango de Apex para quitar.');
+      await interaction.editReply({ embeds: [warningEmbed] });
       return;
     }
 
     await member.roles.remove(rolesToRemove);
 
-    await interaction.editReply({
-      content: 'Se han quitado tus roles de rango de Apex.',
-    });
+    const successEmbed = new EmbedBuilder()
+      .setColor('#e74c3c') // Rojo
+      .setTitle('🗑️ Rango Eliminado')
+      .setDescription('Se han quitado tus roles de rango de Apex.');
+    await interaction.editReply({ embeds: [successEmbed] });
 
+    // Solo actualizamos los contadores del panel público
     await updateRoleCountMessage(guild);
   } catch (error) {
     console.error('Error al quitar el rol:', error);
-    await interaction.editReply({
-      content:
-        'Hubo un error al intentar quitar tu rol. Asegúrate de que tengo permisos para gestionar roles.',
-    });
+    const errorEmbed = new EmbedBuilder()
+      .setColor('#e74c3c') // Rojo
+      .setTitle('❌ Error')
+      .setDescription(
+        'Hubo un error al intentar quitar tu rol. Asegúrate de que tengo los permisos necesarios.'
+      );
+    await interaction.editReply({ embeds: [errorEmbed] });
   }
 }
 
@@ -90,19 +185,23 @@ async function handleShowOnlinePlayersMenu(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
   await interaction.deferReply({ ephemeral: true });
 
-  // Actualizar el panel principal de selección de roles
+  // Actualizar los contadores antes de mostrar el menú
   await updateRoleCountMessage(interaction.guild);
 
-  const rankButtons = APEX_RANKS.map((rank) => {
-    const role = interaction.guild!.roles.cache.find(
-      (r) => r.name === rank.roleName
-    );
-    const onlineMemberCount = role ? getOnlineMembersByRole(role).size : 0;
-    return new ButtonBuilder()
-      .setCustomId(`show_online_rank_${rank.id}`)
-      .setLabel(`${rank.label} (${onlineMemberCount})`)
-      .setStyle(ButtonStyle.Secondary);
-  });
+  const rankButtons = await Promise.all(
+    APEX_RANKS.map(async (rank) => {
+      const role = interaction.guild!.roles.cache.find(
+        (r) => r.name === rank.roleName
+      );
+      const onlineMemberCount = role ? getOnlineMembersByRole(role).size : 0;
+      const emoji = await getRankEmoji(interaction.guild!, rank);
+      return new ButtonBuilder()
+        .setCustomId(`show_online_rank_${rank.id}`)
+        .setLabel(`${rank.label} (${onlineMemberCount})`)
+        .setEmoji(emoji)
+        .setStyle(ButtonStyle.Secondary);
+    })
+  );
 
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (let i = 0; i < rankButtons.length; i += 5) {
@@ -113,8 +212,13 @@ async function handleShowOnlinePlayersMenu(interaction: ButtonInteraction) {
     );
   }
 
+  const menuEmbed = new EmbedBuilder()
+    .setColor('#3498db') // Azul
+    .setTitle('Jugadores en Línea por Rango')
+    .setDescription('Selecciona un rango para ver los jugadores en línea:');
+
   await interaction.editReply({
-    content: 'Selecciona un rango para ver los jugadores en línea:',
+    embeds: [menuEmbed],
     components: rows,
   });
 }
@@ -139,18 +243,28 @@ async function handleShowOnlineByRank(interaction: ButtonInteraction) {
       (r) => r.name === selectedRank.roleName
     );
     if (!role) {
-      await interaction.editReply({
-        content: `El rol "${selectedRank.roleName}" no existe.`,
-      });
+      const errorEmbed = new EmbedBuilder()
+        .setColor('#e74c3c') // Rojo
+        .setTitle('❌ Error de Configuración')
+        .setDescription(`El rol "${selectedRank.roleName}" no existe.`);
+      await interaction.editReply({ embeds: [errorEmbed] });
       return;
     }
 
     const onlineMembers = getOnlineMembersByRole(role);
+    const emoji = await getRankEmoji(interaction.guild, selectedRank);
+
+    const embed = new EmbedBuilder()
+      .setColor(role.color || '#95a5a6')
+      .setTitle(
+        `${emoji} Jugadores en línea en ${selectedRank.label}`
+      );
 
     if (onlineMembers.size === 0) {
-      await interaction.editReply({
-        content: `No hay jugadores en línea en el rango ${selectedRank.label}.`,
-      });
+      embed.setDescription(
+        `No hay jugadores en línea en el rango ${selectedRank.label}.`
+      );
+      await interaction.editReply({ embeds: [embed] });
       return;
     }
 
@@ -168,28 +282,33 @@ async function handleShowOnlineByRank(interaction: ButtonInteraction) {
         return `- **${member.displayName}**${rolesDisplay}`;
       })
       .join('\n');
-    await interaction.editReply({
-      content: `**Jugadores en línea en ${selectedRank.label}:**\n${memberList}`,
-    });
+
+    embed.setDescription(memberList);
+    await interaction.editReply({ embeds: [embed] });
   } catch (error) {
     console.error('Error al obtener miembros en línea:', error);
-    await interaction.editReply({
-      content:
-        'Hubo un error al intentar obtener la lista de jugadores en línea.',
-    });
+    const errorEmbed = new EmbedBuilder()
+      .setColor('#e74c3c') // Rojo
+      .setTitle('❌ Error')
+      .setDescription(
+        'Hubo un error al intentar obtener la lista de jugadores en línea.'
+      );
+    await interaction.editReply({ embeds: [errorEmbed] });
   }
 }
 
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
   const { customId } = interaction;
 
-  if (APEX_RANKS.some((rank) => rank.id === customId)) {
+  if (customId === 'manage_rank_menu') {
+    await handleManageRankMenu(interaction);
+  } else if (APEX_RANKS.some((rank) => rank.id === customId)) {
     await handleRoleAssignment(interaction);
+  } else if (customId === 'remove_apex_rank') {
+    await handleRemoveRank(interaction);
   } else if (customId === 'show_online_players_menu') {
     await handleShowOnlinePlayersMenu(interaction);
   } else if (customId.startsWith('show_online_rank_')) {
     await handleShowOnlineByRank(interaction);
-  } else if (customId === 'remove_apex_rank') {
-    await handleRemoveRank(interaction);
   }
 }

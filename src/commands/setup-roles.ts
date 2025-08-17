@@ -11,6 +11,7 @@ import {
 import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
+import { getRankEmoji } from '../utils/emoji-helper';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -52,22 +53,27 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel as TextChannel;
   if (!channel) return;
 
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    APEX_RANKS.slice(0, 4).map((rank) =>
+  const row1Buttons = await Promise.all(
+    APEX_RANKS.slice(0, 4).map(async (rank) =>
       new ButtonBuilder()
         .setCustomId(rank.id)
-        .setLabel(`${rank.icon} ${rank.label}`)
+        .setLabel(rank.label)
+        .setEmoji(await getRankEmoji(interaction.guild!, rank))
         .setStyle(ButtonStyle.Secondary)
     )
   );
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    APEX_RANKS.slice(4).map((rank) =>
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
+
+  const row2Buttons = await Promise.all(
+    APEX_RANKS.slice(4).map(async (rank) =>
       new ButtonBuilder()
         .setCustomId(rank.id)
-        .setLabel(`${rank.icon} ${rank.label}`)
+        .setLabel(rank.label)
+        .setEmoji(await getRankEmoji(interaction.guild!, rank))
         .setStyle(ButtonStyle.Secondary)
     )
   );
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
 
   const roleSelectionEmbed = new EmbedBuilder()
     .setColor('#95a5a6') // Color gris

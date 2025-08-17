@@ -7,8 +7,9 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import { readState } from './state-manager';
-import { APEX_RANKS } from '../constants';
 import { getTotalUniquePlayers, getOnlinePlayersCount } from './player-stats';
+import { APEX_RANKS } from '../constants';
+import { getRankEmoji } from './emoji-helper';
 
 export async function updateRoleCountMessage(guild: Guild) {
   const state = await readState();
@@ -35,23 +36,30 @@ export async function updateRoleCountMessage(guild: Guild) {
     const embed = new EmbedBuilder()
       .setColor('#0099ff') // Color azul
       .setTitle('Estadísticas del Servidor')
-      .setDescription(
-        `**📊 Jugadores Registrados:** **${totalPlayers}**\n**🟢 Jugadores en Línea:** **${onlinePlayers}**`
+      .setDescription(null) // Limpiamos la descripción principal
+      .setFields(
+        {
+          name: '📊 Jugadores Registrados',
+          value: `**${totalPlayers}**`,
+          inline: true,
+        },
+        {
+          name: '🟢 Jugadores en Línea',
+          value: `**${onlinePlayers}**`,
+          inline: true,
+        }
       )
       .setTimestamp();
 
-    const components: ActionRowBuilder<ButtonBuilder>[] = [];
-    const showOnlineButton = new ButtonBuilder()
-      .setCustomId('show_online_players_menu')
-      .setLabel('Ver jugadores en línea')
-      .setStyle(ButtonStyle.Primary);
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      showOnlineButton
+      new ButtonBuilder()
+        .setCustomId('show_online_players_menu')
+        .setLabel('Ver jugadores en línea')
+        .setStyle(ButtonStyle.Success)
     );
-    components.push(actionRow);
 
     await message
-      .edit({ content: '', embeds: [embed], components })
+      .edit({ content: '', embeds: [embed], components: [actionRow] })
       .catch(console.error);
   } catch (error) {
     console.error(
@@ -66,41 +74,50 @@ export async function updateRoleCountMessage(guild: Guild) {
         state.roleSelectionMessageId
       );
 
-      const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        APEX_RANKS.slice(0, 4).map((rank) => {
+      const roleSelectionEmbed = new EmbedBuilder()
+        .setColor('#95a5a6')
+        .setTitle('Selección de Rango')
+        .setDescription(
+          'Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.'
+        );
+
+      const row1Buttons = await Promise.all(
+        APEX_RANKS.slice(0, 4).map(async (rank) => {
           const role = guild.roles.cache.find((r) => r.name === rank.roleName);
           const memberCount = role ? role.members.size : 0;
           return new ButtonBuilder()
             .setCustomId(rank.id)
-            .setLabel(`${rank.icon} ${rank.label} (${memberCount})`)
+            .setLabel(`${rank.label} (${memberCount})`)
+            .setEmoji(await getRankEmoji(guild, rank))
+            .setStyle(ButtonStyle.Secondary);
+        })
+      );
+      const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        row1Buttons
+      );
+
+      const row2Buttons = await Promise.all(
+        APEX_RANKS.slice(4).map(async (rank) => {
+          const role = guild.roles.cache.find((r) => r.name === rank.roleName);
+          const memberCount = role ? role.members.size : 0;
+          return new ButtonBuilder()
+            .setCustomId(rank.id)
+            .setLabel(`${rank.label} (${memberCount})`)
+            .setEmoji(await getRankEmoji(guild, rank))
             .setStyle(ButtonStyle.Secondary);
         })
       );
       const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        APEX_RANKS.slice(4).map((rank) => {
-          const role = guild.roles.cache.find((r) => r.name === rank.roleName);
-          const memberCount = role ? role.members.size : 0;
-          return new ButtonBuilder()
-            .setCustomId(rank.id)
-            .setLabel(`${rank.icon} ${rank.label} (${memberCount})`)
-            .setStyle(ButtonStyle.Secondary);
-        })
+        row2Buttons
       );
 
-      const removeRankButton = new ButtonBuilder()
-        .setCustomId('remove_apex_rank')
-        .setLabel('X')
-        .setStyle(ButtonStyle.Danger);
-
-      row2.addComponents(removeRankButton);
-
       await roleSelectionMessage.edit({
-        embeds: roleSelectionMessage.embeds, // Preserve existing embeds
+        embeds: [roleSelectionEmbed],
         components: [row1, row2],
       });
     } catch (error) {
       console.error(
-        'No se pudo encontrar o actualizar el panel de selección de roles. Quizás fue borrado.'
+        'No se pudo encontrar o actualizar el mensaje de selección de roles. Quizás fue borrado.'
       );
     }
   }

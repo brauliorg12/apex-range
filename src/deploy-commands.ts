@@ -13,9 +13,9 @@ if (!token || !clientId) {
 }
 
 import { data as setupRolesCommand } from './commands/setup-roles';
-import { data as totalPlayersCommand } from './commands/total-players';
+import { data as totalJugadoresCommand } from './commands/total-players';
 
-const commands = [setupRolesCommand.toJSON(), totalPlayersCommand.toJSON()];
+const commands = [setupRolesCommand.toJSON(), totalJugadoresCommand.toJSON()];
 
 const rest = new REST({ version: '10' }).setToken(token);
 

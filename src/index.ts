@@ -45,14 +45,14 @@ for (const file of commandFiles) {
 
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`¡Listo! Logueado como ${readyClient.user.tag}`);
-  const state = await readState();
-  if (state.guildId) {
-    const guild = await readyClient.guilds
-      .fetch(state.guildId)
-      .catch(() => null);
-    if (guild) {
+  try {
+    const state = await readState();
+    if (state.guildId) {
+      const guild = await readyClient.guilds.fetch(state.guildId);
       await updateRoleCountMessage(guild);
     }
+  } catch (error) {
+    console.error('Error durante la inicialización del bot:', error);
   }
 });
 
