@@ -72,6 +72,7 @@ export async function updateRoleCountMessage(guild: Guild) {
       .setImage(headerImageUrl || ''); // Emoji como imagen grande
 
     const managementButtons = createManagementButtons();
+
     try {
       await statsMessage.edit({
         content: '',

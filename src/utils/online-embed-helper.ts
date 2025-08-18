@@ -25,7 +25,9 @@ export async function buildOnlineEmbedForRank(
     onlineMembers.size > 0
       ? `**${onlineMembers.size}**`
       : `${onlineMembers.size}`;
-  const subtitle = `> _${onlineCount} jugadores en línea_`; // blockquote y cursiva
+  const jugadoresLabel =
+    onlineMembers.size === 1 ? 'jugador en línea' : 'jugadores en línea';
+  const subtitle = `> _${onlineCount} ${jugadoresLabel}_`; // blockquote y cursiva
 
   let description = '';
   if (onlineMembers.size > 0) {
@@ -40,7 +42,7 @@ export async function buildOnlineEmbedForRank(
           .map((role) => role.name)
           .join(', ');
         const rolesDisplay = allRoles ? ` (${allRoles})` : '';
-        return `- <@${member.id}>${rolesDisplay}`;
+        return `• <@${member.id}>${rolesDisplay}`;
       })
       .join('\n');
   }

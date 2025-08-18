@@ -46,12 +46,12 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
       .setCustomId('manage_rank_menu')
       .setLabel('Gestionar mi Rango')
       .setEmoji('⚙️')
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_online_players_menu')
       .setLabel('Ver Jugadores en Línea')
       .setEmoji('🟢')
-      .setStyle(ButtonStyle.Success),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')
       .setLabel('Ayuda de Comandos')
