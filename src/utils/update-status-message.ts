@@ -67,7 +67,10 @@ export async function updateRoleCountMessage(guild: Guild) {
       .setDescription(
         '📋 **Lista de Jugadores por Rango**\n' +
           '> Puede clickear sobre los jugadores para interactuar'
-      );
+      )
+      .setImage(
+        'https://cdn.discordapp.com/emojis/1406874924513103993.png?size=128'
+      ); // Emoji como imagen grande
 
     const managementButtons = createManagementButtons();
     try {

@@ -146,7 +146,7 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
         `${getRankEmoji(guild.client, selectedRank)} **${
           roleToAssign.name
         }**\n\n` +
-          '_Selecciona tu rango actual para que los demás jugadores puedan encontrarte fácilmente._'
+          '_¡Excelente! Ahora puedes ver tu rango actual y los demás jugadores encontrarte._'
       );
     await interaction.editReply({
       embeds: [successEmbed],
