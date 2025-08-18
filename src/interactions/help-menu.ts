@@ -2,6 +2,10 @@ import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { createCloseButtonRow } from '../utils/button-helper';
 
 export async function handleHelpMenu(interaction: ButtonInteraction) {
+  console.log(
+    `[Interacción] ${interaction.user.tag} ha solicitado el menú de ayuda.`
+  );
+
   await interaction.deferReply({ ephemeral: true });
 
   const embed = new EmbedBuilder()
@@ -17,10 +21,17 @@ export async function handleHelpMenu(interaction: ButtonInteraction) {
       ].join('\n')
     );
 
-  await interaction.editReply({ embeds: [embed], components: [createCloseButtonRow()] });
+  await interaction.editReply({
+    embeds: [embed],
+    components: [createCloseButtonRow()],
+  });
 }
 
 export async function handleCloseHelpMenu(interaction: ButtonInteraction) {
   await interaction.deferUpdate();
   await interaction.deleteReply();
+
+  console.log(
+    `[Interacción] ${interaction.user.tag} ha cerrado el menú de ayuda.`
+  );
 }

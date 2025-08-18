@@ -146,16 +146,22 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     );
 
     if (!command) {
-      console.error(
-        `No se encontró ningún comando que coincida con ${interaction.commandName}.`
+      console.warn(
+        `[Advertencia] Comando desconocido: ${interaction.commandName}`
       );
       return;
     }
 
     try {
       await command.execute(interaction);
+      console.log(
+        `[Interacción] Comando '${interaction.commandName}' ejecutado por ${interaction.user.tag}.`
+      );
     } catch (error) {
-      console.error(error);
+      console.error(
+        `[ERROR] Error al ejecutar el comando '${interaction.commandName}':`,
+        error
+      );
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
           content: '¡Hubo un error al ejecutar este comando!',
@@ -169,7 +175,29 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       }
     }
   } else if (interaction.isButton()) {
-    await handleButtonInteraction(interaction);
+    try {
+      await handleButtonInteraction(interaction);
+      // El log específico se maneja dentro de cada función, aquí solo se registra el éxito general.
+      console.log(
+        `[Interacción] Botón '${interaction.customId}' procesado exitosamente por ${interaction.user.tag}.`
+      );
+    } catch (error) {
+      console.error(
+        `[ERROR] Error al manejar el botón '${interaction.customId}':`,
+        error
+      );
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: '¡Hubo un error al procesar este botón!',
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: '¡Hubo un error al procesar este botón!',
+          ephemeral: true,
+        });
+      }
+    }
   }
 });
 

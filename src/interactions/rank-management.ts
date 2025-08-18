@@ -99,6 +99,10 @@ export async function handleManageRankMenu(interaction: ButtonInteraction) {
   if (!interaction.guild || !interaction.member) return;
   const member = interaction.member as GuildMember;
 
+  console.log(
+    `[Interacción] Abriendo menú 'Gestionar mi rango' para ${interaction.user.tag}.`
+  );
+
   await interaction.deferReply({ ephemeral: true });
   const payload = await buildManageRankPayload(interaction.guild, member);
   await interaction.editReply(payload);
@@ -110,6 +114,10 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
 
   const selectedRank = APEX_RANKS.find((rank) => rank.shortId === customId);
   if (!selectedRank) return;
+
+  console.log(
+    `[Interacción] ${interaction.user.tag} está intentando asignarse el rango '${selectedRank.label}'.`
+  );
 
   await interaction.deferReply({ ephemeral: true });
 
@@ -138,6 +146,10 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
 
     await member.roles.remove(rolesToRemove);
     await member.roles.add(roleToAssign);
+
+    console.log(
+      `[Interacción] Rango '${selectedRank.label}' asignado a ${interaction.user.tag}.`
+    );
 
     const successEmbed = new EmbedBuilder()
       .setColor('#2ecc71')
@@ -173,6 +185,10 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
   const { member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
 
+  console.log(
+    `[Interacción] ${interaction.user.tag} está intentando eliminar su rango.`
+  );
+
   await interaction.deferReply({ ephemeral: true });
 
   try {
@@ -191,6 +207,10 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
     }
 
     await member.roles.remove(rolesToRemove);
+
+    console.log(
+      `[Interacción] Roles de rango eliminados para ${interaction.user.tag}.`
+    );
 
     const successEmbed = new EmbedBuilder()
       .setColor('#e74c3c')
