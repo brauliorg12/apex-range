@@ -142,7 +142,12 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     const successEmbed = new EmbedBuilder()
       .setColor('#2ecc71')
       .setTitle('✅ Rango Asignado')
-      .setDescription(`Se te ha asignado el rol **${roleToAssign.name}**.`);
+      .setDescription(
+        `${getRankEmoji(guild.client, selectedRank)} **${
+          roleToAssign.name
+        }**\n\n` +
+          '_Selecciona tu rango actual para que los demás jugadores puedan encontrarte fácilmente._'
+      );
     await interaction.editReply({
       embeds: [successEmbed],
       components: [createCloseButtonRow()],
@@ -202,6 +207,9 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
       .setDescription(
         'Hubo un error al intentar quitar tu rol. Asegúrate de que tengo los permisos necesarios.'
       );
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await interaction.editReply({
+      embeds: [errorEmbed],
+      components: [createCloseButtonRow()],
+    });
   }
 }
