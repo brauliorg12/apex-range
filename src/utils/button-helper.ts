@@ -48,9 +48,9 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
       .setEmoji('⚙️')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId('show_online_players_menu')
-      .setLabel('Ver Jugadores en Línea')
-      .setEmoji('🟢')
+      .setCustomId('show_all_players_menu')
+      .setLabel('Ver todos los jugadores')
+      .setEmoji('👥')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')

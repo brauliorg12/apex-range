@@ -37,7 +37,8 @@ export async function buildOnlineEmbedForRank(
           .filter(
             (role) =>
               role.name !== '@everyone' &&
-              !APEX_RANKS.some((r) => r.roleName === role.name)
+              !APEX_RANKS.some((r) => r.roleName === role.name) &&
+              role.name !== 'Server Booster'
           )
           .map((role) => role.name)
           .join(', ');

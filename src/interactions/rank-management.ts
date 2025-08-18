@@ -11,6 +11,10 @@ import { APEX_RANKS } from '../constants';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
+import {
+  updatePlayerRankDate,
+  removePlayerRankDate,
+} from '../utils/player-data-manager';
 
 // Construye el payload (embed y botones) para el menú de rango privado
 async function buildManageRankPayload(guild: Guild, member: GuildMember) {
@@ -70,15 +74,15 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
 }
 
 export function buildMainMenuComponents() {
+  const allPlayersButton = new ButtonBuilder()
+    .setCustomId('show_all_players_menu')
+    .setLabel('Ver todos los jugadores')
+    .setStyle(ButtonStyle.Secondary);
+
   const manageRankButton = new ButtonBuilder()
     .setCustomId('manage_rank_menu')
     .setLabel('Gestionar mi rango')
     .setStyle(ButtonStyle.Primary);
-
-  const onlinePlayersButton = new ButtonBuilder()
-    .setCustomId('show_online_players_menu')
-    .setLabel('Ver jugadores en línea')
-    .setStyle(ButtonStyle.Secondary);
 
   const helpButton = new ButtonBuilder()
     .setCustomId('show_help_menu')
@@ -88,7 +92,7 @@ export function buildMainMenuComponents() {
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     manageRankButton,
-    onlinePlayersButton,
+    allPlayersButton,
     helpButton
   );
 
@@ -147,6 +151,9 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     await member.roles.remove(rolesToRemove);
     await member.roles.add(roleToAssign);
 
+    // Guardar la fecha de asignación
+    await updatePlayerRankDate(member.id);
+
     console.log(
       `[Interacción] Rango '${selectedRank.label}' asignado a ${interaction.user.tag}.`
     );
@@ -202,11 +209,17 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
         .setColor('#f1c40f')
         .setTitle('⚠️ Sin Rango')
         .setDescription('No tienes ningún rol de rango de Apex para quitar.');
-      await interaction.editReply({ embeds: [warningEmbed] });
+      await interaction.editReply({
+        embeds: [warningEmbed],
+        components: [createCloseButtonRow()],
+      });
       return;
     }
 
     await member.roles.remove(rolesToRemove);
+
+    // Eliminar la fecha de asignación
+    await removePlayerRankDate(member.id);
 
     console.log(
       `[Interacción] Roles de rango eliminados para ${interaction.user.tag}.`
@@ -216,7 +229,10 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
       .setColor('#e74c3c')
       .setTitle('🗑️ Rango Eliminado')
       .setDescription('Se han quitado tus roles de rango de Apex.');
-    await interaction.editReply({ embeds: [successEmbed] });
+    await interaction.editReply({
+      embeds: [successEmbed],
+      components: [createCloseButtonRow()],
+    });
 
     await updateRoleCountMessage(guild);
   } catch (error) {

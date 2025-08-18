@@ -1,57 +1,8 @@
-import {
-  ButtonInteraction,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  ColorResolvable,
-} from 'discord.js';
+import { ButtonInteraction, EmbedBuilder, ColorResolvable } from 'discord.js';
 import { APEX_RANKS } from '../constants';
-import { updateRoleCountMessage } from '../utils/update-status-message';
 import { getOnlineMembersByRole } from '../utils/player-stats';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
-
-export async function handleShowOnlinePlayersMenu(
-  interaction: ButtonInteraction
-) {
-  if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: true });
-
-  await updateRoleCountMessage(interaction.guild);
-
-  const rankButtons = APEX_RANKS.map((rank) => {
-    const role = interaction.guild!.roles.cache.find(
-      (r) => r.name === rank.roleName
-    );
-    const onlineMemberCount = role ? getOnlineMembersByRole(role).size : 0;
-    const emoji = getRankEmoji(interaction.client, rank);
-    return new ButtonBuilder()
-      .setCustomId(`show_online_rank_${rank.shortId}`)
-      .setLabel(`${rank.label} - ${onlineMemberCount}`)
-      .setEmoji(emoji)
-      .setStyle(ButtonStyle.Secondary);
-  });
-
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-  for (let i = 0; i < rankButtons.length; i += 5) {
-    rows.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        rankButtons.slice(i, i + 5)
-      )
-    );
-  }
-
-  const menuEmbed = new EmbedBuilder()
-    .setColor('#3498db')
-    .setTitle('Jugadores en Línea por Rango')
-    .setDescription('Selecciona un rango para ver los jugadores en línea:');
-
-  await interaction.editReply({
-    embeds: [menuEmbed],
-    components: [...rows, createCloseButtonRow()],
-  });
-}
 
 export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
@@ -108,7 +59,8 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
           .filter(
             (role) =>
               role.name !== '@everyone' &&
-              !APEX_RANKS.some((rank) => rank.roleName === role.name)
+              !APEX_RANKS.some((rank) => rank.roleName === role.name) &&
+              role.name !== 'Server Booster'
           )
           .map((role) => role.name)
           .join(', ');
