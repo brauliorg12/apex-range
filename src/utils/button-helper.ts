@@ -51,6 +51,20 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
       .setCustomId('show_online_players_menu')
       .setLabel('Ver Jugadores en Línea')
       .setEmoji('🟢')
-      .setStyle(ButtonStyle.Success)
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('show_help_menu')
+      .setLabel('Ayuda de Comandos')
+      .setEmoji('❓')
+      .setStyle(ButtonStyle.Secondary)
+  );
+}
+
+export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('close_help_menu')
+      .setLabel('Cerrar')
+      .setStyle(ButtonStyle.Secondary)
   );
 }

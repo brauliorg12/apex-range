@@ -10,6 +10,7 @@ import {
 import { APEX_RANKS } from '../constants';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { getRankEmoji } from '../utils/emoji-helper';
+import { createCloseButtonRow } from '../utils/button-helper';
 
 // Construye el payload (embed y botones) para el menú de rango privado
 async function buildManageRankPayload(guild: Guild, member: GuildMember) {
@@ -64,7 +65,34 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
     );
   }
 
-  return { embeds: [embed], components: [row1, row2] };
+  // Agrega el botón de cerrar como última fila
+  return { embeds: [embed], components: [row1, row2, createCloseButtonRow()] };
+}
+
+export function buildMainMenuComponents() {
+  const manageRankButton = new ButtonBuilder()
+    .setCustomId('manage_rank_menu')
+    .setLabel('Gestionar mi rango')
+    .setStyle(ButtonStyle.Primary);
+
+  const onlinePlayersButton = new ButtonBuilder()
+    .setCustomId('show_online_players_menu')
+    .setLabel('Ver jugadores en línea')
+    .setStyle(ButtonStyle.Secondary);
+
+  const helpButton = new ButtonBuilder()
+    .setCustomId('show_help_menu')
+    .setLabel('Ayuda de Comandos')
+    .setEmoji('❓')
+    .setStyle(ButtonStyle.Secondary);
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    manageRankButton,
+    onlinePlayersButton,
+    helpButton
+  );
+
+  return [row];
 }
 
 export async function handleManageRankMenu(interaction: ButtonInteraction) {
@@ -96,7 +124,10 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
         .setDescription(
           `El rol "${selectedRank.roleName}" no existe. Por favor, avisa a un administrador.`
         );
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await interaction.editReply({
+        embeds: [errorEmbed],
+        components: [createCloseButtonRow()],
+      });
       return;
     }
 
@@ -112,7 +143,10 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
       .setColor('#2ecc71')
       .setTitle('✅ Rango Asignado')
       .setDescription(`Se te ha asignado el rol **${roleToAssign.name}**.`);
-    await interaction.editReply({ embeds: [successEmbed] });
+    await interaction.editReply({
+      embeds: [successEmbed],
+      components: [createCloseButtonRow()],
+    });
 
     await updateRoleCountMessage(guild);
   } catch (error) {
@@ -123,7 +157,10 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
       .setDescription(
         'Hubo un error al intentar asignar tu rol. Asegúrate de que tengo los permisos necesarios.'
       );
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await interaction.editReply({
+      embeds: [errorEmbed],
+      components: [createCloseButtonRow()],
+    });
   }
 }
 

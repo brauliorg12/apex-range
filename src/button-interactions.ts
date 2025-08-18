@@ -9,6 +9,7 @@ import {
   handleShowOnlinePlayersMenu,
   handleShowOnlineByRank,
 } from './interactions/online-players';
+import { handleHelpMenu, handleCloseHelpMenu } from './interactions/help-menu';
 
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
   const { customId } = interaction;
@@ -23,5 +24,9 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     await handleShowOnlinePlayersMenu(interaction);
   } else if (customId.startsWith('show_online_rank_')) {
     await handleShowOnlineByRank(interaction);
+  } else if (customId === 'show_help_menu') {
+    await handleHelpMenu(interaction);
+  } else if (customId === 'close_help_menu') {
+    await handleCloseHelpMenu(interaction);
   }
 }

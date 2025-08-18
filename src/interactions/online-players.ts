@@ -10,6 +10,7 @@ import { APEX_RANKS } from '../constants';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { getOnlineMembersByRole } from '../utils/player-stats';
 import { getRankEmoji } from '../utils/emoji-helper';
+import { createCloseButtonRow } from '../utils/button-helper';
 
 export async function handleShowOnlinePlayersMenu(
   interaction: ButtonInteraction
@@ -48,7 +49,7 @@ export async function handleShowOnlinePlayersMenu(
 
   await interaction.editReply({
     embeds: [menuEmbed],
-    components: rows,
+    components: [...rows, createCloseButtonRow()],
   });
 }
 
@@ -76,7 +77,10 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
         .setColor('#e74c3c')
         .setTitle('❌ Error de Configuración')
         .setDescription(`El rol "${selectedRank.roleName}" no existe.`);
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await interaction.editReply({
+        embeds: [errorEmbed],
+        components: [createCloseButtonRow()],
+      });
       return;
     }
 
@@ -91,7 +95,10 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
 
     if (onlineMembers.size === 0) {
       embed.setDescription(subtitle);
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({
+        embeds: [embed],
+        components: [createCloseButtonRow()],
+      });
       return;
     }
 
@@ -111,7 +118,10 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
       .join('\n');
 
     embed.setDescription(`${subtitle}\n\n${memberList}`);
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({
+      embeds: [embed],
+      components: [createCloseButtonRow()],
+    });
   } catch (error) {
     console.error('Error al obtener miembros en línea:', error);
     const errorEmbed = new EmbedBuilder()
@@ -120,6 +130,9 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
       .setDescription(
         'Hubo un error al intentar obtener la lista de jugadores en línea.'
       );
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await interaction.editReply({
+      embeds: [errorEmbed],
+      components: [createCloseButtonRow()],
+    });
   }
 }
