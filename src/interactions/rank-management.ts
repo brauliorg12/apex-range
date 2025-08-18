@@ -30,7 +30,7 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
     : 'Selección de Rango';
   const description = currentRank
     ? 'Puede actualizar su rango seleccionando una nueva opción.'
-    : 'Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.';
+    : 'Selecciona tu rango actual en Apex Legends para que otros jugadores puedan encontrarte.';
 
   const embed = new EmbedBuilder()
     .setColor('#95a5a6')

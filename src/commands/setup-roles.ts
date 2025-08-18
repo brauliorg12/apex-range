@@ -56,7 +56,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     .setColor('#95a5a6') // Color gris
     .setTitle('Selección de Rango')
     .setDescription(
-      'Selecciona tu rango principal en Apex Legends para que otros jugadores puedan encontrarte.'
+      'Selecciona tu rango actual en Apex Legends para que otros jugadores puedan encontrarte.'
     );
 
   const roleSelectionMessage = await channel.send({
