@@ -43,14 +43,14 @@ export function createRankButtons(
 export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId('manage_rank_menu')
-      .setLabel('Gestionar mi Rango')
-      .setEmoji('⚙️')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
       .setCustomId('show_all_players_menu')
       .setLabel('Ver todos los jugadores')
       .setEmoji('👥')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('manage_rank_menu')
+      .setLabel('Gestionar mi Rango')
+      .setEmoji('⚙️')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')
