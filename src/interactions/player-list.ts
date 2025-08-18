@@ -74,20 +74,25 @@ export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
     let description = '';
     for (const rank of APEX_RANKS) {
       const membersInRank = playersByRank[rank.roleName];
+      const emoji = getRankEmoji(interaction.client, rank);
+      description += `\n**${emoji} ${rank.label} (${membersInRank.length})**\n`;
+
       if (membersInRank.length > 0) {
-        const emoji = getRankEmoji(interaction.client, rank);
-        description += `\n**${emoji} ${rank.label} (${membersInRank.length})**\n`;
         description += membersInRank
           .map((m, index) => {
             const assignedData = playerData[m.id];
-            const assignedDate = assignedData
-              ? new Date(assignedData.assignedAt).toLocaleDateString('es-ES')
-              : 'N/A';
-            return `${index + 1}. \`${m.displayName}\` - _${assignedDate}_`;
+            const dateString = assignedData
+              ? ` - _${new Date(assignedData.assignedAt).toLocaleDateString(
+                  'es-ES'
+                )}_`
+              : '';
+            return `${index + 1}. \`${m.displayName}\`${dateString}`;
           })
           .join('\n');
-        description += '\n';
+      } else {
+        description += `_...Aún no hay usuarios registrados en este rango._`;
       }
+      description += '\n';
     }
 
     embed.setDescription(
