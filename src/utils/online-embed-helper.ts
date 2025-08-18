@@ -21,7 +21,11 @@ export async function buildOnlineEmbedForRank(
 
   // Título en negrita normal
   const title = `**${emoji}  ${rank.label.toUpperCase()}**`;
-  const subtitle = `_(${onlineMembers.size} jugadores en línea)_`; // pequeño y en cursiva
+  const onlineCount =
+    onlineMembers.size > 0
+      ? `**${onlineMembers.size}**`
+      : `${onlineMembers.size}`;
+  const subtitle = `> _${onlineCount} jugadores en línea_`; // blockquote y cursiva
 
   let description = '';
   if (onlineMembers.size > 0) {
@@ -39,10 +43,10 @@ export async function buildOnlineEmbedForRank(
         return `- <@${member.id}>${rolesDisplay}`;
       })
       .join('\n');
-    description = `${subtitle}\n\n${description}`;
-  } else {
-    description = `${subtitle}`;
   }
+
+  // Subtítulo blockquote arriba, luego la lista de jugadores (si hay)
+  description = `${subtitle}${description ? '\n\n' + description : ''}`;
 
   const embed = new EmbedBuilder()
     .setColor(rank.color as ColorResolvable)

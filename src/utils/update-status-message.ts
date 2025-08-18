@@ -62,15 +62,14 @@ export async function updateRoleCountMessage(guild: Guild) {
     const onlineEmbeds = await buildAllOnlineEmbeds(guild);
 
     // Encabezado y subtítulo como embed separado para que quede debajo de estadísticas
+    const headerImageUrl = process.env.RANKS_HEADER_IMAGE_URL;
     const headerEmbed = new EmbedBuilder()
       .setColor('#ffffff')
       .setDescription(
-        '📋 **Lista de Jugadores por Rango**\n' +
+        '🛡️ **Jugadores por Rango**\n' +
           '> Puede clickear sobre los jugadores para interactuar'
       )
-      .setImage(
-        'https://cdn.discordapp.com/emojis/1406874924513103993.png?size=128'
-      ); // Emoji como imagen grande
+      .setImage(headerImageUrl || ''); // Emoji como imagen grande
 
     const managementButtons = createManagementButtons();
     try {

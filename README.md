@@ -20,41 +20,44 @@ Este es un bot de Discord diseñado para mejorar la experiencia de tu comunidad 
 
 1. **Clona el repositorio**:
 
-    ```bash
-    git clone https://github.com/your-username/discord-apex.git
-    cd discord-apex
-    ```
+   ```bash
+   git clone https://github.com/your-username/discord-apex.git
+   cd discord-apex
+   ```
 
 2. **Instala las dependencias**:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. **Configura tu bot**:  
    Crea un archivo `.env` en el directorio raíz con el token de tu bot de Discord.  
    Ejemplo:
+
    ```
    DISCORD_TOKEN=TU_TOKEN_DEL_BOT
+   # Imagen para el encabezado de rangos
+   RANKS_HEADER_IMAGE_URL=https://app.cubanova.com/assets/images/Apex_Legends_Ranked_Leagues.jpg
    ```
 
 4. **Compila el proyecto**:
 
-    ```bash
-    npm run build
-    ```
+   ```bash
+   npm run build
+   ```
 
 5. **Despliega los comandos de barra (slash commands)**:
 
-    ```bash
-    npx ts-node src/deploy-commands.ts
-    ```
+   ```bash
+   npx ts-node src/deploy-commands.ts
+   ```
 
 6. **Ejecuta el bot**:
 
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 
 ## Configuración del Servidor de Discord
 
