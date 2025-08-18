@@ -1,6 +1,15 @@
-# Bot de Discord para Apex Legends
+# Apex Legends Rank Bot
 
-Este es un bot de Discord diseñado para mejorar la experiencia de tu comunidad de Apex Legends. Proporciona características como la gestión de roles, panel interactivo de rangos, estadísticas y ayuda integrada.
+Un bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en un servidor.
+
+## Características
+
+- Asignación de roles según el rango en Apex Legends.
+- Panel de control interactivo con botones.
+- Mensaje de estado que se actualiza automáticamente con el recuento de jugadores por rango.
+- Listado de todos los jugadores registrados con su rango y fecha de registro.
+- Listado de jugadores en línea por rango.
+- Comandos slash para una fácil interacción.
 
 ## Tecnologías Utilizadas
 
@@ -8,13 +17,28 @@ Este es un bot de Discord diseñado para mejorar la experiencia de tu comunidad 
 - **TypeScript**: Tipado estático sobre JavaScript.
 - **Discord.js**: Librería para interactuar con la API de Discord.
 
-## Características
+## Archivos de Datos (JSON)
 
-- **Gestión de Roles**: Selección y administración de roles de rango de Apex Legends mediante botones interactivos.
-- **Panel Interactivo**: Los usuarios pueden gestionar su rango, ver jugadores en línea y acceder a la ayuda desde un menú principal con botones.
-- **Actualizaciones de Estado**: Estadísticas automáticas y actualizadas sobre los jugadores y el estado de la API.
-- **Ayuda Integrada**: Botón de ayuda en todos los menús interactivos para mostrar comandos y funcionalidades.
-- **Botón "Cerrar"**: Todos los menús interactivos incluyen un botón para cerrar el mensaje de manera sencilla.
+Este bot utiliza archivos JSON para almacenar datos persistentes. Estos archivos se crean automáticamente en la raíz del proyecto.
+
+### `bot-state.json`
+
+Este archivo es crucial para el funcionamiento continuo del bot entre reinicios. Almacena el estado principal del bot.
+
+- **`guildId`**: El ID del servidor de Discord donde está configurado el bot.
+- **`channelId`**: El ID del canal donde se encuentra el mensaje de estado/panel.
+- **`messageId`**: El ID del mensaje de estado que el bot necesita encontrar y actualizar.
+
+Gracias a este archivo, si el bot se reinicia, puede localizar inmediatamente el mensaje de estado y continuar actualizándolo sin necesidad de volver a ejecutar el comando de configuración.
+
+### `players.json`
+
+Este archivo funciona como una pequeña base de datos para almacenar información específica de los jugadores.
+
+- **Clave (ID de usuario)**: El ID de Discord del jugador.
+- **`assignedAt`**: La fecha y hora (en formato ISO 8601) de la última vez que el jugador se asignó o actualizó su rango a través del bot.
+
+Este registro permite mostrar la "fecha de registro" en la lista de jugadores, proporcionando un dato útil sobre cuándo se unió un jugador al sistema de rangos.
 
 ## Instalación
 
