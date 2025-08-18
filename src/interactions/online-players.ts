@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  ColorResolvable,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
 import { updateRoleCountMessage } from '../utils/update-status-message';
@@ -83,15 +84,13 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
     const emoji = getRankEmoji(interaction.client, selectedRank);
 
     const embed = new EmbedBuilder()
-      .setColor(role.color || '#95a5a6')
-      .setTitle(
-        `${onlineMembers.size} - Jugadores en línea en ${emoji} ${selectedRank.label}`
-      );
+      .setColor(selectedRank.color as ColorResolvable)
+      .setTitle(`**${emoji}  ${selectedRank.label.toUpperCase()}**`);
+
+    const subtitle = `_(${onlineMembers.size} jugadores en línea)_`;
 
     if (onlineMembers.size === 0) {
-      embed.setDescription(
-        `No hay jugadores en línea en el rango ${selectedRank.label}.`
-      );
+      embed.setDescription(subtitle);
       await interaction.editReply({ embeds: [embed] });
       return;
     }
@@ -111,7 +110,7 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
       })
       .join('\n');
 
-    embed.setDescription(memberList);
+    embed.setDescription(`${subtitle}\n\n${memberList}`);
     await interaction.editReply({ embeds: [embed] });
   } catch (error) {
     console.error('Error al obtener miembros en línea:', error);

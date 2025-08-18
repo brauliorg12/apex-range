@@ -32,7 +32,8 @@ export function getRankEmoji(client: Client, rank: ApexRank): string {
   const emojiId = match[1];
 
   // 1. Intentar encontrar en la caché (método preferido).
-  const emojiFromCache: GuildEmoji | undefined = client.emojis.cache.get(emojiId);
+  const emojiFromCache: GuildEmoji | undefined =
+    client.emojis.cache.get(emojiId);
 
   if (emojiFromCache) {
     // El emoji existe y el bot lo conoce, devolver su representación completa.
