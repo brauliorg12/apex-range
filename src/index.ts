@@ -114,7 +114,7 @@ client.once(Events.ClientReady, async (readyClient) => {
     ? apiStatus.lastChecked.toLocaleString()
     : 'Nunca';
   console.log('------------------------------------------');
-  console.log('      ESTADO DEL SERVIDOR/API  ');
+  console.log('  SERVIDOR/API Apex Range ');
   console.log(
     `  Estado: ${color} ${apiStatus.ok ? 'Conectado' : 'Desconectado'}`
   );
