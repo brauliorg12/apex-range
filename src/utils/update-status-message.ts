@@ -27,7 +27,16 @@ export async function updateRoleCountMessage(guild: Guild) {
 
     // Actualizar botones
     const updatedButtons = createRankButtons(guild.client, guild);
-    await roleSelectionMessage.edit({ components: updatedButtons });
+    try {
+      await roleSelectionMessage.edit({ components: updatedButtons });
+    } catch (error: any) {
+      if (error.code === 10008) {
+        const newMessage = await channel.send({ components: updatedButtons });
+        // Guarda newMessage.id donde corresponda
+      } else {
+        throw error;
+      }
+    }
 
     // Actualizar embed de estadísticas
     const embed = new EmbedBuilder()
@@ -48,11 +57,24 @@ export async function updateRoleCountMessage(guild: Guild) {
     );
 
     const managementButtons = createManagementButtons();
-    await statsMessage.edit({
-      content: '',
-      embeds: [embed],
-      components: [managementButtons],
-    });
+    try {
+      await statsMessage.edit({
+        content: '',
+        embeds: [embed],
+        components: [managementButtons],
+      });
+    } catch (error: any) {
+      if (error.code === 10008) {
+        const newMessage = await channel.send({
+          content: '',
+          embeds: [embed],
+          components: [managementButtons],
+        });
+        // Guarda newMessage.id donde corresponda
+      } else {
+        throw error;
+      }
+    }
   } catch (error) {
     console.error('Error al actualizar el mensaje de conteo de roles:', error);
   }

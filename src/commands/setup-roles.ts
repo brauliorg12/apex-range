@@ -88,9 +88,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
   await updateRoleCountMessage(interaction.guild);
 
-  await interaction.reply({
-    content:
-      '¡El panel de roles y el mensaje de listado han sido configurados!',
-    ephemeral: true,
-  });
+  try {
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({ content: 'Respuesta adicional', ephemeral: true });
+    } else {
+      await interaction.reply({ content: 'Respuesta principal', ephemeral: true });
+    }
+  } catch (error: any) {
+    if (error.code !== 10062) {
+      throw error;
+    }
+    // Si es 10062, ignora o loguea
+  }
 }
