@@ -1,12 +1,12 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { getApiStatus } from '../utils/api-status';
+import { getGlobalApiStatus } from '../utils/global-api-status';
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('api-status')
     .setDescription('Muestra el estado actual de la API externa.'),
   async execute(interaction: ChatInputCommandInteraction) {
-    const status = getApiStatus();
+    const status = getGlobalApiStatus();
     const color = status.ok ? 0x2ecc71 : 0xe74c3c;
     const estado = status.ok ? '🟢 Conectado' : '🔴 Desconectado';
     const lastChecked = status.lastChecked

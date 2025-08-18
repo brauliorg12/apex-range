@@ -14,7 +14,7 @@ import { readState } from './utils/state-manager';
 import { handleButtonInteraction } from './button-interactions';
 import { updateBotPresence } from './utils/presence-helper';
 import { startHealthServer } from './health-server';
-import { getApiStatus } from './utils/api-status';
+import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
 
 dotenv.config();
@@ -108,7 +108,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   }
 
   // --- SECCIÓN NUEVA: Estado del servidor/API ---
-  const apiStatus = getApiStatus();
+  const apiStatus = getGlobalApiStatus();
   const color = apiStatus.ok ? '🟢' : '🔴';
   const lastChecked = apiStatus.lastChecked
     ? apiStatus.lastChecked.toLocaleString()

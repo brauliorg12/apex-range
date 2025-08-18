@@ -1,5 +1,5 @@
 import express from 'express';
-import { getApiStatus } from './utils/api-status';
+import { getGlobalApiStatus } from './utils/global-api-status';
 
 export function startHealthServer() {
   const app = express();
@@ -9,7 +9,7 @@ export function startHealthServer() {
   });
 
   app.get('/api-status', (req, res) => {
-    const status = getApiStatus();
+    const status = getGlobalApiStatus();
     res.json({
       ok: status.ok,
       lastChecked: status.lastChecked ? status.lastChecked.toISOString() : null,

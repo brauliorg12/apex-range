@@ -1,4 +1,4 @@
-import { setApiStatus } from './api-status';
+import { setGlobalApiStatus } from './global-api-status';
 
 export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
   const url = apiUrl || process.env.API_URL;
@@ -6,7 +6,7 @@ export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
     console.warn(
       '[API] No se ha definido la URL de la API para el chequeo de salud.'
     );
-    setApiStatus(false);
+    setGlobalApiStatus(false);
     return false;
   }
   const controller = new AbortController();
@@ -17,16 +17,16 @@ export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
     clearTimeout(timeout);
     if (res.ok) {
       const now = new Date();
-      setApiStatus(true, now);
+      setGlobalApiStatus(true, now);
       console.log(`[API] La API está UP (${now.toLocaleString()})`);
       return true;
     } else {
-      setApiStatus(false);
+      setGlobalApiStatus(false);
       console.warn(`[API] La API respondió con status: ${res.status}`);
       return false;
     }
   } catch (error) {
-    setApiStatus(false);
+    setGlobalApiStatus(false);
     if (error instanceof Error && error.name === 'AbortError') {
       console.error('[API] Timeout al chequear la API.');
     } else {
