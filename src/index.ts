@@ -13,8 +13,13 @@ import { updateRoleCountMessage } from './utils/update-status-message';
 import { readState } from './utils/state-manager';
 import { handleButtonInteraction } from './button-interactions';
 import { updateBotPresence } from './utils/presence-helper';
+import { startHealthServer } from './health-server';
+import { getApiStatus } from './utils/api-status';
+import { checkApiHealth } from './utils/api-health-check';
 
 dotenv.config();
+
+startHealthServer(); // Inicia el endpoint /health
 
 class CustomClient extends Client {
   commands = new Collection<string, any>();
@@ -52,7 +57,10 @@ async function loadCommands() {
   }
 }
 
-const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
+const debounce = <F extends (...args: any[]) => any>(
+  func: F,
+  waitFor: number
+) => {
   let timeout: NodeJS.Timeout;
 
   return (...args: Parameters<F>): void => {
@@ -70,6 +78,10 @@ client.once(Events.ClientReady, async (readyClient) => {
   console.log(`¡Listo! Logueado como ${readyClient.user.tag}`);
   await loadCommands();
 
+  // Chequeo de salud inicial y periódico
+  await checkApiHealth();
+  setInterval(checkApiHealth, 60000);
+
   try {
     const state = await readState();
     if (state.guildId) {
@@ -86,6 +98,21 @@ client.once(Events.ClientReady, async (readyClient) => {
   } catch (error) {
     console.error('Error durante la inicialización del bot:', error);
   }
+
+  // --- SECCIÓN NUEVA: Estado del servidor/API ---
+  const apiStatus = getApiStatus();
+  const color = apiStatus.ok ? '🟢' : '🔴';
+  const lastChecked = apiStatus.lastChecked
+    ? apiStatus.lastChecked.toLocaleString()
+    : 'Nunca';
+  console.log('------------------------------------------');
+  console.log('      ESTADO DEL SERVIDOR/API  ');
+  console.log(
+    `  Estado: ${color} ${apiStatus.ok ? 'Conectado' : 'Desconectado'}`
+  );
+  console.log(`  Última vez chequeado: ${lastChecked}`);
+  console.log('------------------------------------------');
+  // --- FIN SECCIÓN NUEVA ---
 });
 
 client.on(Events.GuildMemberAdd, (member) => {
