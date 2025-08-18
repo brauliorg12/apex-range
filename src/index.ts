@@ -78,22 +78,30 @@ client.once(Events.ClientReady, async (readyClient) => {
   console.log(`¡Listo! Logueado como ${readyClient.user.tag}`);
   await loadCommands();
 
-  // Chequeo de salud inicial y periódico
-  await checkApiHealth();
-  setInterval(checkApiHealth, 60000);
-
   try {
     const state = await readState();
     if (state.guildId) {
       const guild = await readyClient.guilds.fetch(state.guildId);
       await updateRoleCountMessage(guild);
-      await updateBotPresence(readyClient, guild); // Presencia inicial
+      await updateBotPresence(readyClient, guild);
 
-      // Actualizar presencia periódicamente
+      // Actualizar presencia cada 60 segundos
       setInterval(
         () => updateBotPresence(readyClient, guild),
         60000 // cada 60 segundos
       );
+
+      // Chequeo de salud y actualización de embed cada 60 segundos
+      const updateApiStatusEmbed = async () => {
+        await checkApiHealth();
+        await updateRoleCountMessage(guild);
+      };
+
+      // Primer chequeo y actualización al iniciar
+      await updateApiStatusEmbed();
+
+      // Luego cada 60 segundos
+      setInterval(updateApiStatusEmbed, 60000);
     }
   } catch (error) {
     console.error('Error durante la inicialización del bot:', error);

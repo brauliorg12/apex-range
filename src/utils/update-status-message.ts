@@ -38,12 +38,8 @@ export async function updateRoleCountMessage(guild: Guild) {
       }
     }
 
-    // Actualizar embed de estadísticas
-    const embed = new EmbedBuilder()
-      .setColor('#bdc3c7') // Color gris claro
-      .setTitle('Estadísticas de Jugadores');
-
-    embed.setFields(
+    // Solo campos de jugadores
+    const fields = [
       {
         name: 'Registrados',
         value: `👥 - **${stats.total}**`,
@@ -53,8 +49,13 @@ export async function updateRoleCountMessage(guild: Guild) {
         name: 'En Línea',
         value: `🟢 - **${stats.online}**`,
         inline: true,
-      }
-    );
+      },
+    ];
+
+    const embed = new EmbedBuilder()
+      .setColor('#bdc3c7')
+      .setTitle('Estadísticas de Jugadores')
+      .setFields(fields);
 
     const managementButtons = createManagementButtons();
     try {

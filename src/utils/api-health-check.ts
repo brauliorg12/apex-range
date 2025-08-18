@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { setApiStatus } from './api-status';
 
 export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
@@ -10,11 +9,16 @@ export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
     setApiStatus(false);
     return false;
   }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
   try {
-    const res = await fetch(url, { timeout: 5000 });
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     if (res.ok) {
-      setApiStatus(true);
-      console.log('[API] La API está UP');
+      const now = new Date();
+      setApiStatus(true, now);
+      console.log(`[API] La API está UP (${now.toLocaleString()})`);
       return true;
     } else {
       setApiStatus(false);
@@ -23,7 +27,11 @@ export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
     }
   } catch (error) {
     setApiStatus(false);
-    console.error('[API] Error al chequear la API:', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('[API] Timeout al chequear la API.');
+    } else {
+      console.error('[API] Error al chequear la API:', error);
+    }
     return false;
   }
 }

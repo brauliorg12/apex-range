@@ -8,9 +8,13 @@ const apiStatus: ApiStatus = {
   lastChecked: null,
 };
 
-export function setApiStatus(ok: boolean) {
+export function setApiStatus(ok: boolean, lastChecked?: Date) {
   apiStatus.ok = ok;
-  apiStatus.lastChecked = new Date();
+  if (lastChecked) {
+    apiStatus.lastChecked = lastChecked;
+  } else if (!ok) {
+    apiStatus.lastChecked = new Date();
+  }
 }
 
 export function getApiStatus(): ApiStatus {
