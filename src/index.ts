@@ -17,6 +17,7 @@ import { startHealthServer } from './health-server';
 import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
 import { handleRankFilterSelect } from './interactions/show-more';
+import { createUpdateThrottler } from './utils/update-throttler'; // <-- NUEVO
 
 dotenv.config();
 
@@ -58,22 +59,11 @@ async function loadCommands() {
   }
 }
 
-const debounce = <F extends (...args: any[]) => any>(
-  func: F,
-  waitFor: number
-) => {
-  let timeout: NodeJS.Timeout;
-
-  return (...args: Parameters<F>): void => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), waitFor);
-  };
-};
-
-const debouncedUpdate = debounce((guild: Guild) => {
-  updateRoleCountMessage(guild);
-  updateBotPresence(client, guild);
-}, 5000);
+// Throttler: como máximo 1 update por minuto; coalesce eventos
+const throttler = createUpdateThrottler(60_000, async (guild: Guild) => {
+  await updateRoleCountMessage(guild);
+  await updateBotPresence(client, guild);
+});
 
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`¡Listo! Logueado como ${readyClient.user.tag}`);
@@ -83,26 +73,21 @@ client.once(Events.ClientReady, async (readyClient) => {
     const state = await readState();
     if (state.guildId) {
       const guild = await readyClient.guilds.fetch(state.guildId);
-      await updateRoleCountMessage(guild);
-      await updateBotPresence(readyClient, guild);
 
-      // Actualizar presencia cada 60 segundos
-      setInterval(
-        () => updateBotPresence(readyClient, guild),
-        60000 // cada 60 segundos
-      );
+      // Disparo inicial (entra al throttling si corresponde)
+      throttler.requestUpdate(guild);
 
-      // Chequeo de salud y actualización de embed cada 60 segundos
+      // Chequeo de salud y actualización de embed cada 60 segundos (coalescida por el throttler)
       const updateApiStatusEmbed = async () => {
         await checkApiHealth();
-        await updateRoleCountMessage(guild);
+        throttler.requestUpdate(guild);
       };
 
       // Primer chequeo y actualización al iniciar
       await updateApiStatusEmbed();
 
       // Luego cada 60 segundos
-      setInterval(updateApiStatusEmbed, 60000);
+      setInterval(updateApiStatusEmbed, 60_000);
     }
   } catch (error) {
     console.error('Error durante la inicialización del bot:', error);
@@ -124,18 +109,17 @@ client.once(Events.ClientReady, async (readyClient) => {
   // --- FIN SECCIÓN NUEVA ---
 });
 
+// Eventos que disparan actualización coalescida
 client.on(Events.GuildMemberAdd, (member) => {
-  debouncedUpdate(member.guild);
+  throttler.requestUpdate(member.guild);
 });
 
 client.on(Events.GuildMemberRemove, (member) => {
-  debouncedUpdate(member.guild);
+  throttler.requestUpdate(member.guild);
 });
 
 client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
-  if (newPresence.guild) {
-    debouncedUpdate(newPresence.guild);
-  }
+  if (newPresence.guild) throttler.requestUpdate(newPresence.guild);
 });
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
