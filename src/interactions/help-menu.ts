@@ -17,7 +17,11 @@ export async function handleHelpMenu(interaction: ButtonInteraction) {
         '**/total-jugadores** — Muestra el número total de jugadores con un rol de rango.',
         '**/api-status** — Muestra el estado actual de la API externa.',
         '',
-        'También puedes usar los botones para gestionar tu rango o ver jugadores en línea.',
+        'Botones disponibles:',
+        '• Gestionar Rango — Selecciona o cambia tu rango.',
+        '• Todos los Jugadores — Lista completa con fecha de registro.',
+        '• Ayuda — Abre este menú.',
+        '• Cerrar — Cierra el mensaje actual.',
       ].join('\n')
     );
 

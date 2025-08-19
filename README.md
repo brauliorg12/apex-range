@@ -8,7 +8,6 @@ Un bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex L
 - Panel de control interactivo con botones.
 - Mensaje de estado que se actualiza automáticamente con el recuento de jugadores por rango.
 - Listado de todos los jugadores registrados con su rango y fecha de registro.
-- Listado de jugadores en línea por rango.
 - Comandos slash para una fácil interacción.
 
 ## Tecnologías Utilizadas
@@ -138,12 +137,12 @@ Una vez que el bot esté en funcionamiento y añadido a tu servidor de Discord, 
 - `/total-jugadores`: Muestra el número total de jugadores con un rol de rango de Apex Legends.
 - `/api-status`: Muestra el estado actual de la API externa.
 
-Además, los usuarios pueden interactuar con los botones para:
+Además, los usuarios pueden interactuar con los botones:
 
-- Gestionar su rango.
-- Ver jugadores en línea por rango.
-- Acceder a la ayuda de comandos.
-- Cerrar cualquier mensaje interactivo con el botón "Cerrar".
+- Gestionar Rango — Selecciona o cambia tu rango.
+- Todos los Jugadores — Lista completa con fecha de registro.
+- Ayuda — Abre el menú de ayuda.
+- Cerrar — Cierra el mensaje actual.
 
 ## Contribución
 
