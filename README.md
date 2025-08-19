@@ -129,6 +129,118 @@ El bot necesita los siguientes permisos:
 - Usar emojis externos
 - Gestionar mensajes (para fijar mensajes de estadísticas)
 
+## Gráficos con @napi-rs/canvas
+
+Este proyecto utiliza @napi-rs/canvas para generar imágenes (cards) dinámicas que se adjuntan en los mensajes de Discord. Esta librería es un binding nativo muy rápido que expone una API compatible con Canvas (2D).
+
+- Paquete: @napi-rs/canvas
+- Uso principal: renderizar avatares circulares, superponer “badges” de rango y dibujar etiquetas (nombres de usuario).
+
+### Qué generamos hoy
+
+- Card “Últimos 5 registrados” (recent-avatars-card):
+  - Avatares circulares de los últimos jugadores registrados.
+  - Badge de rango en la esquina inferior derecha del avatar (emoji custom vía CDN o Unicode).
+  - Nombre de usuario centrado bajo cada avatar, con elipsis si no entra.
+
+Arquitectura:
+
+- src/utils/recent-avatars-card.ts: Orquesta datos (fetch, emojis, nombres) y arma el embed.
+- src/utils/recent-avatars-canvas.ts: Renderer reutilizable que dibuja y devuelve el PNG.
+
+### Renderer reutilizable
+
+Archivo: src/utils/recent-avatars-canvas.ts
+
+- API:
+  - renderRecentAvatarsCanvas(items, options) => { buffer, encodeMs, width, height }
+  - items: array de { avatar, badgeImg?, badgeText?, label }
+    - avatar: imagen ya decodificada (loadImage) o null (se dibuja placeholder).
+    - badgeImg: imagen del emoji de rango (si es custom).
+    - badgeText: texto/emoji Unicode del rango (si no hay imagen).
+    - label: nombre a mostrar bajo el avatar.
+  - options:
+    - size: tamaño del avatar (px). Default: 128
+    - pad: padding entre avatares (px). Default: 16
+    - labelHeight: alto de la banda inferior para el nombre. Default: 36
+
+Ejemplo de uso para otra card:
+
+```ts
+import { loadImage } from '@napi-rs/canvas';
+import { renderRecentAvatarsCanvas } from './utils/recent-avatars-canvas';
+
+// Preparar items (cada avatar ya decodificado o null)
+const items = [
+  { avatar: await loadImage(buf1), label: 'Jugador 1' },
+  { avatar: await loadImage(buf2), label: 'Jugador 2', badgeText: '⭐' },
+  // ...
+];
+
+const { buffer } = await renderRecentAvatarsCanvas(items, {
+  size: 128,
+  pad: 16,
+  labelHeight: 36,
+});
+// buffer es un PNG listo para adjuntar a un Embed
+```
+
+### Emojis de rango
+
+- Emojis personalizados de Discord: se resuelven a PNG vía CDN (https://cdn.discordapp.com/emojis/{id}.png?size=64) y se decodifican con loadImage.
+- Emojis Unicode: se dibujan como texto dentro de un recorte circular, con un borde sutil para legibilidad.
+
+Nota: El renderer no hace fetch ni decodifica imágenes; esa responsabilidad queda del caller (para mantener responsabilidad única y facilitar testeo).
+
+### Fuentes
+
+- Por defecto usa “sans-serif” del sistema.
+- Para una tipografía consistente, puedes registrar una fuente antes de renderizar:
+
+```ts
+import { registerFont } from '@napi-rs/canvas';
+registerFont('/ruta/a/Inter-Regular.ttf', { family: 'Inter' });
+registerFont('/ruta/a/Inter-Bold.ttf', { family: 'Inter', weight: '700' });
+// Luego usa ctx.font = '700 22px Inter';
+```
+
+### Rendimiento y buenas prácticas
+
+- Decodificación: usa loadImage(Buffer) y reutiliza resultados si vas a renderizar varias cards.
+- Concurrencia: limita el número de fetch/decodificaciones simultáneas si amplías el número de avatares.
+- Tamaños:
+  - size grande => más píxeles a dibujar/encodear.
+  - labelHeight suficiente si subes la fuente (el renderer usa elipsis).
+- Encode: canvas.encode('png') es síncrono-async; el renderer devuelve encodeMs para tus métricas.
+- Throttling: este repo ya incluye un throttler para coalescer actualizaciones (ver src/utils/update-throttler.ts).
+
+### Requisitos y compatibilidad
+
+- Node.js 18+ recomendado (N-API estable).
+- @napi-rs/canvas trae binarios precompilados para plataformas soportadas.
+- En entornos Linux minimalistas/Docker, asegúrate de tener:
+  - glibc adecuada para tu versión de Node.
+  - Paquetes de fuentes (ej: fonts-dejavu) para evitar reemplazos pobres.
+
+### Solución de problemas
+
+- “Error loading shared library” al iniciar:
+  - Actualiza a una imagen base con glibc compatible con tu Node o usa una versión LTS reciente.
+- Texto/emoji se ven “finos” o “cuadrados”:
+  - Instala un pack de fuentes o registra fuentes manualmente.
+- Emojis custom no visibles:
+  - Verifica que la cadena del emoji sea del tipo <a?:name:id> y que el bot tenga permiso de “Usar emojis externos”.
+- PNG en blanco o corrupto:
+  - Asegúrate de esperar la promesa de renderRecentAvatarsCanvas y de adjuntar el buffer retornado.
+
+### Extender a más cards
+
+- Reutiliza renderRecentAvatarsCanvas cambiando:
+  - label para otras descripciones (p.ej. K/D, nivel, etc.).
+  - badgeImg/badgeText para iconos específicos.
+  - options (size, pad, labelHeight) para otras densidades.
+- Si necesitas un layout en 2 filas/tabla, puedes crear un renderer similar que itere filas/columnas y reutilice los helpers de badge/label.
+
 ## Uso
 
 Una vez que el bot esté en funcionamiento y añadido a tu servidor de Discord, puedes usar los siguientes comandos:
