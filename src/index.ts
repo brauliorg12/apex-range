@@ -16,6 +16,7 @@ import { updateBotPresence } from './utils/presence-helper';
 import { startHealthServer } from './health-server';
 import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
+import { handleRankFilterSelect } from './interactions/show-more';
 
 dotenv.config();
 
@@ -194,6 +195,25 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       } else {
         await interaction.reply({
           content: '¡Hubo un error al procesar este botón!',
+          ephemeral: true,
+        });
+      }
+    }
+  } else if (interaction.isStringSelectMenu()) {
+    try {
+      if (interaction.customId === 'RANK_FILTER') {
+        await handleRankFilterSelect(interaction);
+      }
+    } catch (error) {
+      console.error('[ERROR] Error al manejar el select:', error);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({
+          content: '¡Hubo un error al procesar tu selección!',
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: '¡Hubo un error al procesar tu selección!',
           ephemeral: true,
         });
       }

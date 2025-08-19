@@ -41,7 +41,7 @@ export function createRankButtons(
 }
 
 export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
-  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId('show_all_players_menu')
       .setLabel('Ver todos los jugadores')
@@ -58,6 +58,8 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
       .setEmoji('❓')
       .setStyle(ButtonStyle.Secondary)
   );
+
+  return row;
 }
 
 export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
