@@ -35,10 +35,21 @@ Gracias a este archivo, si el bot se reinicia, puede localizar inmediatamente el
 
 Este archivo funciona como una pequeña base de datos para almacenar información específica de los jugadores.
 
-- **Clave (ID de usuario)**: El ID de Discord del jugador.
+Nueva estructura (más clara y extensible):
+
+```json
+[
+  {
+    "userId": "123456789012345678",
+    "assignedAt": "2025-08-18T20:38:51.842Z"
+  }
+]
+```
+
+- **`userId`**: El ID de Discord del jugador.
 - **`assignedAt`**: La fecha y hora (en formato ISO 8601) de la última vez que el jugador se asignó o actualizó su rango a través del bot.
 
-Este registro permite mostrar la "fecha de registro" en la lista de jugadores, proporcionando un dato útil sobre cuándo se unió un jugador al sistema de rangos.
+Migración automática: si ya tienes un `players.json` en el formato antiguo (objeto indexado por `userId`), el bot lo convertirá automáticamente a este nuevo formato la próxima vez que lea el archivo.
 
 ## Instalación
 

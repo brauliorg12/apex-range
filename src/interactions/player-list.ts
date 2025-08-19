@@ -8,6 +8,7 @@ import { APEX_RANKS } from '../constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
+import type { PlayerRecord } from '../utils/player-data-manager';
 
 interface Player {
   member: GuildMember;
@@ -41,6 +42,11 @@ export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
       getAllRankedPlayers(interaction.guild),
       getPlayerData(),
     ]);
+
+    // Crear un índice por userId para acceso O(1)
+    const playerDateById = new Map<string, string>(
+      (playerData as PlayerRecord[]).map((p) => [p.userId, p.assignedAt])
+    );
 
     if (players.length === 0) {
       const emptyEmbed = new EmbedBuilder()
@@ -80,11 +86,9 @@ export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
       if (membersInRank.length > 0) {
         description += membersInRank
           .map((m, index) => {
-            const assignedData = playerData[m.id];
-            const dateString = assignedData
-              ? ` - _${new Date(assignedData.assignedAt).toLocaleDateString(
-                  'es-ES'
-                )}_`
+            const assignedAt = playerDateById.get(m.id);
+            const dateString = assignedAt
+              ? ` - _${new Date(assignedAt).toLocaleDateString('es-ES')}_`
               : '';
             return `${index + 1}. \`${m.displayName}\`${dateString}`;
           })
