@@ -11,6 +11,7 @@ import { createRankButtons, createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
 import { APEX_RANKS } from '../constants';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
+import { buildRanksHeaderAttachment } from './ranks-header-card'; // <-- NUEVO
 
 export async function updateRoleCountMessage(guild: Guild) {
   try {
@@ -72,15 +73,17 @@ export async function updateRoleCountMessage(guild: Guild) {
     // Cards
     const recentCard = await buildRecentAvatarsCard(guild);
 
-    // Header con imagen anterior (env RANKS_HEADER_IMAGE_URL)
-    const headerImageUrl = process.env.RANKS_HEADER_IMAGE_URL;
+    // Header con canvas: mantenemos título/descr. del embed, solo reemplazamos la imagen
+    const headerAttachment = await buildRanksHeaderAttachment(guild); // <-- NUEVO
     const headerEmbed = new EmbedBuilder()
       .setColor('#ffffff')
       .setDescription(
         '🛡️ **Jugadores por Rango**\n' +
           '> Puede clickear sobre los jugadores para interactuar'
       )
-      .setImage(headerImageUrl || '');
+      .setImage(
+        headerAttachment ? `attachment://${headerAttachment.name}` : ''
+      ); // <-- NUEVO
 
     // Filtro por rango
     const rankFilterRow =
@@ -93,16 +96,17 @@ export async function updateRoleCountMessage(guild: Guild) {
           )
       );
 
-    // Orden: estadísticas -> (opcional) últimos 5 (con avatares) -> header rangos -> listado online
+    // Orden: estadísticas -> (opcional) últimos 5 -> header rangos -> listado online
     const embedsToSend = [
       embed,
       ...(recentCard ? [recentCard.embed] : []),
-      headerEmbed,
+      headerEmbed, // <-- NUEVO (se mantiene el lugar)
       ...onlineEmbeds,
     ];
 
-    // Adjuntos combinados (solo el card de "últimos 5")
+    // Adjuntos combinados (header + últimos 5)
     const filesToSend = [
+      ...(headerAttachment ? [headerAttachment.attachment] : []), // <-- NUEVO
       ...(recentCard ? recentCard.files : []),
     ];
 
@@ -111,7 +115,6 @@ export async function updateRoleCountMessage(guild: Guild) {
         content: '',
         embeds: embedsToSend,
         components: [createManagementButtons(), rankFilterRow],
-        attachments: [],
         files: filesToSend,
       });
     } catch (error: any) {
