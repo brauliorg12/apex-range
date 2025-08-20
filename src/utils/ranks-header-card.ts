@@ -49,57 +49,6 @@ const loadHeaderBg = async (): Promise<any | null> => {
   }
 };
 
-export async function buildRanksHeaderCard(guild: Guild) {
-  try {
-    // Preparar íconos de rango
-    const iconImages = await Promise.all(
-      APEX_RANKS.map(async (rk) => {
-        const emoji = getRankEmoji(guild.client, rk) || rk.icon || '';
-        const cdn = emojiToCdnPng(emoji);
-        if (cdn) {
-          const r = await fetchWithTimeout(cdn, 6000);
-          if (r.ok && r.buffer) {
-            try {
-              const img = await loadImage(r.buffer);
-              return { img, label: rk.label };
-            } catch {
-              return { img: null, label: rk.label };
-            }
-          }
-        }
-        // Sin CDN: placeholder (se dibuja '?'), aún mostramos la etiqueta
-        return { img: null, label: rk.label };
-      })
-    );
-
-    const bgImg = await loadHeaderBg(); // <-- NUEVO
-
-    const { buffer } = await renderRanksHeaderCanvas(iconImages, {
-      iconSize: 96,
-      pad: 24,
-      title: 'Jugadores por Rango',
-      showLabels: true,
-      accentHex: '#e74c3c',
-      background: { image: bgImg, overlayAlpha: 0.4, decorations: 'none' }, // <-- CAMBIO
-      topBarHeight: 4, // <-- NUEVO
-      bottomHairline: true, // <-- NUEVO
-      hairlineAlpha: 0.4, // <-- NUEVO
-    });
-
-    const attachmentName = 'ranks-header.png';
-    const attachment = new AttachmentBuilder(buffer, { name: attachmentName });
-
-    const embed = new EmbedBuilder()
-      .setColor('#ffffff')
-      .setImage(`attachment://${attachmentName}`);
-
-    return { embed, files: [attachment] };
-  } catch (e) {
-    console.error('[HeaderCard] Error al construir la card:', e);
-    return null;
-  }
-}
-
 // NUEVO: solo el attachment para embebido en el header existente
 export async function buildRanksHeaderAttachment(guild: Guild) {
   try {

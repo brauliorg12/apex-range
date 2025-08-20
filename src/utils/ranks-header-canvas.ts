@@ -173,6 +173,7 @@ export async function renderRanksHeaderCanvas(
   width: number;
   height: number;
 }> {
+  // TODO revisar si se utiliza
   const iconSize = opts.iconSize ?? 96;
   const pad = opts.pad ?? 24;
   const title = opts.title ?? 'Jugadores por Rango';

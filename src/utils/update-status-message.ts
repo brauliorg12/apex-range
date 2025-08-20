@@ -11,7 +11,6 @@ import { createRankButtons, createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
 import { APEX_RANKS } from '../constants';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
-import { buildRanksHeaderAttachment } from './ranks-header-card'; // <-- NUEVO
 
 export async function updateRoleCountMessage(guild: Guild) {
   try {
@@ -73,17 +72,13 @@ export async function updateRoleCountMessage(guild: Guild) {
     // Cards
     const recentCard = await buildRecentAvatarsCard(guild);
 
-    // Header con canvas: mantenemos título/descr. del embed, solo reemplazamos la imagen
-    const headerAttachment = await buildRanksHeaderAttachment(guild); // <-- NUEVO
+    // Header “Jugadores por Rango” sin imagen (solo texto)
     const headerEmbed = new EmbedBuilder()
       .setColor('#ffffff')
       .setDescription(
         '🛡️ **Jugadores por Rango**\n' +
           '> Puede clickear sobre los jugadores para interactuar'
-      )
-      .setImage(
-        headerAttachment ? `attachment://${headerAttachment.name}` : ''
-      ); // <-- NUEVO
+      );
 
     // Filtro por rango
     const rankFilterRow =
@@ -100,13 +95,12 @@ export async function updateRoleCountMessage(guild: Guild) {
     const embedsToSend = [
       embed,
       ...(recentCard ? [recentCard.embed] : []),
-      headerEmbed, // <-- NUEVO (se mantiene el lugar)
+      headerEmbed,
       ...onlineEmbeds,
     ];
 
-    // Adjuntos combinados (header + últimos 5)
+    // Adjuntos combinados (solo “últimos 5”)
     const filesToSend = [
-      ...(headerAttachment ? [headerAttachment.attachment] : []), // <-- NUEVO
       ...(recentCard ? recentCard.files : []),
     ];
 
