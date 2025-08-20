@@ -9,7 +9,6 @@ import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { createRankButtons } from '../utils/button-helper';
-import { buildRanksHeaderAttachment } from '../utils/ranks-header-card'; // <-- NUEVO
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -53,21 +52,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const buttonRows = createRankButtons(interaction.client, interaction.guild);
 
-  // Header con canvas: mantenemos título/descr. del embed, solo reemplazamos la imagen
-  const headerAttachment = await buildRanksHeaderAttachment(interaction.guild!); // <-- NUEVO
-
   const roleSelectionEmbed = new EmbedBuilder()
     .setColor('#95a5a6') // Color gris
     .setTitle('Selección de Rango')
     .setDescription(
       'Selecciona tu rango actual en Apex Legends para que otros jugadores puedan encontrarte.'
-    )
-    .setImage(headerAttachment ? `attachment://${headerAttachment.name}` : ''); // <-- NUEVO
+    );
 
   const roleSelectionMessage = await channel.send({
     embeds: [roleSelectionEmbed],
     components: buttonRows,
-    files: headerAttachment ? [headerAttachment.attachment] : [], // <-- NUEVO
   });
 
   const roleCountMessage = await channel.send({

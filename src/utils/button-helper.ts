@@ -14,18 +14,9 @@ export function createRankButtons(
 ): ActionRowBuilder<ButtonBuilder>[] {
   const buildButtons = (ranks: typeof APEX_RANKS) => {
     return ranks.map((rank) => {
-      const role = guild.roles.cache.find((r) => r.name === rank.roleName);
-      let label = rank.label;
-      if (role) {
-        const totalCount = role.members.size;
-        // Limitar la longitud de la etiqueta para evitar errores de Discord
-        const labelText = `${rank.label} - ${totalCount}`;
-        label = labelText.length > 80 ? rank.label : labelText;
-      }
-
       return new ButtonBuilder()
         .setCustomId(rank.shortId)
-        .setLabel(label)
+        .setLabel(rank.label)
         .setEmoji(getRankEmoji(client, rank))
         .setStyle(ButtonStyle.Secondary);
     });
