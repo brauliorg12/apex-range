@@ -183,19 +183,6 @@ const { buffer } = await renderRecentAvatarsCanvas(items, {
 // buffer es un PNG listo para adjuntar a un Embed
 ```
 
-### Imagen de fondo del header (opcional)
-
-Puedes personalizar el fondo del header de “Jugadores por Rango” con una imagen propia (por ejemplo, un recorte del mapa o arte que tengas permiso para usar). Define la variable:
-
-```
-RANKS_HEADER_BG_URL=https://tu.cdn.local/mi-fondo-apex.png
-```
-
-Notas:
-- Usa solo material con derechos adecuados. Evita enlaces que puedan caer o cambiar sin aviso.
-- La imagen se ajusta con “cover” y se oscurece sutilmente para mejorar el contraste de los iconos/etiquetas.
-- Si no se define, se usa un fondo estilizado sin patrones “rallados”.
-
 ### Emojis de rango
 
 - Emojis personalizados de Discord: se resuelven a PNG vía CDN (https://cdn.discordapp.com/emojis/{id}.png?size=64) y se decodifican con loadImage.
