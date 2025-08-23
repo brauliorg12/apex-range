@@ -2,9 +2,11 @@
 
 Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en tu servidor, con panel interactivo, estadísticas y cards visuales.
 
+![CI](https://github.com/brauliorg12/discord-apex/actions/workflows/ci-cd.yml/badge.svg)
 ![Version](https://img.shields.io/github/v/release/brauliorg12/discord-apex)
 ![License](https://img.shields.io/github/license/brauliorg12/discord-apex)
-![Docker](https://img.shields.io/docker/automated/brauliorg12/discord-apex)
+![GHCR Pulls](https://img.shields.io/badge/GHCR-pulls-blue?logo=github)
+![Docker Pulls](https://img.shields.io/docker/pulls/brauliorg12/discord-apex)
 
 ---
 
@@ -202,11 +204,16 @@ Migración automática de formatos antiguos incluida.
 
 ---
 
-## 🐳 Docker & CI/CD
+## 🐳 Docker
 
-- Imágenes pre-construidas disponibles (próximamente).
-- Build multi-arquitectura.
-- Pipeline automática con tests, build y publicación.
+Puedes ejecutar el bot fácilmente usando Docker desde GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/brauliorg12/discord-apex:latest
+docker run -e DISCORD_TOKEN=TU_TOKEN -e CLIENT_ID=TU_CLIENT_ID ghcr.io/brauliorg12/discord-apex:latest
+```
+
+Asegúrate de pasar las variables de entorno necesarias (`DISCORD_TOKEN`, `CLIENT_ID`, etc).
 
 ---
 
@@ -246,4 +253,3 @@ MIT License - Ver [LICENSE](LICENSE) para detalles.
 ⭐ ¡Dale una estrella en GitHub! ⭐
 
 [Reportar Bug](https://github.com/brauliorg12/discord-apex/issues) • [Solicitar Feature](https://github.com/brauliorg12/discord-apex/issues) • [Discusiones](https://github.com/brauliorg12/discord-apex/discussions)
-````

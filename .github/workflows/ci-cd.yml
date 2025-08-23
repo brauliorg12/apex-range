@@ -1,0 +1,55 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configura Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Instala dependencias
+        run: npm ci
+
+      - name: Compila TypeScript
+        run: npm run build
+
+      # Si tienes tests, descomenta la siguiente línea
+      # - name: Ejecuta tests
+      #   run: npm test
+
+  docker:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag' || github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Login a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construye y publica imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
