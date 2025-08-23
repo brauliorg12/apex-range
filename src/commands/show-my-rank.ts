@@ -22,9 +22,18 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
 
     const member = await interaction.guild.members.fetch(interaction.targetId);
 
+    // Si el objetivo es un bot, muestra un mensaje especial
+    if (member.user.bot) {
+      await interaction.reply({
+        content: 'Este comando no está disponible para bots.',
+        ephemeral: true,
+      });
+      return;
+    }
+
     // Busca si tiene algún rol de rango
-    const userRank = APEX_RANKS.find(rank =>
-      member.roles.cache.some(role => role.name === rank.roleName)
+    const userRank = APEX_RANKS.find((rank) =>
+      member.roles.cache.some((role) => role.name === rank.roleName)
     );
 
     // Usa el botón cerrar global del helper
@@ -37,8 +46,10 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       const mention = `<@${member.id}>`;
 
       const embed = new EmbedBuilder()
-        .setColor(userRank.color as any || '#95a5a6')
-        .setTitle(isSelf ? 'Tu rango en Apex Legends' : `Rango de ${displayName}`)
+        .setColor((userRank.color as any) || '#95a5a6')
+        .setTitle(
+          isSelf ? 'Tu rango en Apex Legends' : `Rango de ${displayName}`
+        )
         .setDescription(
           isSelf
             ? `Actualmente tienes el rango: ${emoji} **${userRank.label}**`
@@ -68,7 +79,10 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       await interaction.reply({
         embeds: [embed],
         components: isSelf
-          ? [...createRankButtons(interaction.client, interaction.guild), closeButton]
+          ? [
+              ...createRankButtons(interaction.client, interaction.guild),
+              closeButton,
+            ]
           : [closeButton],
         ephemeral: true,
       });
