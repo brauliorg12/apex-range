@@ -1,101 +1,149 @@
-# Apex Legends Rank Bot
+# 🛡️ Apex Legends Rank Bot
 
-Un bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en un servidor.
+Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en tu servidor, con panel interactivo, estadísticas y cards visuales.
 
-## Características
+![Version](https://img.shields.io/github/v/release/brauliorg12/discord-apex)
+![License](https://img.shields.io/github/license/brauliorg12/discord-apex)
+![Node](https://img.shields.io/node/v/discord.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
+![Docker](https://img.shields.io/docker/automated/brauliorg12/discord-apex)
 
-- Asignación de roles según el rango en Apex Legends.
-- Panel de control interactivo con botones.
-- Mensaje de estado que se actualiza automáticamente con el recuento de jugadores por rango.
-- Listado de todos los jugadores registrados con su rango y fecha de registro.
-- Comandos slash para una fácil interacción.
+---
 
-## Tecnologías Utilizadas
+## 🚀 ¿Qué es Apex Legends Rank Bot?
 
-- **Node.js**: Entorno de ejecución de JavaScript del lado del servidor.
-- **TypeScript**: Tipado estático sobre JavaScript.
-- **Discord.js**: Librería para interactuar con la API de Discord.
+Un bot profesional para comunidades de Apex Legends que permite:
 
-## Archivos de Datos (JSON)
+- Asignar roles de rango mediante botones.
+- Mostrar estadísticas y cards visuales de jugadores.
+- Panel persistente y configurable.
+- Comandos slash y de contexto para gestión avanzada.
 
-Este bot utiliza archivos JSON para almacenar datos persistentes. Estos archivos se crean automáticamente en la raíz del proyecto.
+---
 
-### `bot-state.json`
+## 🟢 Comandos Disponibles
 
-Este archivo es crucial para el funcionamiento continuo del bot entre reinicios. Almacena el estado principal del bot.
+| Comando / Acción               | Descripción                                                        | Permisos      |
+| ------------------------------ | ------------------------------------------------------------------ | ------------- |
+| `/setup-roles`                 | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
+| `/total-jugadores`             | Muestra el número total de jugadores con rango                     | Todos         |
+| `Ver mi rango Apex` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
 
-- **`guildId`**: El ID del servidor de Discord donde está configurado el bot.
-- **`channelId`**: El ID del canal donde se encuentra el mensaje de estado/panel.
-- **`messageId`**: El ID del mensaje de estado que el bot necesita encontrar y actualizar.
+> **Nota:** El comando de contexto aparece al hacer click derecho sobre un usuario.
 
-Gracias a este archivo, si el bot se reinicia, puede localizar inmediatamente el mensaje de estado y continuar actualizándolo sin necesidad de volver a ejecutar el comando de configuración.
+---
 
-### `players.json`
+## 🧑‍💼 Comando de Contexto: Ver mi rango Apex
 
-Este archivo funciona como una pequeña base de datos para almacenar información específica de los jugadores.
+Puedes ver el rango de cualquier usuario (incluyéndote a ti mismo) usando el menú contextual:
 
-Nueva estructura (más clara y extensible):
+1. Haz **click derecho** sobre el nombre de usuario (en la lista de miembros o en el chat).
+2. Selecciona **"Ver mi rango Apex"** en la sección de Apps.
 
-```json
-[
-  {
-    "userId": "123456789012345678",
-    "assignedAt": "2025-08-18T20:38:51.842Z"
-  }
-]
+### Funcionamiento:
+
+- **Si eres tú mismo:**
+
+  - El embed muestra:
+    - "Tu rango en Apex Legends"
+    - El rango actual con su color y emoji
+    - Botones para gestionar tu rango y cerrar el mensaje
+  - Si no tienes rango, te permite seleccionarlo directamente.
+
+- **Si es otro usuario:**
+
+  - El embed muestra:
+    - "Rango de [nombre]"
+    - El rango actual del usuario con color y emoji
+    - Solo el botón "Cerrar"
+  - Si el usuario no tiene rango, lo indica claramente.
+
+- **Botón "Cerrar":**
+  - Siempre disponible para cerrar el mensaje ephemeral.
+
+> Este comando es privado (ephemeral) y solo visible para quien lo ejecuta.
+
+---
+
+## 🎛️ Panel Interactivo
+
+- **Botones para seleccionar rango**: Elige tu rango y el bot te asigna el rol correspondiente.
+- **Gestión de rango**: Cambia o elimina tu rango fácilmente.
+- **Estadísticas en tiempo real**: Ve cuántos jugadores hay por rango y quiénes están online.
+- **Cards visuales**: Avatares de los últimos registrados y listados por rango.
+
+---
+
+## ✨ Características principales
+
+- Panel persistente y auto-actualizable.
+- Cards generadas con @napi-rs/canvas para máxima calidad.
+- Filtros por rango y gestión desde el propio canal.
+- Comandos slash y menú contextual profesional.
+- Migración automática de datos antiguos.
+- Logs claros y monitoreo de estado/API.
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+- `src/commands/`: Comandos slash y de contexto.
+- `src/utils/`: Helpers, renderers de cards, lógica de estadísticas.
+- `src/interactions/`: Handlers de botones y selects.
+- `src/index.ts`: Punto de entrada principal.
+- `src/deploy-commands.ts`: Script para desplegar comandos.
+
+---
+
+## ⚙️ Instalación y Configuración
+
+### 1. Clona el repositorio
+
+```bash
+git clone https://github.com/brauliorg12/discord-apex.git
+cd discord-apex
 ```
 
-- **`userId`**: El ID de Discord del jugador.
-- **`assignedAt`**: La fecha y hora (en formato ISO 8601) de la última vez que el jugador se asignó o actualizó su rango a través del bot.
+### 2. Instala dependencias
 
-Migración automática: si ya tienes un `players.json` en el formato antiguo (objeto indexado por `userId`), el bot lo convertirá automáticamente a este nuevo formato la próxima vez que lea el archivo.
+```bash
+npm install
+```
 
-## Instalación
+### 3. Configura el archivo `.env`
 
-1. **Clona el repositorio**:
+Crea un archivo `.env` en la raíz con:
 
-   ```bash
-   git clone https://github.com/your-username/discord-apex.git
-   cd discord-apex
-   ```
+```
+DISCORD_TOKEN=TU_TOKEN_DEL_BOT
+CLIENT_ID=TU_CLIENT_ID
+```
 
-2. **Instala las dependencias**:
+### 4. Compila el proyecto
 
-   ```bash
-   npm install
-   ```
+```bash
+npm run build
+```
 
-3. **Configura tu bot**:  
-   Crea un archivo `.env` en el directorio raíz con el token de tu bot de Discord.  
-   Nota: el encabezado de rangos ahora se genera localmente con canvas, no se requiere URL externa.
+### 5. Despliega los comandos
 
-   ```
-   DISCORD_TOKEN=TU_TOKEN_DEL_BOT
-   ```
+```bash
+npm run deploy-commands
+```
 
-4. **Compila el proyecto**:
+### 6. Ejecuta el bot
 
-   ```bash
-   npm run build
-   ```
+```bash
+npm run dev
+```
 
-5. **Despliega los comandos de barra (slash commands)**:
+---
 
-   ```bash
-   npx ts-node src/deploy-commands.ts
-   ```
+## 🛠️ Configuración Discord
 
-6. **Ejecuta el bot**:
+### Roles requeridos
 
-   ```bash
-   npm run dev
-   ```
-
-## Configuración del Servidor de Discord
-
-### 1. Creación de Roles
-
-Debes crear los siguientes roles en tu servidor (los nombres deben coincidir exactamente):
+Crea estos roles en tu servidor (nombres exactos):
 
 - Bronce
 - Plata
@@ -105,159 +153,90 @@ Debes crear los siguientes roles en tu servidor (los nombres deben coincidir exa
 - Maestro
 - Apex Predator
 
-### 2. Subida de Emojis de Rango
+### Emojis personalizados
 
-Sube los siguientes emojis personalizados y asígnales los nombres correctos:
+Sube los emojis de rango y asígnales los nombres correctos, por ejemplo:
 
 - `Ranked_Tier1_Bronze.webp` como `:Ranked_Tier1_Bronze:`
-- `Ranked_Tier2_Silver.webp` como `:Ranked_Tier2_Silver:`
-- `Ranked_Tier3_Gold.webp` como `:Ranked_Tier3_Gold:`
-- `Ranked_Tier4_Platinum.webp` como `:Ranked_Tier4_Platinum:`
-- `Ranked_Tier5_Diamond.webp` como `:Ranked_Tier5_Diamond:`
-- `Ranked_Tier6_Master.webp` como `:Ranked_Tier6_Master:`
-- `Ranked_Tier7_Apex_Predator.webp` como `:Ranked_Tier7_Apex_Predator:`
+- ... (uno por cada rango)
 
-### 3. Permisos del Bot
-
-El bot necesita los siguientes permisos:
+### Permisos del bot
 
 - Gestionar roles
 - Enviar mensajes
 - Leer historial de mensajes
 - Usar emojis externos
-- Gestionar mensajes (para fijar mensajes de estadísticas)
+- Gestionar mensajes
 
-## Gráficos con @napi-rs/canvas
+---
 
-Este proyecto utiliza @napi-rs/canvas para generar imágenes (cards) dinámicas que se adjuntan en los mensajes de Discord. Esta librería es un binding nativo muy rápido que expone una API compatible con Canvas (2D).
+## 🖼️ Cards y Estadísticas Visuales
 
-- Paquete: @napi-rs/canvas
-- Uso principal: renderizar avatares circulares, superponer “badges” de rango y dibujar etiquetas (nombres de usuario).
+El bot genera imágenes dinámicas con los avatares y rangos de los jugadores usando [@napi-rs/canvas](https://www.npmjs.com/package/@napi-rs/canvas).  
+Las cards muestran los últimos registrados y los jugadores online por rango, todo en alta calidad.
 
-### Qué generamos hoy
+---
 
-- Card “Últimos 5 registrados” (recent-avatars-card):
-  - Avatares circulares de los últimos jugadores registrados.
-  - Badge de rango en la esquina inferior derecha del avatar (emoji custom vía CDN o Unicode).
-  - Nombre de usuario centrado bajo cada avatar, con elipsis si no entra.
+## 📦 Archivos de Datos
 
-Arquitectura:
+- `bot-state.json`: Estado principal del bot (canal, mensajes, etc).
+- `players.json`: Lista de jugadores y fecha de asignación de rango.
 
-- src/utils/recent-avatars-card.ts: Orquesta datos (fetch, emojis, nombres) y arma el embed.
-- src/utils/recent-avatars-canvas.ts: Renderer reutilizable que dibuja y devuelve el PNG.
+Migración automática de formatos antiguos incluida.
 
-### Renderer reutilizable
+---
 
-Archivo: src/utils/recent-avatars-canvas.ts
+## 📝 Ejemplo de Uso
 
-- API:
-  - renderRecentAvatarsCanvas(items, options) => { buffer, encodeMs, width, height }
-  - items: array de { avatar, badgeImg?, badgeText?, label }
-    - avatar: imagen ya decodificada (loadImage) o null (se dibuja placeholder).
-    - badgeImg: imagen del emoji de rango (si es custom).
-    - badgeText: texto/emoji Unicode del rango (si no hay imagen).
-    - label: nombre a mostrar bajo el avatar.
-  - options:
-    - size: tamaño del avatar (px). Default: 128
-    - pad: padding entre avatares (px). Default: 16
-    - labelHeight: alto de la banda inferior para el nombre. Default: 36
+1. Un admin ejecuta `/setup-roles` en el canal deseado.
+2. El panel aparece con botones para seleccionar rango.
+3. Los usuarios eligen su rango y el bot les asigna el rol.
+4. El mensaje de estadísticas se actualiza automáticamente.
+5. Los usuarios pueden ver su rango con el menú contextual "Ver mi rango Apex".
 
-Ejemplo de uso para otra card:
+---
 
-```ts
-import { loadImage } from '@napi-rs/canvas';
-import { renderRecentAvatarsCanvas } from './utils/recent-avatars-canvas';
+## 🐳 Docker & CI/CD
 
-// Preparar items (cada avatar ya decodificado o null)
-const items = [
-  { avatar: await loadImage(buf1), label: 'Jugador 1' },
-  { avatar: await loadImage(buf2), label: 'Jugador 2', badgeText: '⭐' },
-  // ...
-];
+- Imágenes pre-construidas disponibles (próximamente).
+- Build multi-arquitectura.
+- Pipeline automática con tests, build y publicación.
 
-const { buffer } = await renderRecentAvatarsCanvas(items, {
-  size: 128,
-  pad: 16,
-  labelHeight: 36,
-});
-// buffer es un PNG listo para adjuntar a un Embed
-```
+---
 
-### Emojis de rango
+## ❓ Solución de Problemas
 
-- Emojis personalizados de Discord: se resuelven a PNG vía CDN (https://cdn.discordapp.com/emojis/{id}.png?size=64) y se decodifican con loadImage.
-- Emojis Unicode: se dibujan como texto dentro de un recorte circular, con un borde sutil para legibilidad.
+- Si los comandos no aparecen, ejecuta `npm run deploy-commands` y espera unos minutos.
+- Si el bot no responde, revisa el token, permisos y configuración.
+- El comando de contexto puede tardar en aparecer por caché de Discord.
 
-Nota: El renderer no hace fetch ni decodifica imágenes; esa responsabilidad queda del caller (para mantener responsabilidad única y facilitar testeo).
+---
 
-### Fuentes
+## 🤝 Contribuir
 
-- Por defecto usa “sans-serif” del sistema.
-- Para una tipografía consistente, puedes registrar una fuente antes de renderizar:
+1. Haz un fork y crea una rama para tu feature.
+2. Haz tus cambios y abre un Pull Request.
+3. Sigue la convención de commits: `Add:`, `Fix:`, `Update:`, etc.
 
-```ts
-import { registerFont } from '@napi-rs/canvas';
-registerFont('/ruta/a/Inter-Regular.ttf', { family: 'Inter' });
-registerFont('/ruta/a/Inter-Bold.ttf', { family: 'Inter', weight: '700' });
-// Luego usa ctx.font = '700 22px Inter';
-```
+---
 
-### Rendimiento y buenas prácticas
+## 📄 Licencia
 
-- Decodificación: usa loadImage(Buffer) y reutiliza resultados si vas a renderizar varias cards.
-- Concurrencia: limita el número de fetch/decodificaciones simultáneas si amplías el número de avatares.
-- Tamaños:
-  - size grande => más píxeles a dibujar/encodear.
-  - labelHeight suficiente si subes la fuente (el renderer usa elipsis).
-- Encode: canvas.encode('png') es síncrono-async; el renderer devuelve encodeMs para tus métricas.
-- Throttling: este repo ya incluye un throttler para coalescer actualizaciones (ver src/utils/update-throttler.ts).
+MIT License - Ver [LICENSE](LICENSE) para detalles.
 
-### Requisitos y compatibilidad
+---
 
-- Node.js 18+ recomendado (N-API estable).
-- @napi-rs/canvas trae binarios precompilados para plataformas soportadas.
-- En entornos Linux minimalistas/Docker, asegúrate de tener:
-  - glibc adecuada para tu versión de Node.
-  - Paquetes de fuentes (ej: fonts-dejavu) para evitar reemplazos pobres.
+## 👤 Autor
 
-### Solución de problemas
+**Braulio Rodriguez**
 
-- “Error loading shared library” al iniciar:
-  - Actualiza a una imagen base con glibc compatible con tu Node o usa una versión LTS reciente.
-- Texto/emoji se ven “finos” o “cuadrados”:
-  - Instala un pack de fuentes o registra fuentes manualmente.
-- Emojis custom no visibles:
-  - Verifica que la cadena del emoji sea del tipo <a?:name:id> y que el bot tenga permiso de “Usar emojis externos”.
-- PNG en blanco o corrupto:
-  - Asegúrate de esperar la promesa de renderRecentAvatarsCanvas y de adjuntar el buffer retornado.
+- GitHub: [@brauliorg12](https://github.com/brauliorg12)
+- Discord: burlon23
+- Email: cubanovainfo@gmail.com
 
-### Extender a más cards
+---
 
-- Reutiliza renderRecentAvatarsCanvas cambiando:
-  - label para otras descripciones (p.ej. K/D, nivel, etc.).
-  - badgeImg/badgeText para iconos específicos.
-  - options (size, pad, labelHeight) para otras densidades.
-- Si necesitas un layout en 2 filas/tabla, puedes crear un renderer similar que itere filas/columnas y reutilice los helpers de badge/label.
+¿Te gusta este bot?  
+⭐ ¡Dale una estrella en GitHub! ⭐
 
-## Uso
-
-Una vez que el bot esté en funcionamiento y añadido a tu servidor de Discord, puedes usar los siguientes comandos:
-
-- `/setup-roles`: Configura el panel de selección de rango y el mensaje de estadísticas.
-- `/total-jugadores`: Muestra el número total de jugadores con un rol de rango de Apex Legends.
-- `/api-status`: Muestra el estado actual de la API externa.
-
-Además, los usuarios pueden interactuar con los botones:
-
-- Gestionar Rango — Selecciona o cambia tu rango.
-- Todos los Jugadores — Lista completa con fecha de registro.
-- Ayuda — Abre el menú de ayuda.
-- Cerrar — Cierra el mensaje actual.
-
-## Contribución
-
-¡Las contribuciones son bienvenidas! No dudes en abrir issues o enviar pull requests.
-
-## Licencia
-
-Este proyecto está bajo la Licencia MIT.
+[Reportar Bug](https://github.com/brauliorg12/discord-apex/issues) • [Solicitar Feature](https://github.com/brauliorg12/discord-apex/issues) • [Discusiones](https://github.com/brauliorg12/discord-apex/discussions)

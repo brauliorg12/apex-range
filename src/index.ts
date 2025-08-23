@@ -18,6 +18,7 @@ import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
 import { handleRankFilterSelect } from './interactions/show-more';
 import { createUpdateThrottler } from './utils/update-throttler'; // <-- NUEVO
+import { data as showMyRankCommand, execute as showMyRankExecute } from './commands/show-my-rank';
 
 dotenv.config();
 
@@ -172,6 +173,25 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       } else {
         await interaction.reply({
           content: '¡Hubo un error al ejecutar este comando!',
+          ephemeral: true,
+        });
+      }
+    }
+  } else if (interaction.isUserContextMenuCommand()) {
+    try {
+      if (interaction.commandName === showMyRankCommand.name) {
+        await showMyRankExecute(interaction);
+      }
+    } catch (error) {
+      console.error('[ERROR] Error al manejar el comando de contexto:', error);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({
+          content: '¡Hubo un error al procesar tu solicitud!',
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: '¡Hubo un error al procesar tu solicitud!',
           ephemeral: true,
         });
       }
