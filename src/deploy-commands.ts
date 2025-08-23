@@ -15,11 +15,13 @@ if (!token || !clientId) {
 import { data as setupRolesCommand } from './commands/setup-roles';
 import { data as totalJugadoresCommand } from './commands/total-players';
 import { data as showMyRankCommand } from './commands/show-my-rank';
+import { data as apiStatusCommand } from './commands/api-status';
 
 const commands = [
   setupRolesCommand.toJSON(),
   totalJugadoresCommand.toJSON(),
-  showMyRankCommand.toJSON(), // <-- Agrega el comando de contexto
+  showMyRankCommand.toJSON(),
+  apiStatusCommand.toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(token);

@@ -4,8 +4,6 @@ Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Lege
 
 ![Version](https://img.shields.io/github/v/release/brauliorg12/discord-apex)
 ![License](https://img.shields.io/github/license/brauliorg12/discord-apex)
-![Node](https://img.shields.io/node/v/discord.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 ![Docker](https://img.shields.io/docker/automated/brauliorg12/discord-apex)
 
 ---
@@ -27,9 +25,17 @@ Un bot profesional para comunidades de Apex Legends que permite:
 | ------------------------------ | ------------------------------------------------------------------ | ------------- |
 | `/setup-roles`                 | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
 | `/total-jugadores`             | Muestra el número total de jugadores con rango                     | Todos         |
+| `/api-status`                  | Muestra el estado actual de la API externa                         | Todos         |
 | `Ver mi rango Apex` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
 
 > **Nota:** El comando de contexto aparece al hacer click derecho sobre un usuario.
+
+---
+
+## 🧑‍💼 Comando `/api-status`
+
+Consulta el estado de la API externa utilizada por el bot.  
+Muestra si la API está conectada o no y la última vez que se verificó.
 
 ---
 
@@ -240,3 +246,4 @@ MIT License - Ver [LICENSE](LICENSE) para detalles.
 ⭐ ¡Dale una estrella en GitHub! ⭐
 
 [Reportar Bug](https://github.com/brauliorg12/discord-apex/issues) • [Solicitar Feature](https://github.com/brauliorg12/discord-apex/issues) • [Discusiones](https://github.com/brauliorg12/discord-apex/discussions)
+````
