@@ -1,10 +1,7 @@
 import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
 import { readState } from './state-manager';
 import { getPlayerStats } from './player-stats';
-import {
-  createRankButtons,
-  createManagementButtons,
-} from './button-helper';
+import { createRankButtons, createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 
@@ -63,7 +60,8 @@ export async function updateRoleCountMessage(guild: Guild) {
       .setFields(fields);
 
     // Embeds de jugadores en línea por rango
-    const onlineEmbeds = await buildAllOnlineEmbeds(guild);
+    const { embeds: onlineEmbeds, files: onlineFiles } =
+      await buildAllOnlineEmbeds(guild);
 
     // Cards
     const recentCard = await buildRecentAvatarsCard(guild);
@@ -84,8 +82,11 @@ export async function updateRoleCountMessage(guild: Guild) {
       ...onlineEmbeds,
     ];
 
-    // Adjuntos combinados (solo “últimos 5”)
-    const filesToSend = [...(recentCard ? recentCard.files : [])];
+    // Adjuntos combinados (solo “últimos 5” + online por rango)
+    const filesToSend = [
+      ...(recentCard ? recentCard.files : []),
+      ...(onlineFiles ?? []),
+    ];
 
     try {
       await statsMessage.edit({

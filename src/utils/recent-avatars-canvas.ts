@@ -1,4 +1,4 @@
-import { createCanvas } from '@napi-rs/canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { performance } from 'node:perf_hooks';
 
 type Img = any;
@@ -161,3 +161,5 @@ export async function renderRecentAvatarsCanvas(
 
   return { buffer, encodeMs, width, height };
 }
+
+export { loadImage };
