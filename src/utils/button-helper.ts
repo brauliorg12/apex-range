@@ -39,6 +39,11 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
       .setEmoji('👥')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
+      .setCustomId('show_more_options')
+      .setLabel('Filtrar')
+      .setEmoji('🔎')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId('manage_rank_menu')
       .setLabel('Gestionar mi Rango')
       .setEmoji('⚙️')
@@ -58,6 +63,16 @@ export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
     new ButtonBuilder()
       .setCustomId('close_help_menu')
       .setLabel('Cerrar')
+      .setStyle(ButtonStyle.Secondary)
+  );
+}
+
+export function createMoreOptionsButtonRow(): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('show_more_options')
+      .setLabel('Filtrar')
+      .setEmoji('🔎')
       .setStyle(ButtonStyle.Secondary)
   );
 }

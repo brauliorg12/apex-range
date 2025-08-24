@@ -1,5 +1,10 @@
-import { ButtonInteraction } from 'discord.js';
+import {
+  ButtonInteraction,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+} from 'discord.js';
 import { APEX_RANKS } from './constants';
+import { createCloseButtonRow } from './utils/button-helper';
 import {
   handleManageRankMenu,
   handleRoleAssignment,
@@ -26,5 +31,22 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     await handleHelpMenu(interaction);
   } else if (customId === 'close_help_menu') {
     await handleCloseHelpMenu(interaction);
+  } else if (customId === 'show_more_options') {
+    const rankFilterRow =
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId('RANK_FILTER')
+          .setPlaceholder('Filtrar por rango')
+          .addOptions(
+            APEX_RANKS.map((r) => ({ label: r.label, value: r.shortId }))
+          )
+      );
+    const closeButtonRow = createCloseButtonRow();
+    await interaction.reply({
+      content: 'Filtra los jugadores en línea por rango:',
+      components: [rankFilterRow, closeButtonRow],
+      ephemeral: true,
+    });
+    return;
   }
 }

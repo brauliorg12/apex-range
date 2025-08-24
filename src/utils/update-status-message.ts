@@ -1,15 +1,11 @@
-import {
-  Guild,
-  TextChannel,
-  EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-} from 'discord.js';
+import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
 import { readState } from './state-manager';
 import { getPlayerStats } from './player-stats';
-import { createRankButtons, createManagementButtons } from './button-helper';
+import {
+  createRankButtons,
+  createManagementButtons,
+} from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
-import { APEX_RANKS } from '../constants';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 
 export async function updateRoleCountMessage(guild: Guild) {
@@ -80,17 +76,6 @@ export async function updateRoleCountMessage(guild: Guild) {
           '> Puede clickear sobre los jugadores para interactuar'
       );
 
-    // Filtro por rango
-    const rankFilterRow =
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId('RANK_FILTER')
-          .setPlaceholder('Filtrar por rango')
-          .addOptions(
-            APEX_RANKS.map((r) => ({ label: r.label, value: r.shortId }))
-          )
-      );
-
     // Orden: estadísticas -> (opcional) últimos 5 -> header rangos -> listado online
     const embedsToSend = [
       embed,
@@ -100,15 +85,13 @@ export async function updateRoleCountMessage(guild: Guild) {
     ];
 
     // Adjuntos combinados (solo “últimos 5”)
-    const filesToSend = [
-      ...(recentCard ? recentCard.files : []),
-    ];
+    const filesToSend = [...(recentCard ? recentCard.files : [])];
 
     try {
       await statsMessage.edit({
         content: '',
         embeds: embedsToSend,
-        components: [createManagementButtons(), rankFilterRow],
+        components: [createManagementButtons()],
         files: filesToSend,
       });
     } catch (error: any) {
@@ -116,7 +99,7 @@ export async function updateRoleCountMessage(guild: Guild) {
         const newMessage = await channel.send({
           content: '',
           embeds: embedsToSend,
-          components: [createManagementButtons(), rankFilterRow],
+          components: [createManagementButtons()],
           files: filesToSend,
         });
         // Guarda newMessage.id donde corresponda

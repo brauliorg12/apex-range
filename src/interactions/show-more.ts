@@ -1,7 +1,4 @@
-import {
-  EmbedBuilder,
-  StringSelectMenuInteraction,
-} from 'discord.js';
+import { EmbedBuilder, StringSelectMenuInteraction } from 'discord.js';
 import { APEX_RANKS } from '../constants';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
