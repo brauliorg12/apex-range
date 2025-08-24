@@ -2,11 +2,10 @@
 
 Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en tu servidor, con panel interactivo, estadísticas y cards visuales.
 
-![CI](https://github.com/brauliorg12/discord-apex/actions/workflows/ci-cd.yml/badge.svg)
-![Version](https://img.shields.io/github/v/release/brauliorg12/discord-apex)
-![License](https://img.shields.io/github/license/brauliorg12/discord-apex)
+![Version](https://img.shields.io/github/v/release/brauliorg12/apex-range)
+![License](https://img.shields.io/github/license/brauliorg12/apex-range)
 ![GHCR Pulls](https://img.shields.io/badge/GHCR-pulls-blue?logo=github)
-![Docker Pulls](https://img.shields.io/docker/pulls/brauliorg12/discord-apex)
+![Docker Pulls](https://img.shields.io/docker/pulls/brauliorg12/apex-range)
 
 ---
 
