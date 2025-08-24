@@ -66,11 +66,11 @@ export async function updateRoleCountMessage(guild: Guild) {
     // Cards
     const recentCard = await buildRecentAvatarsCard(guild);
 
-    // Header “Jugadores por Rango” sin imagen (solo texto)
+    // Header
     const headerEmbed = new EmbedBuilder()
       .setColor('#ffffff')
       .setDescription(
-        '🛡️ **Jugadores por Rango**\n' +
+        '🛡️ **Jugadores en línea por Rango**\n' +
           '> Puede clickear sobre los jugadores para interactuar'
       );
 
@@ -83,10 +83,15 @@ export async function updateRoleCountMessage(guild: Guild) {
     ];
 
     // Adjuntos combinados (solo “últimos 5” + online por rango)
-    const filesToSend = [
+    let filesToSend = [
       ...(recentCard ? recentCard.files : []),
       ...(onlineFiles ?? []),
     ];
+
+    // Discord solo permite 10 archivos adjuntos por mensaje
+    if (filesToSend.length > 10) {
+      filesToSend = filesToSend.slice(0, 10);
+    }
 
     try {
       await statsMessage.edit({
