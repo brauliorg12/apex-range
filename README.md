@@ -178,7 +178,10 @@ Las cards muestran los últimos registrados y los jugadores online por rango, to
 ## 📦 Archivos de Datos
 
 - `db/players_<ID_SERVER>.json`: Lista de jugadores y fecha de asignación de rango por servidor.
-- `bot-state.json`: Estado principal del bot (canal, mensajes, etc).
+- `db/bot-state.json`: Estado principal del bot (canal, mensajes, etc).
+
+> **Todos los archivos de datos JSON se almacenan en la carpeta `/db` ubicada en la raíz del proyecto.**  
+> Si no existe, el bot la creará automáticamente al ejecutarse.
 
 Migración automática de formatos antiguos incluida.
 
