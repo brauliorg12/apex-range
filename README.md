@@ -33,42 +33,33 @@ Un bot profesional para comunidades de Apex Legends que permite:
 
 ---
 
-## 🧑‍💼 Comando `/api-status`
+## Comando `/api-status`
 
 Consulta el estado de la API externa utilizada por el bot.  
-Muestra si la API está conectada o no y la última vez que se verificó.
+Muestra si la API está conectada y la última vez que se verificó.
 
 ---
 
-## 🧑‍💼 Comando de Contexto: Ver mi rango Apex
+## Comando de Contexto: Ver mi rango Apex
 
-Puedes ver el rango de cualquier usuario (incluyéndote a ti mismo) usando el menú contextual:
+Permite consultar el rango de cualquier usuario (incluyéndote a ti mismo) desde el menú contextual:
 
-1. Haz **click derecho** sobre el nombre de usuario (en la lista de miembros o en el chat).
+1. Haz click derecho sobre el nombre de usuario (en la lista de miembros o en el chat).
 2. Selecciona **"Ver mi rango Apex"** en la sección de Apps.
 
-### Funcionamiento:
+### Funcionamiento
 
 - **Si eres tú mismo:**
 
-  - El embed muestra:
-    - "Tu rango en Apex Legends"
-    - El rango actual con su color y emoji
-    - Botones para gestionar tu rango y cerrar el mensaje
-  - Si no tienes rango, te permite seleccionarlo directamente.
+  - El embed muestra tu rango actual con color, emoji y botones para gestionarlo o cerrarlo.
+  - Si no tienes rango, puedes seleccionarlo directamente.
 
 - **Si es otro usuario:**
 
-  - El embed muestra:
-    - "Rango de [nombre]"
-    - El rango actual del usuario con color y emoji
-    - Solo el botón "Cerrar"
+  - El embed muestra el rango actual del usuario con color y emoji, y solo el botón "Cerrar".
   - Si el usuario no tiene rango, lo indica claramente.
 
-- **Botón "Cerrar":**
-  - Siempre disponible para cerrar el mensaje ephemeral.
-
-> Este comando es privado (ephemeral) y solo visible para quien lo ejecuta.
+- El mensaje es privado (ephemeral) y solo visible para quien ejecuta el comando.
 
 ---
 
