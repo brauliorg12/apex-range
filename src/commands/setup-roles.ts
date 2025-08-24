@@ -9,6 +9,7 @@ import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { createRankButtons } from '../utils/button-helper';
+import { getPlayers, savePlayers } from '../utils/players-manager';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -17,7 +18,7 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  if (!interaction.guild) return;
+  if (!interaction.guild || !interaction.guildId) return;
 
   if (
     !interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)
@@ -87,6 +88,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     guildId: interaction.guild.id,
   });
   await updateRoleCountMessage(interaction.guild);
+
+  const guildId = interaction.guildId;
+  const players = await getPlayers(guildId);
 
   try {
     if (interaction.replied || interaction.deferred) {

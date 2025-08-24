@@ -152,7 +152,7 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     await member.roles.add(roleToAssign);
 
     // Guardar la fecha de asignación
-    await updatePlayerRankDate(member.id);
+    await updatePlayerRankDate(guild.id, member.id);
 
     console.log(
       `[Interacción] Rango '${selectedRank.label}' asignado a ${interaction.user.tag}.`
@@ -219,7 +219,7 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
     await member.roles.remove(rolesToRemove);
 
     // Eliminar la fecha de asignación
-    await removePlayerRankDate(member.id);
+    await removePlayerRankDate(guild.id, member.id);
 
     console.log(
       `[Interacción] Roles de rango eliminados para ${interaction.user.tag}.`

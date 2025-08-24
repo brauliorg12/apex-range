@@ -11,6 +11,7 @@ import {
   createCloseButtonRow,
 } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
+import { getPlayers } from '../utils/players-manager';
 
 export const data = new ContextMenuCommandBuilder()
   .setName('Ver mi rango Apex')
@@ -18,7 +19,10 @@ export const data = new ContextMenuCommandBuilder()
 
 export async function execute(interaction: UserContextMenuCommandInteraction) {
   try {
-    if (!interaction.guild) return;
+    if (!interaction.guild || !interaction.guildId) return;
+
+    const guildId = interaction.guildId;
+    const players = await getPlayers(guildId);
 
     const member = await interaction.guild.members.fetch(interaction.targetId);
 

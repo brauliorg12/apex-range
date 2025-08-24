@@ -10,7 +10,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
   const tStart = performance.now(); // <-- NUEVO
   console.log('[Canvas] Iniciando generación de card (últimos 5 registrados)');
 
-  const playerData = await getPlayerData();
+  const playerData = await getPlayerData(guild);
   if (playerData.length < 5) {
     console.log(
       '[Canvas] No hay suficientes registros para generar el card (min: 5).'

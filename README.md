@@ -177,8 +177,8 @@ Las cards muestran los últimos registrados y los jugadores online por rango, to
 
 ## 📦 Archivos de Datos
 
+- `db/players_<ID_SERVER>.json`: Lista de jugadores y fecha de asignación de rango por servidor.
 - `bot-state.json`: Estado principal del bot (canal, mensajes, etc).
-- `players.json`: Lista de jugadores y fecha de asignación de rango.
 
 Migración automática de formatos antiguos incluida.
 

@@ -40,7 +40,7 @@ export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
   try {
     const [players, playerData] = await Promise.all([
       getAllRankedPlayers(interaction.guild),
-      getPlayerData(),
+      getPlayerData(interaction.guild), // <-- pasa el guild aquí
     ]);
 
     // Crear un índice por userId para acceso O(1)
