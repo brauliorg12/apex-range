@@ -16,7 +16,13 @@ import {
   removePlayerRankDate,
 } from '../utils/player-data-manager';
 
-// Construye el payload (embed y botones) para el menú de rango privado
+/**
+ * Construye el payload (embed y botones) para el menú de gestión de rango privado de un usuario.
+ * Muestra el rango actual y permite cambiarlo o eliminarlo.
+ * @param guild Servidor Discord.
+ * @param member Miembro de Discord.
+ * @returns Objeto con embeds y componentes (botones) para mostrar al usuario.
+ */
 async function buildManageRankPayload(guild: Guild, member: GuildMember) {
   const memberRankRoles = member.roles.cache.filter((role) =>
     APEX_RANKS.some((rank) => rank.roleName === role.name)

@@ -43,13 +43,13 @@ export async function updateRoleCountMessage(guild: Guild) {
     // Solo campos de jugadores
     const fields = [
       {
-        name: 'Registrados',
-        value: `👥 - **${stats.total}**`,
+        name: 'En Línea',
+        value: `🟢 - **${stats.online}**`,
         inline: true,
       },
       {
-        name: 'En Línea',
-        value: `🟢 - **${stats.online}**`,
+        name: 'Registrados',
+        value: `👥 - **${stats.total}**`,
         inline: true,
       },
     ];

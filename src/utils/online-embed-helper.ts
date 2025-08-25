@@ -10,6 +10,15 @@ import { APEX_RANKS } from '../constants';
 import { getOnlineMembersByRole } from './player-stats';
 import { renderRankCardCanvas } from './rank-card-canvas';
 
+/**
+ * Construye un embed visual para mostrar los jugadores online de un rango específico.
+ * Incluye el logo pulse y el nombre del rango como imagen principal.
+ * @param guild Servidor Discord.
+ * @param rank Objeto de rango de APEX_RANKS.
+ * @param onlineMembers Lista de miembros online de ese rango.
+ * @param cardUrl (opcional) URL de la imagen generada para el card.
+ * @returns EmbedBuilder listo para enviar.
+ */
 export async function buildOnlineEmbedForRank(
   guild: Guild,
   rank: (typeof APEX_RANKS)[number],
@@ -54,6 +63,12 @@ export async function buildOnlineEmbedForRank(
   return embed;
 }
 
+/**
+ * Genera todos los embeds y archivos de imagen para mostrar los jugadores online por rango.
+ * Cada embed contiene el card visual del rango y la lista de jugadores online.
+ * @param guild Servidor Discord.
+ * @returns { embeds, files } para enviar en un mensaje.
+ */
 export async function buildAllOnlineEmbeds(guild: Guild) {
   const embeds: EmbedBuilder[] = [];
   const files: AttachmentBuilder[] = [];

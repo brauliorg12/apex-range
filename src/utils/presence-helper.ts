@@ -6,7 +6,7 @@ export async function updateBotPresence(client: Client, guild: Guild) {
     const stats = await getPlayerStats(guild);
 
     client.user?.setActivity(
-      `👥 ${stats.total} registrados | 🟢 ${stats.online} en línea`,
+      `🟢 ${stats.online} en línea | 👥 ${stats.total} registrados`,
       {
         type: ActivityType.Watching,
       }

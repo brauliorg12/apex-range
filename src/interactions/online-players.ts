@@ -4,6 +4,11 @@ import { getOnlineMembersByRole } from '../utils/player-stats';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
 
+/**
+ * Muestra un embed con los jugadores online de un rango específico.
+ * Incluye el emoji, nombre del rango y la lista de jugadores online.
+ * @param interaction Interacción de botón de Discord.
+ */
 export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
 
@@ -42,7 +47,7 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
       .setColor(selectedRank.color as ColorResolvable)
       .setTitle(`**${emoji}  ${selectedRank.label.toUpperCase()}**`);
 
-    const subtitle = `_(${onlineMembers.size} jugadores en línea)_`;
+    const subtitle = `_${onlineMembers.size} jugadores en línea)_`;
 
     if (onlineMembers.size === 0) {
       embed.setDescription(subtitle);

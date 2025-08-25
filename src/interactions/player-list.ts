@@ -33,6 +33,11 @@ async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
   return players;
 }
 
+/**
+ * Maneja la interacción para mostrar el listado de todos los jugadores registrados por rango.
+ * Muestra un embed con los nombres y fechas de registro.
+ * @param interaction Interacción de botón de Discord.
+ */
 export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
   await interaction.deferReply({ ephemeral: true });
