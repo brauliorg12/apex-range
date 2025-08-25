@@ -28,7 +28,7 @@ export async function updateRoleCountMessage(guild: Guild) {
     if (!statsMessage || !roleSelectionMessage) return;
 
     // Actualizar botones
-    const updatedButtons = createRankButtons(guild.client, guild);
+    const updatedButtons = createRankButtons(guild.client);
     try {
       await roleSelectionMessage.edit({ components: updatedButtons });
     } catch (error: any) {

@@ -9,6 +9,7 @@ import {
 import { APEX_RANKS } from '../constants';
 import { getOnlineMembersByRole } from './player-stats';
 import { renderRankCardCanvas } from './rank-card-canvas';
+import { getRankEmoji } from './emoji-helper';
 
 /**
  * Construye un embed visual para mostrar los jugadores online de un rango específico.
@@ -27,10 +28,11 @@ export async function buildOnlineEmbedForRank(
 ) {
   const onlineCount = onlineMembers.length;
   const jugadoresLabel =
-    onlineCount === 1 ? 'jugador en línea' : 'jugadores en línea';
-  const subtitle = `_${onlineCount} ${jugadoresLabel}_`;
+    onlineCount === 1 ? '_jugador en línea_' : '_jugadores en línea_';
 
-  let description = subtitle;
+  const rankEmoji = getRankEmoji(guild.client, rank);
+
+  let description = `> ${rankEmoji} **${onlineCount}** ${jugadoresLabel}`;
   if (onlineCount > 0) {
     description +=
       '\n\n' +

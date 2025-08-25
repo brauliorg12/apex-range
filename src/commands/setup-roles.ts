@@ -9,7 +9,7 @@ import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { createRankButtons } from '../utils/button-helper';
-import { getPlayers, savePlayers } from '../utils/players-manager';
+import { getPlayers } from '../utils/players-manager';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -51,13 +51,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel as TextChannel;
   if (!channel) return;
 
-  const buttonRows = createRankButtons(interaction.client, interaction.guild);
+  const buttonRows = createRankButtons(interaction.client);
 
+  // Embed llamativo y claro para selección de rango
   const roleSelectionEmbed = new EmbedBuilder()
-    .setColor('#95a5a6') // Color gris
-    .setTitle('Selección de Rango')
+    .setColor('#f1c40f')
+    .setTitle('🎯 SELECCIONA TU RANGO')
     .setDescription(
-      'Selecciona tu rango actual en Apex Legends para que otros jugadores puedan encontrarte.'
+      [
+        'Haz click en el botón correspondiente a tu rango actual de Apex Legends.',
+        '',
+        '🔹 **¡Es obligatorio seleccionar tu rango para aparecer en los listados y paneles!**',
+        '',
+        '⬇️ _Selecciona tu rango abajo:_',
+      ].join('\n')
     );
 
   const roleSelectionMessage = await channel.send({

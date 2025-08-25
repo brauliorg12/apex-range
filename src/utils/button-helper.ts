@@ -3,32 +3,38 @@ import {
   ButtonBuilder,
   ButtonStyle,
   Client,
-  Guild,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
 import { getRankEmoji } from './emoji-helper';
 
+/**
+ * Crea los botones de selección de rango para el panel principal.
+ * Cada botón representa un rango de Apex y muestra su emoji y nombre.
+ * Los botones se dividen en filas de máximo 5 por fila, como requiere Discord.
+ * @param client Cliente de Discord.
+ * @returns Array de ActionRowBuilder<ButtonBuilder> con los botones de rango.
+ */
 export function createRankButtons(
   client: Client,
-  guild: Guild
 ): ActionRowBuilder<ButtonBuilder>[] {
-  const buildButtons = (ranks: typeof APEX_RANKS) => {
-    return ranks.map((rank) => {
-      return new ButtonBuilder()
-        .setCustomId(rank.shortId)
-        .setLabel(rank.label)
-        .setEmoji(getRankEmoji(client, rank))
-        .setStyle(ButtonStyle.Secondary);
-    });
-  };
+  const buttons = APEX_RANKS.map((rank) =>
+    new ButtonBuilder()
+      .setCustomId(rank.shortId)
+      .setLabel(rank.label)
+      .setEmoji(getRankEmoji(client, rank))
+      .setStyle(ButtonStyle.Secondary)
+  );
 
-  const row1Buttons = buildButtons(APEX_RANKS.slice(0, 4));
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
-
-  const row2Buttons = buildButtons(APEX_RANKS.slice(4));
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
-
-  return [row1, row2];
+  // Divide en filas de máximo 5 botones
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let i = 0; i < buttons.length; i += 5) {
+    rows.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        buttons.slice(i, i + 5)
+      )
+    );
+  }
+  return rows;
 }
 
 export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {

@@ -83,10 +83,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       await interaction.reply({
         embeds: [embed],
         components: isSelf
-          ? [
-              ...createRankButtons(interaction.client, interaction.guild),
-              closeButton,
-            ]
+          ? [...createRankButtons(interaction.client), closeButton]
           : [closeButton],
         ephemeral: true,
       });
