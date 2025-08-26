@@ -5,6 +5,7 @@ export interface ApexRank {
   roleName: string;
   icon: string;
   color: string;
+  apiName: string;
 }
 
 export const APEX_RANKS: ApexRank[] = [
@@ -14,7 +15,8 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Bronce',
     roleName: 'Bronce',
     icon: '🥉',
-    color: '#cd7f32', // bronce
+    color: '#cd7f32',
+    apiName: 'Bronze',
   },
   {
     id: '<:Ranked_Tier2_Silver:1406723933608083599>',
@@ -22,7 +24,8 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Plata',
     roleName: 'Plata',
     icon: '🥈',
-    color: '#bfc1c2', // plata
+    color: '#bfc1c2',
+    apiName: 'Silver',
   },
   {
     id: '<:Ranked_Tier3_Gold:1406723943787925546>',
@@ -30,7 +33,8 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Oro',
     roleName: 'Oro',
     icon: '🥇',
-    color: '#ffd700', // oro
+    color: '#ffd700',
+    apiName: 'Gold',
   },
   {
     id: '<:Ranked_Tier4_Platinum:1406723955682705418>',
@@ -38,7 +42,8 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Platino',
     roleName: 'Platino',
     icon: '💠',
-    color: '#43e6e1', // platino
+    color: '#43e6e1',
+    apiName: 'Platinum',
   },
   {
     id: '<:Ranked_Tier5_Diamond:1406723964981612596>',
@@ -46,7 +51,8 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Diamante',
     roleName: 'Diamante',
     icon: '💎',
-    color: '#7289da', // diamante
+    color: '#7289da',
+    apiName: 'Diamond',
   },
   {
     id: '<:Ranked_Tier6_Master:1406723974313934968>',
@@ -54,7 +60,8 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Maestro',
     roleName: 'Maestro',
     icon: '🔮',
-    color: '#a259e6', // maestro
+    color: '#a259e6',
+    apiName: 'Master',
   },
   {
     id: '<:Ranked_Tier7_Apex_Predator:1406723982887223416>',
@@ -62,6 +69,7 @@ export const APEX_RANKS: ApexRank[] = [
     label: 'Apex Predator',
     roleName: 'Apex Predator',
     icon: '👹',
-    color: '#e74c3c', // predator
+    color: '#e74c3c',
+    apiName: 'Apex Predator',
   },
 ];

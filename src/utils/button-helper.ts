@@ -15,7 +15,7 @@ import { getRankEmoji } from './emoji-helper';
  * @returns Array de ActionRowBuilder<ButtonBuilder> con los botones de rango.
  */
 export function createRankButtons(
-  client: Client,
+  client: Client
 ): ActionRowBuilder<ButtonBuilder>[] {
   const buttons = APEX_RANKS.map((rank) =>
     new ButtonBuilder()
@@ -39,6 +39,10 @@ export function createRankButtons(
 
 export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('show_apex_profile_modal')
+      .setLabel('Ver mi perfil Apex')
+      .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId('show_all_players_menu')
       .setLabel('Ver todos los jugadores')

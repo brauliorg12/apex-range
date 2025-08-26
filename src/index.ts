@@ -1,11 +1,11 @@
-import { Client, GatewayIntentBits } from 'discord.js';
 import * as dotenv from 'dotenv';
+dotenv.config();
+
+import { Client, GatewayIntentBits } from 'discord.js';
 import { loadCommands } from './command-loader';
 import { registerInteractionHandler } from './interaction-handler';
 import { initBot } from './init-bot';
 import { startHealthServer } from './health-server';
-
-dotenv.config();
 
 /**
  * Inicia el servidor HTTP de salud para monitoreo (endpoint /health).

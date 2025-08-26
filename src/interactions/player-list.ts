@@ -1,5 +1,6 @@
 import {
   ButtonInteraction,
+  StringSelectMenuInteraction,
   EmbedBuilder,
   Guild,
   GuildMember,
@@ -37,53 +38,62 @@ async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
  * Maneja la interacción para mostrar el listado de todos los jugadores registrados por rango.
  * Muestra un embed con los nombres y fechas de registro.
  * @param interaction Interacción de botón de Discord.
+ * @param rankShortId ID corto del rango para filtrar (opcional).
+ * @param onlyOnline Indica si solo se deben mostrar los jugadores en línea (opcional).
  */
-export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
+export async function handleShowAllPlayersMenu(
+  interaction: ButtonInteraction | StringSelectMenuInteraction,
+  rankShortId?: string,
+  onlyOnline: boolean = false
+) {
   if (!interaction.guild) return;
   await interaction.deferReply({ ephemeral: true });
 
   try {
     const [players, playerData] = await Promise.all([
       getAllRankedPlayers(interaction.guild),
-      getPlayerData(interaction.guild), // <-- pasa el guild aquí
+      getPlayerData(interaction.guild),
     ]);
 
-    // Crear un índice por userId para acceso O(1)
     const playerDateById = new Map<string, string>(
       (playerData as PlayerRecord[]).map((p) => [p.userId, p.assignedAt])
     );
 
-    if (players.length === 0) {
-      const emptyEmbed = new EmbedBuilder()
-        .setColor('#f1c40f')
-        .setTitle('👥 Jugadores Registrados')
-        .setDescription('Actualmente no hay jugadores con un rango asignado.');
-      await interaction.editReply({
-        embeds: [emptyEmbed],
-        components: [createCloseButtonRow()],
-      });
-      return;
+    // --- FILTRA LOS RANGOS SI rankShortId ESTÁ PRESENTE ---
+    let filteredRanks = APEX_RANKS;
+    if (rankShortId) {
+      filteredRanks = APEX_RANKS.filter(r => r.shortId === rankShortId);
     }
+    // ------------------------------------------------------
 
     // Agrupar jugadores por rango
     const playersByRank: Record<string, GuildMember[]> = {};
-    for (const rank of APEX_RANKS) {
+    for (const rank of filteredRanks) {
       playersByRank[rank.roleName] = [];
     }
 
     for (const player of players) {
       if (playersByRank[player.rankName]) {
-        playersByRank[player.rankName].push(player.member);
+        if (
+          !onlyOnline ||
+          (player.member.presence && player.member.presence.status === 'online')
+        ) {
+          playersByRank[player.rankName].push(player.member);
+        }
       }
     }
 
     const embed = new EmbedBuilder()
       .setColor('#3498db')
-      .setTitle('👥 Todos los Jugadores Registrados')
+      .setTitle(
+        onlyOnline
+          ? '🟢 Jugadores en línea por rango'
+          : '👥 Todos los Jugadores Registrados'
+      )
       .setTimestamp();
 
     let description = '';
-    for (const rank of APEX_RANKS) {
+    for (const rank of filteredRanks) {
       const membersInRank = playersByRank[rank.roleName];
       const emoji = getRankEmoji(interaction.client, rank);
       description += `\n**${emoji} ${rank.label} (${membersInRank.length})**\n`;
@@ -99,7 +109,7 @@ export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
           })
           .join('\n');
       } else {
-        description += `_...Aún no hay usuarios registrados en este rango._`;
+        description += `_...No hay usuarios en línea en este rango._`;
       }
       description += '\n';
     }
@@ -107,7 +117,7 @@ export async function handleShowAllPlayersMenu(interaction: ButtonInteraction) {
     embed.setDescription(
       description.trim().length > 0
         ? description
-        : 'No se encontraron jugadores con rango.'
+        : 'No se encontraron jugadores en línea con rango.'
     );
 
     await interaction.editReply({

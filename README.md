@@ -20,6 +20,37 @@ Un bot profesional para comunidades de Apex Legends que permite:
 
 ---
 
+## 🔗 Integración con la API de Mozambique (Perfil Apex)
+
+El bot ahora permite consultar el perfil de cualquier jugador de Apex Legends usando la [API de Mozambique](https://apexlegendsapi.com/).
+
+### Funcionalidad
+
+- Consulta tu perfil de Apex Legends desde el panel o usando el modal interactivo.
+- Muestra estadísticas básicas: nivel, rango, kills, leyenda seleccionada, UID y plataforma.
+- El card/embed del perfil usa el color correspondiente al rango del jugador.
+- Si ocurre un error (por ejemplo, usuario no encontrado), se muestra un card de error con borde rojo y botón cerrar.
+
+### Configuración
+
+1. **Obtén tu API Key gratuita en** [https://apexlegendsapi.com/](https://apexlegendsapi.com/).
+2. Agrega estas variables a tu archivo `.env`:
+
+   ```
+   MOZA_API_KEY=TU_API_KEY_DE_MOZAMBIQUE
+   MOZA_URL=https://api.mozambiquehe.re
+   ```
+
+3. Reinicia el bot para que tome la nueva configuración.
+
+### Cómo usarlo
+
+- Haz click en el botón **"Ver mi perfil Apex"** en el panel del bot.
+- Completa el modal con tu nombre de usuario y plataforma (PC, PS4 o X1).
+- Recibirás un mensaje privado con tu perfil y estadísticas.
+
+---
+
 ## 🟢 Comandos Disponibles
 
 | Comando / Acción               | Descripción                                                        | Permisos      |
@@ -28,6 +59,7 @@ Un bot profesional para comunidades de Apex Legends que permite:
 | `/total-jugadores`             | Muestra el número total de jugadores con rango                     | Todos         |
 | `/api-status`                  | Muestra el estado actual de la API externa                         | Todos         |
 | `Ver mi rango Apex` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
+| **Ver mi perfil Apex** (botón) | Consulta tu perfil de Apex Legends usando la API Mozambique        | Todos         |
 
 > **Nota:** El comando de contexto aparece al hacer click derecho sobre un usuario.
 
@@ -246,3 +278,7 @@ MIT License - Ver [LICENSE](LICENSE) para detalles.
 ⭐ ¡Dale una estrella en GitHub! ⭐
 
 [Reportar Bug](https://github.com/brauliorg12/discord-apex/issues) • [Solicitar Feature](https://github.com/brauliorg12/discord-apex/issues) • [Discusiones](https://github.com/brauliorg12/discord-apex/discussions)
+
+```
+
+```

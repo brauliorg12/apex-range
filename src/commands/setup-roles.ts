@@ -8,7 +8,7 @@ import {
 import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
-import { createRankButtons } from '../utils/button-helper';
+import { createRankButtons, createManagementButtons } from '../utils/button-helper';
 import { getPlayers } from '../utils/players-manager';
 
 export const data = new SlashCommandBuilder()
@@ -51,7 +51,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel as TextChannel;
   if (!channel) return;
 
-  const buttonRows = createRankButtons(interaction.client);
+  const components = [
+    ...createRankButtons(interaction.client), // Botones de rango
+    createManagementButtons(), // Botones de gestión (incluye "Ver mi perfil Apex")
+  ];
 
   // Embed llamativo y claro para selección de rango
   const roleSelectionEmbed = new EmbedBuilder()
@@ -69,7 +72,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const roleSelectionMessage = await channel.send({
     embeds: [roleSelectionEmbed],
-    components: buttonRows,
+    components,
   });
 
   const roleCountMessage = await channel.send({

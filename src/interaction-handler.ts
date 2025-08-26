@@ -1,6 +1,9 @@
-import { Interaction, Client, Events, Guild } from 'discord.js';
-import { handleButtonInteraction } from './button-interactions';
-import { handleRankFilterSelect } from './interactions/show-more';
+import { Interaction, Client, Events } from 'discord.js';
+import {
+  handleButtonInteraction,
+  handleSelectMenuInteraction,
+} from './button-interactions';
+import { handleModalInteraction } from './modal-interactions';
 import {
   data as showMyRankCommand,
   execute as showMyRankExecute,
@@ -89,9 +92,7 @@ export function registerInteractionHandler(client: Client) {
       }
     } else if (interaction.isStringSelectMenu()) {
       try {
-        if (interaction.customId === 'RANK_FILTER') {
-          await handleRankFilterSelect(interaction);
-        }
+        await handleSelectMenuInteraction(interaction);
       } catch (error) {
         console.error('[ERROR] Error al manejar el select:', error);
         if (interaction.deferred || interaction.replied) {
@@ -102,6 +103,23 @@ export function registerInteractionHandler(client: Client) {
         } else {
           await interaction.reply({
             content: '¡Hubo un error al procesar tu selección!',
+            ephemeral: true,
+          });
+        }
+      }
+    } else if (interaction.isModalSubmit()) {
+      try {
+        await handleModalInteraction(interaction);
+      } catch (error) {
+        console.error('[ERROR] Error al manejar el modal:', error);
+        if (interaction.deferred || interaction.replied) {
+          await interaction.followUp({
+            content: '¡Hubo un error al procesar tu solicitud!',
+            ephemeral: true,
+          });
+        } else {
+          await interaction.reply({
+            content: '¡Hubo un error al procesar tu solicitud!',
             ephemeral: true,
           });
         }
