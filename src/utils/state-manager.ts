@@ -4,6 +4,7 @@ import * as path from 'path';
 export interface BotState {
   roleCountMessageId?: string;
   roleSelectionMessageId?: string;
+  apexInfoMessageId?: string;
   channelId?: string;
   guildId?: string;
 }
@@ -25,9 +26,18 @@ export async function writeState(state: BotState): Promise<void> {
   await fs.writeFile(STATE_FILE_PATH, JSON.stringify(state, null, 2));
 }
 
-function ensureGuildId(guildId: string | null | undefined): asserts guildId is string {
-  if (!guildId || typeof guildId !== 'string' || guildId === 'undefined' || guildId === 'null') {
-    throw new Error(`[DB] guildId inválido al acceder a players DB: "${guildId}"`);
+function ensureGuildId(
+  guildId: string | null | undefined
+): asserts guildId is string {
+  if (
+    !guildId ||
+    typeof guildId !== 'string' ||
+    guildId === 'undefined' ||
+    guildId === 'null'
+  ) {
+    throw new Error(
+      `[DB] guildId inválido al acceder a players DB: "${guildId}"`
+    );
   }
 }
 

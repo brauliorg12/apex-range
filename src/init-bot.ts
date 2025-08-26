@@ -1,6 +1,9 @@
 import { Client, Guild, Events } from 'discord.js';
 import { readState } from './utils/state-manager';
-import { updateRoleCountMessage } from './utils/update-status-message';
+import {
+  updateRoleCountMessage,
+  updateApexInfoMessage,
+} from './utils/update-status-message';
 import { updateBotPresence } from './utils/presence-helper';
 import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
@@ -54,6 +57,11 @@ export async function initBot(client: Client) {
         );
 
         throttler.requestUpdate(guild);
+
+        // Update Apex Info message every 5 minutes
+        setInterval(() => {
+          updateApexInfoMessage(guild);
+        }, 5 * 60 * 1000);
 
         // Chequeo de salud y actualización de embed solo al iniciar
         await checkApiHealth();

@@ -51,6 +51,47 @@ El bot ahora permite consultar el perfil de cualquier jugador de Apex Legends us
 
 ---
 
+## 🆕 Panel de Estado de Apex Legends y Perfil Interactivo
+
+### Card de Estado de la API Mozambique
+
+El bot ahora incluye un **embed dinámico** que muestra información en tiempo real de la API oficial de Mozambique:
+
+- **Rotación de mapas**: Battle Royale, Ranked y LTM, siempre actualizados.
+- **RP necesario para Predator**: Visualización clara para PC, PS4 y Xbox.
+- **Actualización automática**: El panel se refresca cada 5 minutos para mantener la información al día.
+- **Fuente y timestamp**: Siempre sabrás de dónde provienen los datos y cuándo se actualizaron.
+
+Esto permite a tu comunidad estar informada al instante sobre el estado del juego y los requisitos competitivos.
+
+### Botón "Ver mi perfil Apex"
+
+Debajo del embed de estado, encontrarás el botón:
+
+```
+[ Ver mi perfil Apex ]
+```
+
+- Al pulsarlo, se abre un modal donde puedes ingresar tu usuario y plataforma.
+- El bot consulta la API de Mozambique y te envía un **card privado** con tus estadísticas principales: nivel, kills, rango, leyenda principal, UID y plataforma.
+- El embed utiliza colores y emojis personalizados según tu rango.
+- Si ocurre un error (usuario no encontrado, API caída, etc), recibirás un mensaje claro y profesional.
+
+#### Experiencia de usuario
+
+- **Acceso rápido**: Todo desde el canal principal, sin comandos complicados.
+- **Privacidad**: Tu perfil se muestra solo a ti mediante mensaje ephemeral.
+- **Integración total**: El botón y el embed están siempre visibles y actualizados en el panel.
+
+#### Detalles técnicos
+
+- El panel y el botón se generan automáticamente al ejecutar `/setup-roles`.
+- El estado de la API se obtiene usando la [API de Mozambique](https://apexlegendsapi.com/).
+- El botón utiliza componentes interactivos de Discord para una experiencia moderna y fluida.
+- El código es modular y fácil de mantener.
+
+---
+
 ## 🟢 Comandos Disponibles
 
 | Comando / Acción               | Descripción                                                        | Permisos      |

@@ -62,7 +62,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
 
       await interaction.reply({
         embeds: [embed],
-        components: [createManagementButtons(), closeButton],
+        components: [...createManagementButtons(), closeButton],
         ephemeral: true,
       });
     } else {

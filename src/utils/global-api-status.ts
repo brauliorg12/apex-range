@@ -1,11 +1,28 @@
-type GlobalApiStatus = {
+export interface MapRotationInfo {
+  current: {
+    map: string;
+    remainingTimer: string;
+  };
+  next: {
+    map: string;
+    readableDate_start: string;
+  };
+}
+
+export interface GlobalApiStatusData {
+  mapRotation?: MapRotationInfo;
+  predatorRP?: number | string;
+}
+
+export interface GlobalApiStatus {
   ok: boolean;
-  lastChecked: Date | null;
-};
+  lastChecked?: Date;
+  data?: GlobalApiStatusData;
+}
 
 const globalApiStatus: GlobalApiStatus = {
   ok: false,
-  lastChecked: null,
+  lastChecked: undefined,
 };
 
 export function setGlobalApiStatus(ok: boolean, lastChecked?: Date) {

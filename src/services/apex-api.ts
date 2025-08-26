@@ -67,3 +67,53 @@ export async function getApexProfileByName(
     return null;
   }
 }
+
+/**
+ * Obtiene la rotación de mapas actual de Apex Legends.
+ * @returns Datos de la rotación de mapas o null si hay error.
+ */
+export async function getMapRotation(): Promise<any | null> {
+  if (!MOZA_API_KEY) {
+    throw new Error('MOZA_API_KEY no está configurada en el entorno.');
+  }
+  const url = `${MOZA_URL}/maprotation?version=2&auth=${MOZA_API_KEY}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || (data && (data as any).Error)) {
+      console.log(`[API][getMapRotation] status: ERROR | url: ${url}`);
+      return null;
+    }
+    console.log(`[API][getMapRotation] status: OK | url: ${url}`);
+    return data;
+  } catch (error) {
+    console.log(`[API][getMapRotation] status: ERROR | url: ${url}`);
+    console.error('Error al consultar la rotación de mapas:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtiene el RP necesario para ser Predator en Apex Legends.
+ * @returns Datos del rank de Predator o null si hay error.
+ */
+export async function getPredatorRank(): Promise<any | null> {
+  if (!MOZA_API_KEY) {
+    throw new Error('MOZA_API_KEY no está configurada en el entorno.');
+  }
+  const url = `${MOZA_URL}/predator?auth=${MOZA_API_KEY}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || (data && (data as any).Error)) {
+      console.log(`[API][getPredatorRank] status: ERROR | url: ${url}`);
+      return null;
+    }
+    console.log(`[API][getPredatorRank] status: OK | url: ${url}`);
+    return data;
+  } catch (error) {
+    console.log(`[API][getPredatorRank] status: ERROR | url: ${url}`);
+    console.error('Error al consultar el rank de Predator:', error);
+    return null;
+  }
+}

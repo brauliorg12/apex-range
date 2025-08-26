@@ -4,6 +4,7 @@ import { getPlayerStats } from './player-stats';
 import { createRankButtons, createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
+import { createApexStatusEmbed } from './apex-status-embed';
 
 export async function updateRoleCountMessage(guild: Guild) {
   try {
@@ -27,20 +28,17 @@ export async function updateRoleCountMessage(guild: Guild) {
 
     if (!statsMessage || !roleSelectionMessage) return;
 
-    // Actualizar botones
     const updatedButtons = createRankButtons(guild.client);
     try {
       await roleSelectionMessage.edit({ components: updatedButtons });
     } catch (error: any) {
       if (error.code === 10008) {
         const newMessage = await channel.send({ components: updatedButtons });
-        // Guarda newMessage.id donde corresponda
       } else {
         throw error;
       }
     }
 
-    // Solo campos de jugadores
     const fields = [
       {
         name: 'En Línea',
@@ -59,14 +57,11 @@ export async function updateRoleCountMessage(guild: Guild) {
       .setTitle('Estadísticas de Jugadores')
       .setFields(fields);
 
-    // Embeds de jugadores en línea por rango
     const { embeds: onlineEmbeds, files: onlineFiles } =
       await buildAllOnlineEmbeds(guild);
 
-    // Cards
     const recentCard = await buildRecentAvatarsCard(guild);
 
-    // Header
     const headerEmbed = new EmbedBuilder()
       .setColor('#ffffff')
       .setDescription(
@@ -74,7 +69,6 @@ export async function updateRoleCountMessage(guild: Guild) {
           '> Puede clickear sobre los jugadores para interactuar'
       );
 
-    // Orden: estadísticas -> (opcional) últimos 5 -> header rangos -> listado online
     const embedsToSend = [
       embed,
       ...(recentCard ? [recentCard.embed] : []),
@@ -82,13 +76,11 @@ export async function updateRoleCountMessage(guild: Guild) {
       ...onlineEmbeds,
     ];
 
-    // Adjuntos combinados (solo “últimos 5” + online por rango)
     let filesToSend = [
       ...(recentCard ? recentCard.files : []),
       ...(onlineFiles ?? []),
     ];
 
-    // Discord solo permite 10 archivos adjuntos por mensaje
     if (filesToSend.length > 10) {
       filesToSend = filesToSend.slice(0, 10);
     }
@@ -97,7 +89,7 @@ export async function updateRoleCountMessage(guild: Guild) {
       await statsMessage.edit({
         content: '',
         embeds: embedsToSend,
-        components: [createManagementButtons()],
+        components: [...createManagementButtons()],
         files: filesToSend,
       });
     } catch (error: any) {
@@ -105,15 +97,41 @@ export async function updateRoleCountMessage(guild: Guild) {
         const newMessage = await channel.send({
           content: '',
           embeds: embedsToSend,
-          components: [createManagementButtons()],
+          components: [...createManagementButtons()],
           files: filesToSend,
         });
-        // Guarda newMessage.id donde corresponda
       } else {
         throw error;
       }
     }
   } catch (error) {
     console.error('Error al actualizar el mensaje de conteo de roles:', error);
+  }
+}
+
+export async function updateApexInfoMessage(guild: Guild) {
+  try {
+    const state = await readState();
+    if (!state.channelId || !state.apexInfoMessageId) return;
+
+    const channel = (await guild.channels.fetch(
+      state.channelId
+    )) as TextChannel;
+
+    const apexInfoMessage = await channel.messages.fetch(
+      state.apexInfoMessageId
+    );
+
+    if (!apexInfoMessage) return;
+
+    // Usa el nuevo card consistente
+    const embed = await createApexStatusEmbed();
+
+    await apexInfoMessage.edit({ embeds: [embed] });
+  } catch (error) {
+    console.error(
+      'Error al actualizar el mensaje de información de Apex:',
+      error
+    );
   }
 }

@@ -37,12 +37,8 @@ export function createRankButtons(
   return rows;
 }
 
-export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
+export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId('show_apex_profile_modal')
-      .setLabel('Ver mi perfil Apex')
-      .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId('show_all_players_menu')
       .setLabel('Ver todos los jugadores')
@@ -64,8 +60,7 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder> {
       .setEmoji('❓')
       .setStyle(ButtonStyle.Secondary)
   );
-
-  return row;
+  return [row];
 }
 
 export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
