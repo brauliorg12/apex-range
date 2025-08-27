@@ -4,20 +4,16 @@ import {
   TextChannel,
   ChatInputCommandInteraction,
   EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
 import { writeState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { createRankButtons, createManagementButtons } from '../utils/button-helper';
-import { createApexStatusEmbed } from '../utils/apex-status-embed';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
   .setDescription(
-    'Configura los paneles de selección de roles, información y estadísticas.'
+    'Configura los paneles de selección de roles y estadísticas.'
   );
 
 /**
@@ -26,8 +22,7 @@ export const data = new SlashCommandBuilder()
  * 1. Verifica que todos los roles de rango de Apex existan en el servidor.
  * 2. Envía un mensaje para que los usuarios seleccionen su rango.
  * 3. Envía un mensaje de estadísticas que se mantendrá actualizado.
- * 4. Envía un mensaje con información de Apex que se mantendrá actualizado.
- * 5. Guarda los IDs de los mensajes en el estado del bot.
+ * 4. Guarda los IDs de los mensajes en el estado del bot.
  * @param interaction La interacción del comando.
  */
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -54,10 +49,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (missingRoles.length > 0) {
     const missingRoleNames = missingRoles
-      .map((r) => `"${r.roleName}"`) // Corrected escaping for roleName
+      .map((r) => `"${r.roleName}"`)
       .join(', ');
     await interaction.reply({
-      content: `Error: Faltan los siguientes roles en el servidor: ${missingRoleNames}. Por favor, créalos y vuelve a intentarlo.`, // Corrected escaping for missingRoleNames
+      content: `Error: Faltan los siguientes roles en el servidor: ${missingRoleNames}. Por favor, créalos y vuelve a intentarlo.`,
       ephemeral: true,
     });
     return;
@@ -92,48 +87,29 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // 4. Mensaje de estadísticas
   const roleCountMessage = await channel.send({
-    content: 'Generando estadísticas...', // Corrected escaping for content
+    content: 'Generando estadísticas...',
     components: [...createManagementButtons()],
   });
 
-  // 5. Mensaje de información de Apex
-  const apexInfoEmbed = await createApexStatusEmbed();
-
-  // Agrega el botón "Ver mi perfil Apex"
-  const apexProfileButtonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId('show_apex_profile_modal')
-      .setLabel('Ver mi perfil Apex')
-      .setStyle(ButtonStyle.Primary)
-  );
-
-  const apexInfoMessage = await channel.send({
-    embeds: [apexInfoEmbed],
-    components: [apexProfileButtonRow],
-  });
-
   try {
-    await apexInfoMessage.pin();
     await roleCountMessage.pin();
   } catch (err) {
     console.error('Error al fijar los mensajes. ¿Tengo los permisos necesarios?', err);
     await channel.send(
       "No pude fijar los mensajes. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'."
-    ); // Corrected escaping for content
+    );
   }
 
-  // 6. Guardar estado
+  // 5. Guardar estado
   await writeState({
     roleCountMessageId: roleCountMessage.id,
     roleSelectionMessageId: roleSelectionMessage.id,
-    apexInfoMessageId: apexInfoMessage.id,
     channelId: channel.id,
     guildId: interaction.guild.id,
   });
 
-  // 7. Actualizar mensajes
+  // 6. Actualizar mensajes
   await updateRoleCountMessage(interaction.guild);
 
   await interaction.editReply({ content: '¡Configuración completada!' });
-
 }

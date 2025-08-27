@@ -4,7 +4,7 @@ import { getPlayerStats } from './player-stats';
 import { createRankButtons, createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
-import { createApexStatusEmbed } from './apex-status-embed';
+import { createApexStatusEmbeds } from './apex-status-embed';
 
 export async function updateRoleCountMessage(guild: Guild) {
   try {
@@ -110,6 +110,10 @@ export async function updateRoleCountMessage(guild: Guild) {
 }
 
 export async function updateApexInfoMessage(guild: Guild) {
+  console.log(
+    '[DEBUG] updateApexInfoMessage ejecutado',
+    new Date().toISOString()
+  );
   try {
     const state = await readState();
     if (!state.channelId || !state.apexInfoMessageId) return;
@@ -124,10 +128,10 @@ export async function updateApexInfoMessage(guild: Guild) {
 
     if (!apexInfoMessage) return;
 
-    // Usa el nuevo card consistente
-    const embed = await createApexStatusEmbed();
+    // Usa siempre la versión con los nuevos cards
+    const embeds = await createApexStatusEmbeds();
 
-    await apexInfoMessage.edit({ embeds: [embed] });
+    await apexInfoMessage.edit({ embeds });
   } catch (error) {
     console.error(
       'Error al actualizar el mensaje de información de Apex:',

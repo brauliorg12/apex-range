@@ -4,8 +4,6 @@ import { getMapRotation, getPredatorRank } from '../services/apex-api';
 // Utilidad para formatear fecha a "HH:MM AM/PM" (corrige zona horaria)
 function formatHour(dateStr?: string) {
   if (!dateStr) return 'N/A';
-  // Forzar a tratar la fecha como UTC si viene en formato "YYYY-MM-DD HH:mm:ss"
-  // Reemplaza espacio por 'T' y agrega 'Z' para que sea ISO UTC
   let iso = dateStr.replace(' ', 'T');
   if (!iso.endsWith('Z')) iso += 'Z';
   const date = new Date(iso);
@@ -28,9 +26,34 @@ function formatRemaining(remaining?: string) {
   return parts.length ? `Queda: ${parts.join(' ')}.` : '';
 }
 
-export async function createApexStatusEmbed() {
+function formatTimeLeft(remaining?: string) {
+  if (!remaining) return 'N/A';
+  const [h, m, s] = remaining.split(':').map(Number);
+  let parts = [];
+  if (h > 0) parts.push(`${h} hrs`);
+  if (m > 0) parts.push(`${m} mins`);
+  if (s > 0) parts.push(`${s} segs`);
+  return parts.length ? parts.join(' ') : 'N/A';
+}
+
+function formatNextMap(map?: string, dateStr?: string) {
+  if (!map || !dateStr) return 'No disponible';
+  const now = new Date();
+  const nextDate = new Date(dateStr.replace(' ', 'T') + 'Z');
+  const isToday = nextDate.toDateString() === now.toDateString();
+  const isTomorrow = nextDate.getDate() === now.getDate() + 1;
+  let dayText = isToday
+    ? 'hoy'
+    : isTomorrow
+    ? 'mañana'
+    : nextDate.toLocaleDateString('es-ES');
+  return `Próximo mapa: ${map} • ${dayText} a las ${formatHour(dateStr)}`;
+}
+
+export async function createApexStatusEmbeds() {
   let mapRotation: any = null;
   let predatorRank: any = null;
+  const now = new Date();
 
   try {
     [mapRotation, predatorRank] = await Promise.all([
@@ -41,100 +64,156 @@ export async function createApexStatusEmbed() {
     console.error('Error consultando la API de Mozambique:', error);
   }
 
-  // Selecciona el mapa actual de Battle Royale para la imagen principal
   const br = mapRotation?.battle_royale;
   const ranked = mapRotation?.ranked;
   const ltm = mapRotation?.ltm;
 
-  // Imagen del mapa actual (si la API la provee)
-  const mainMapImg =
-    br?.current?.asset ||
-    ranked?.current?.asset ||
-    ltm?.current?.asset ||
-    undefined;
-
-  const embed = new EmbedBuilder()
+  // Card principal de estado
+  const mainEmbed = new EmbedBuilder()
     .setColor('#e74c3c')
-    .setTitle('🟢 ESTADO DE APEX LEGENDS')
+    .setTitle('ℹ️ Información de Apex Legends')
+    .setDescription(
+      [
+        '🔄 Se actualiza cada 5 minutos.',
+        `🕒 Última actualización: ${now.toLocaleString()}`,
+        '',
+        '🌐 Datos desde la API de Mozambique',
+        '[Más info](https://apexlegendsapi.com/)',
+      ].join('\n')
+    )
     .setFooter({
-      text: `Fuente: Apex Legends API | ${new Date().toLocaleString()}`,
+      text: 'by Burlon23',
+      iconURL: 'https://apexlegendsapi.com/favicon.ico',
     });
 
-  // Mostrar la imagen del mapa de Battle Royale como thumbnail (miniatura)
-  if (mainMapImg) {
-    embed.setThumbnail(mainMapImg);
-  }
-
-  // Sección de mapas
-  if (mapRotation) {
-    embed.addFields(
+  // Card Battle Royale (Pubs)
+  const pubsEmbed = new EmbedBuilder()
+    .setColor('#3498db')
+    .setTitle('🗺️ Battle Royale | Normales')
+    .setImage(br?.current?.asset || null)
+    .addFields(
       {
-        name: '🗺️ Battle Royale',
-        value: br?.current?.map
-          ? [
-              `• Ahora: **${br.current.map}** (${formatRemaining(
-                br.current.remainingTimer
-              )})`,
-              `Próximo: **${br.next.map}** a las ${formatHour(
-                br.next.readableDate_start
-              )}`,
-            ].join('\n')
-          : 'No disponible',
-        inline: false,
+        name: 'Mapa actual',
+        value: br?.current?.map ? `${br.current.map}` : 'No disponible',
+        inline: true,
       },
       {
-        name: '🗺️ Ranked',
-        value: ranked?.current?.map
-          ? [
-              `• Ahora: **${ranked.current.map}** (${formatRemaining(
-                ranked.current.remainingTimer
-              )})`,
-              `Próximo: **${ranked.next.map}** a las ${formatHour(
-                ranked.next.readableDate_start
-              )}`,
-            ].join('\n')
+        name: 'Tiempo restante',
+        value: br?.current?.remainingTimer
+          ? formatTimeLeft(br.current.remainingTimer)
           : 'No disponible',
-        inline: false,
+        inline: true,
       },
       {
-        name: '🗺️ LTM (Modo por Tiempo Limitado)',
-        value: ltm?.current?.map
-          ? [
-              `• Ahora: **${ltm.current.map}** (${formatRemaining(
-                ltm.current.remainingTimer
-              )})`,
-              `Próximo: **${ltm.next.map}** a las ${formatHour(
-                ltm.next.readableDate_start
-              )}`,
-            ].join('\n')
+        name: '\u200B',
+        value: br?.next?.map
+          ? formatNextMap(br.next.map, br.next.readableDate_start)
           : 'No disponible',
         inline: false,
       }
     );
-  } else {
-    embed.addFields({
-      name: '🗺️ Mapas',
-      value: 'No se pudo obtener la información de rotación de mapas.',
-    });
-  }
 
-  // Sección de Predator RP
-  if (predatorRank && predatorRank.RP) {
-    embed.addFields({
-      name: '👹 RP necesario para Predator (Top global)',
-      value: [
-        `🖥️ **PC:** ${predatorRank.RP.PC.val} RP`,
-        `🎮 **PS4:** ${predatorRank.RP.PS4.val} RP`,
-        `🎮 **Xbox:** ${predatorRank.RP.X1.val} RP`,
-      ].join('\n'),
-      inline: false,
-    });
-  } else {
-    embed.addFields({
-      name: '👹 RP necesario para Predator',
-      value: 'No se pudo obtener la información.',
-    });
-  }
+  // Card Ranked
+  const rankedDescArr = [
+    ranked?.current?.eventType === 'split'
+      ? `El split termina en ${ranked?.current?.eventEnd || 'N/A'}`
+      : '',
+    ranked?.current?.seasonEnd
+      ? `La temporada termina en ${ranked?.current?.seasonEnd}`
+      : '',
+  ].filter(Boolean);
 
-  return embed;
+  const rankedEmbed = new EmbedBuilder()
+    .setColor('#8e44ad')
+    .setTitle('🏆 Battle Royale | Ranked')
+    .setImage(ranked?.current?.asset || null)
+    .setDescription(rankedDescArr.length > 0 ? rankedDescArr.join(' • ') : ' ')
+    .addFields(
+      {
+        name: 'Mapa actual',
+        value: ranked?.current?.map ? `${ranked.current.map}` : 'No disponible',
+        inline: true,
+      },
+      {
+        name: 'Tiempo restante',
+        value: ranked?.current?.remainingTimer
+          ? formatTimeLeft(ranked.current.remainingTimer)
+          : 'No disponible',
+        inline: true,
+      },
+      {
+        name: '\u200B',
+        value: ranked?.next?.map
+          ? formatNextMap(ranked.next.map, ranked.next.readableDate_start)
+          : 'No disponible',
+        inline: false,
+      }
+    );
+
+  // Card LTM
+  const ltmEmbed = new EmbedBuilder()
+    .setColor('#f39c12')
+    .setTitle('🌀 LTM (Modo por Tiempo Limitado)')
+    .setImage(ltm?.current?.asset || null)
+    .addFields(
+      {
+        name: 'Mapa actual',
+        value: ltm?.current?.map ? `${ltm.current.map}` : 'No disponible',
+        inline: true,
+      },
+      {
+        name: 'Tiempo restante',
+        value: ltm?.current?.remainingTimer
+          ? formatTimeLeft(ltm.current.remainingTimer)
+          : 'No disponible',
+        inline: true,
+      },
+      {
+        name: '\u200B',
+        value: ltm?.next?.map
+          ? formatNextMap(ltm.next.map, ltm.next.readableDate_start)
+          : 'No disponible',
+        inline: false,
+      }
+    );
+
+  // Card Predator RP
+  const predatorEmbed = new EmbedBuilder()
+    .setColor('#e67e22')
+    .setTitle('👹 RP necesario para Predator (Top global)')
+    .setDescription(
+      'RP requerido para entrar al top global Predator en cada plataforma.'
+    )
+    .addFields(
+      predatorRank && predatorRank.RP
+        ? [
+            {
+              name: '🖥️ PC',
+              value: `${predatorRank.RP.PC.val} RP`,
+              inline: true,
+            },
+            {
+              name: '🎮 PS4',
+              value: `${predatorRank.RP.PS4.val} RP`,
+              inline: true,
+            },
+            {
+              name: '🎮 Xbox',
+              value: `${predatorRank.RP.X1.val} RP`,
+              inline: true,
+            },
+          ]
+        : [
+            {
+              name: 'RP necesario para Predator',
+              value: 'No se pudo obtener la información.',
+              inline: false,
+            },
+          ]
+    )
+    .setThumbnail(
+      'https://static.wikia.nocookie.net/apexlegends_gamepedia_en/images/7/7e/Ranked_Predator.png'
+    );
+
+  return [rankedEmbed, pubsEmbed, ltmEmbed, predatorEmbed, mainEmbed];
 }
