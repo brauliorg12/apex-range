@@ -142,3 +142,37 @@ export async function getServerStatus(): Promise<any | null> {
     return null;
   }
 }
+
+/**
+ * Obtiene el leaderboard de Apex Legends. (API con whitelist)
+ * @param platform Plataforma (PC, PS4, X1)
+ * @returns Datos del leaderboard o null si hay error.
+ */
+export async function getLeaderboard(
+  platform: string = 'PC'
+): Promise<any | null> {
+  if (!MOZA_API_KEY) {
+    throw new Error('MOZA_API_KEY no está configurada en el entorno.');
+  }
+  const url = `${MOZA_URL}/leaderboard?auth=${MOZA_API_KEY}&legend=Global&key=rankScore&platform=${platform}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    // LOG detallado para inspección de la respuesta del leaderboard
+    console.log(
+      '[ApexAPI][DEBUG] Respuesta completa de getLeaderboard:',
+      JSON.stringify(data, null, 2)
+    );
+    if (!res.ok || (data && (data as any).Error)) {
+      console.log(`[API][getLeaderboard] status: ERROR | url: ${url}`);
+      // It's common for this endpoint to be restricted, so we'll return a specific object.
+      return { error: 'Restricted access or no data' };
+    }
+    console.log(`[API][getLeaderboard] status: OK | url: ${url}`);
+    return data;
+  } catch (error) {
+    console.log(`[API][getLeaderboard] status: ERROR | url: ${url}`);
+    console.error('Error al consultar el leaderboard:', error);
+    return null;
+  }
+}

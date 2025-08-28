@@ -38,13 +38,18 @@ export function buildPredatorEmbed(
               inline: true,
             },
             {
-              name: '🎮 PS4',
+              name: '🎮 PlayStation',
               value: `\`\`${predatorRank.RP.PS4.val} RP\`\``,
               inline: true,
             },
             {
               name: '🎮 Xbox',
               value: `\`\`${predatorRank.RP.X1.val} RP\`\``,
+              inline: true,
+            },
+            {
+              name: '🎮 Switch',
+              value: `\`\`${predatorRank.RP.SWITCH.val} RP\`\``,
               inline: true,
             },
           ]
