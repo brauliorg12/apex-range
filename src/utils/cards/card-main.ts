@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 
 export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
   return new EmbedBuilder()
-    .setColor('#e74c3c')
+    .setColor('#bdc3c7')
     .setTitle('ℹ️ Información de Apex Legends')
     .setDescription(
       [

@@ -28,7 +28,7 @@ export function buildServerStatusEmbed(
       : undefined;
 
   const embed = new EmbedBuilder()
-    .setColor('#f1c40f')
+    .setColor('#27ae60')
     .setTitle('🛰️ Estado de los Servidores de Apex Legends');
 
   if (serverStatus) {

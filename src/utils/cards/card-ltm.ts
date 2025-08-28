@@ -10,7 +10,7 @@ function formatTimeLeft(remaining?: string) {
   return parts.length ? parts.join(' ') : 'N/A';
 }
 
-function formatNextMap(map?: string, dateStr?: string) {
+function formatNextMap(map?: string, dateStr?: string, eventName?: string) {
   if (!map || !dateStr) return 'No disponible';
   const now = new Date();
   const nextDate = new Date(dateStr.replace(' ', 'T') + 'Z');
@@ -21,7 +21,8 @@ function formatNextMap(map?: string, dateStr?: string) {
     : isTomorrow
     ? 'mañana'
     : nextDate.toLocaleDateString('es-ES');
-  return `Próximo mapa: ${map} • ${dayText} a las ${nextDate.toLocaleTimeString(
+  let eventText = eventName ? ` (${eventName})` : '';
+  return `Próximo mapa: ${map}${eventText} • ${dayText} a las ${nextDate.toLocaleTimeString(
     'es-ES',
     {
       hour: '2-digit',
@@ -45,7 +46,11 @@ export function buildLtmEmbed(
   cacheTimestamps?: Record<string, number | undefined>
 ) {
   const hasData =
-    ltm && ltm.current && ltm.current.map && ltm.current.remainingTimer;
+    ltm &&
+    ltm.current &&
+    ltm.current.map &&
+    ltm.current.remainingTimer &&
+    ltm.current.eventName;
   const footerText =
     cacheInfo.mapRotation && hasData && cacheTimestamps?.mapRotation
       ? `⚠️ Datos en cache cargados ${formatCacheAge(
@@ -55,9 +60,16 @@ export function buildLtmEmbed(
 
   const embed = new EmbedBuilder()
     .setColor('#f39c12')
-    .setTitle('🌀 LTM (Modo por Tiempo Limitado)')
+    .setTitle('🎲 Mixtape')
     .setImage(hasData ? ltm.current.asset : null)
     .addFields(
+      {
+        name: 'Modo de juego',
+        value: hasData
+          ? `\`\`\`${ltm.current.eventName}\`\`\``
+          : 'No disponible',
+        inline: true,
+      },
       {
         name: 'Mapa actual',
         value: hasData ? `\`\`\`${ltm.current.map}\`\`\`` : 'No disponible',
@@ -77,14 +89,19 @@ export function buildLtmEmbed(
       text: ltm?.next?.map
         ? `${formatNextMap(
             ltm.next.map,
-            ltm.next.readableDate_start
+            ltm.next.readableDate_start,
+            ltm.next.eventName
           )} • ${footerText}`
         : `Próximo mapa: No disponible • ${footerText}`,
     });
   } else {
     embed.setFooter({
       text: ltm?.next?.map
-        ? formatNextMap(ltm.next.map, ltm.next.readableDate_start)
+        ? formatNextMap(
+            ltm.next.map,
+            ltm.next.readableDate_start,
+            ltm.next.eventName
+          )
         : 'Próximo mapa: No disponible',
     });
   }

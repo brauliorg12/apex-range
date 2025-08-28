@@ -134,14 +134,6 @@ export async function createApexStatusEmbeds(
   const predatorRank = resultMap.predatorRank;
   const serverStatus = resultMap.serverStatus;
 
-  // LOG para inspección de assets/imágenes de mapas
-  if (mapRotation) {
-    console.log(
-      '[ApexStatus][DEBUG] mapRotation objeto completo:',
-      JSON.stringify(mapRotation, null, 2)
-    );
-  }
-
   // Logging resumen de ciclo
   console.log(`[ApexStatus] Actualización completada.`);
 

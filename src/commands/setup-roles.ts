@@ -94,7 +94,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     components: [...createManagementButtons()],
   });
 
+  // Fijar ambos mensajes
   try {
+    await roleSelectionMessage.pin();
     await roleCountMessage.pin();
   } catch (err) {
     console.error(

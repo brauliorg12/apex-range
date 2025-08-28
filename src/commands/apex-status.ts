@@ -43,6 +43,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       components: [apexProfileButtonRow],
     });
 
+    // Fijar el mensaje principal de estado
+    try {
+      const channel = await interaction.channel?.fetch();
+      if (channel && 'messages' in channel) {
+        const msg = await channel.messages.fetch(reply.id);
+        await msg.pin();
+      }
+    } catch (err) {
+      console.error('No se pudo fijar el mensaje de estado.', err);
+      await interaction.followUp({
+        content:
+          "No pude fijar el mensaje de estado. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'.",
+        ephemeral: true,
+      });
+    }
+
     // Registrar el mensaje para actualización automática
     await writeApexStatusState({
       apexInfoMessageId: reply.id,

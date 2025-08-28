@@ -67,7 +67,7 @@ export async function updateRoleCountMessage(guild: Guild) {
       const recentCard = await buildRecentAvatarsCard(guild);
 
       const headerEmbed = new EmbedBuilder()
-        .setColor('#ffffff')
+        .setColor('#bdc3c7')
         .setDescription(
           '🛡️ **Jugadores en línea por Rango**\n' +
             '> Puede clickear sobre los jugadores para interactuar'
