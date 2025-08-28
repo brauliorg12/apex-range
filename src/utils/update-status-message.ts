@@ -1,91 +1,90 @@
 import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
-import { readState } from './state-manager';
+import {
+  readRolesState,
+  writeRolesState,
+  readApexStatusState,
+  writeApexStatusState,
+} from './state-manager';
 import { getPlayerStats } from './player-stats';
 import { createRankButtons, createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './online-embed-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 import { createApexStatusEmbeds } from './apex-status-embed';
 
+async function fetchChannel(guild: Guild, channelId: string) {
+  return (await guild.channels.fetch(channelId)) as TextChannel;
+}
+
 export async function updateRoleCountMessage(guild: Guild) {
   try {
-    const state = await readState();
+    const rolesState = await readRolesState();
     if (
-      !state.channelId ||
-      !state.roleCountMessageId ||
-      !state.roleSelectionMessageId
-    )
+      !rolesState?.channelId ||
+      !rolesState.roleCountMessageId ||
+      !rolesState.roleSelectionMessageId
+    ) {
       return;
+    }
 
-    const channel = (await guild.channels.fetch(
-      state.channelId
-    )) as TextChannel;
+    const channel = await fetchChannel(guild, rolesState.channelId);
+    if (!channel) return;
 
-    const [statsMessage, roleSelectionMessage, stats] = await Promise.all([
-      channel.messages.fetch(state.roleCountMessageId),
-      channel.messages.fetch(state.roleSelectionMessageId),
-      getPlayerStats(guild),
-    ]);
+    const stats = await getPlayerStats(guild);
 
-    if (!statsMessage || !roleSelectionMessage) return;
-
-    const updatedButtons = createRankButtons(guild.client);
+    // Actualizar mensaje de selección de roles
     try {
+      const roleSelectionMessage = await channel.messages.fetch(
+        rolesState.roleSelectionMessageId
+      );
+      const updatedButtons = createRankButtons(guild.client);
       await roleSelectionMessage.edit({ components: updatedButtons });
     } catch (error: any) {
       if (error.code === 10008) {
-        const newMessage = await channel.send({ components: updatedButtons });
-      } else {
-        throw error;
+        console.warn(
+          'El mensaje de selección de roles no fue encontrado. No se pudo actualizar.'
+        );
       }
     }
 
-    const fields = [
-      {
-        name: 'En Línea',
-        value: `🟢 - **${stats.online}**`,
-        inline: true,
-      },
-      {
-        name: 'Registrados',
-        value: `👥 - **${stats.total}**`,
-        inline: true,
-      },
-    ];
-
-    const embed = new EmbedBuilder()
-      .setColor('#bdc3c7')
-      .setTitle('Estadísticas de Jugadores')
-      .setFields(fields);
-
-    const { embeds: onlineEmbeds, files: onlineFiles } =
-      await buildAllOnlineEmbeds(guild);
-
-    const recentCard = await buildRecentAvatarsCard(guild);
-
-    const headerEmbed = new EmbedBuilder()
-      .setColor('#ffffff')
-      .setDescription(
-        '🛡️ **Jugadores en línea por Rango**\n' +
-          '> Puede clickear sobre los jugadores para interactuar'
+    // Actualizar mensaje de estadísticas
+    try {
+      const statsMessage = await channel.messages.fetch(
+        rolesState.roleCountMessageId
       );
 
-    const embedsToSend = [
-      embed,
-      ...(recentCard ? [recentCard.embed] : []),
-      headerEmbed,
-      ...onlineEmbeds,
-    ];
+      const fields = [
+        { name: 'En Línea', value: `🟢 - **${stats.online}**`, inline: true },
+        { name: 'Registrados', value: `👥 - **${stats.total}**`, inline: true },
+      ];
 
-    let filesToSend = [
-      ...(recentCard ? recentCard.files : []),
-      ...(onlineFiles ?? []),
-    ];
+      const embed = new EmbedBuilder()
+        .setColor('#bdc3c7')
+        .setTitle('Estadísticas de Jugadores')
+        .setFields(fields);
 
-    if (filesToSend.length > 10) {
-      filesToSend = filesToSend.slice(0, 10);
-    }
+      const { embeds: onlineEmbeds, files: onlineFiles } =
+        await buildAllOnlineEmbeds(guild);
+      const recentCard = await buildRecentAvatarsCard(guild);
 
-    try {
+      const headerEmbed = new EmbedBuilder()
+        .setColor('#ffffff')
+        .setDescription(
+          '🛡️ **Jugadores en línea por Rango**\n' +
+            '> Puede clickear sobre los jugadores para interactuar'
+        );
+
+      const embedsToSend = [
+        embed,
+        ...(recentCard ? [recentCard.embed] : []),
+        headerEmbed,
+        ...onlineEmbeds,
+      ];
+
+      const filesToSend = [
+        ...(recentCard ? recentCard.files : []),
+        ...(onlineFiles ?? []),
+      ].slice(0, 10);
+
       await statsMessage.edit({
         content: '',
         embeds: embedsToSend,
@@ -94,14 +93,9 @@ export async function updateRoleCountMessage(guild: Guild) {
       });
     } catch (error: any) {
       if (error.code === 10008) {
-        const newMessage = await channel.send({
-          content: '',
-          embeds: embedsToSend,
-          components: [...createManagementButtons()],
-          files: filesToSend,
-        });
-      } else {
-        throw error;
+        console.warn(
+          'El mensaje de estadísticas no fue encontrado. No se pudo actualizar.'
+        );
       }
     }
   } catch (error) {
@@ -110,32 +104,35 @@ export async function updateRoleCountMessage(guild: Guild) {
 }
 
 export async function updateApexInfoMessage(guild: Guild) {
-  console.log(
-    '[DEBUG] updateApexInfoMessage ejecutado',
-    new Date().toISOString()
-  );
   try {
-    const state = await readState();
-    if (!state.channelId || !state.apexInfoMessageId) return;
+    const apexStatusState = await readApexStatusState();
+    if (!apexStatusState?.channelId || !apexStatusState.apexInfoMessageId) {
+      return;
+    }
 
-    const channel = (await guild.channels.fetch(
-      state.channelId
-    )) as TextChannel;
+    const channel = await fetchChannel(guild, apexStatusState.channelId);
+    if (!channel) return;
 
-    const apexInfoMessage = await channel.messages.fetch(
-      state.apexInfoMessageId
-    );
-
-    if (!apexInfoMessage) return;
-
-    // Usa siempre la versión con los nuevos cards
     const embeds = await createApexStatusEmbeds();
 
-    await apexInfoMessage.edit({ embeds });
-  } catch (error) {
-    console.error(
-      'Error al actualizar el mensaje de información de Apex:',
-      error
-    );
+    await channel.messages.edit(apexStatusState.apexInfoMessageId, { embeds });
+  } catch (error: any) {
+    if (error.code === 10008) {
+      console.warn(
+        'El mensaje de información de Apex no fue encontrado, limpiando estado.'
+      );
+      const currentState = await readApexStatusState();
+      if (currentState) {
+        await writeApexStatusState({
+          ...currentState,
+          apexInfoMessageId: undefined,
+        });
+      }
+    } else {
+      console.error(
+        'Error al actualizar el mensaje de información de Apex:',
+        error
+      );
+    }
   }
 }

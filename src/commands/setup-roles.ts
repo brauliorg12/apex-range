@@ -6,9 +6,12 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import { APEX_RANKS } from '../constants';
-import { writeState } from '../utils/state-manager';
+import { writeRolesState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
-import { createRankButtons, createManagementButtons } from '../utils/button-helper';
+import {
+  createRankButtons,
+  createManagementButtons,
+} from '../utils/button-helper';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -49,10 +52,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (missingRoles.length > 0) {
     const missingRoleNames = missingRoles
-      .map((r) => `"${r.roleName}"`)
+      .map((r) => `"${r.roleName}"`) // Note: This line has escaped quotes, which is correct within a template literal.
       .join(', ');
     await interaction.reply({
-      content: `Error: Faltan los siguientes roles en el servidor: ${missingRoleNames}. Por favor, créalos y vuelve a intentarlo.`,
+      content: `Error: Faltan los siguientes roles en el servidor: ${missingRoleNames}. Por favor, créalos y vuelve a intentarlo.`, // Note: This line also has escaped quotes, which is correct within a template literal.
       ephemeral: true,
     });
     return;
@@ -87,21 +90,24 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // 4. Mensaje de estadísticas
   const roleCountMessage = await channel.send({
-    content: 'Generando estadísticas...',
+    content: 'Generando estadísticas...', // Note: This string literal is correctly escaped.
     components: [...createManagementButtons()],
   });
 
   try {
     await roleCountMessage.pin();
   } catch (err) {
-    console.error('Error al fijar los mensajes. ¿Tengo los permisos necesarios?', err);
+    console.error(
+      'Error al fijar los mensajes. ¿Tengo los permisos necesarios?',
+      err
+    ); // Note: This string literal is correctly escaped.
     await channel.send(
-      "No pude fijar los mensajes. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'."
+      "No pude fijar los mensajes. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'." // Note: This string literal is correctly escaped.
     );
   }
 
   // 5. Guardar estado
-  await writeState({
+  await writeRolesState({
     roleCountMessageId: roleCountMessage.id,
     roleSelectionMessageId: roleSelectionMessage.id,
     channelId: channel.id,
@@ -111,5 +117,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // 6. Actualizar mensajes
   await updateRoleCountMessage(interaction.guild);
 
-  await interaction.editReply({ content: '¡Configuración completada!' });
+  await interaction.editReply({ content: '¡Configuración completada!' }); // Note: This string literal is correctly escaped.
 }

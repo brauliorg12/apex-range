@@ -1,5 +1,5 @@
 import { Client, Guild, Events } from 'discord.js';
-import { readState } from './utils/state-manager';
+import { readRolesState } from './utils/state-manager';
 import {
   updateRoleCountMessage,
   updateApexInfoMessage,
@@ -27,20 +27,20 @@ function printBanner(client: Client, guild: Guild, channelInfo: string) {
 export async function initBot(client: Client) {
   client.once(Events.ClientReady, async (readyClient) => {
     try {
-      const state = await readState();
-      if (state.guildId) {
-        const guild = await readyClient.guilds.fetch(state.guildId);
+      const rolesState = await readRolesState();
+      if (rolesState?.guildId) {
+        const guild = await readyClient.guilds.fetch(rolesState.guildId);
         let channelInfo = '';
-        if (state.channelId) {
+        if (rolesState.channelId) {
           try {
-            const channel = await guild.channels.fetch(state.channelId);
+            const channel = await guild.channels.fetch(rolesState.channelId);
             if (channel && 'name' in channel) {
               channelInfo = `Canal: #${channel.name} (${channel.id})`;
             } else {
-              channelInfo = `Canal: (no encontrado, id=${state.channelId})`;
+              channelInfo = `Canal: (no encontrado, id=${rolesState.channelId})`;
             }
           } catch {
-            channelInfo = `Canal: (no encontrado, id=${state.channelId})`;
+            channelInfo = `Canal: (no encontrado, id=${rolesState.channelId})`;
           }
         } else {
           channelInfo = 'Canal: (no configurado)';

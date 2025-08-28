@@ -83,7 +83,6 @@ export async function createApexStatusEmbeds() {
     )
     .setFooter({
       text: 'by Burlon23',
-      iconURL: 'https://apexlegendsapi.com/favicon.ico',
     });
 
   // Card Battle Royale (Pubs)

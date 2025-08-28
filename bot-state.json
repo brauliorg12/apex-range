@@ -1,7 +1,18 @@
 {
-  "roleCountMessageId": "1410321975833788448",
-  "roleSelectionMessageId": "1410321973887897631",
+  "roleCountMessageId": "1410566075933917184",
+  "roleSelectionMessageId": "1410566074449137664",
   "channelId": "1147625091627237427",
   "guildId": "335236834621652994",
-  "apexInfoMessageId": "1410322108075999445"
+  "apexInfoMessageId": "1410566210449571900",
+  "roles": {
+    "roleCountMessageId": "1410570076028932157",
+    "roleSelectionMessageId": "1410570074095353857",
+    "channelId": "1406432984231313580",
+    "guildId": "335236834621652994"
+  },
+  "apexStatus": {
+    "apexInfoMessageId": "1410570139694534668",
+    "channelId": "1147625091627237427",
+    "guildId": "335236834621652994"
+  }
 }

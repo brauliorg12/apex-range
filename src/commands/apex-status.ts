@@ -6,7 +6,7 @@ import {
   ButtonStyle,
 } from 'discord.js';
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
-import { writeState, readState } from '../utils/state-manager';
+import { writeApexStatusState } from '../utils/state-manager';
 
 export const data = new SlashCommandBuilder()
   .setName('apex-status')
@@ -34,9 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
 
     // Registrar el mensaje para actualización automática
-    const state = await readState();
-    await writeState({
-      ...state,
+    await writeApexStatusState({
       apexInfoMessageId: reply.id,
       channelId: interaction.channelId,
       guildId: interaction.guildId!,
