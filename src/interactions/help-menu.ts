@@ -14,6 +14,7 @@ export async function handleHelpMenu(interaction: ButtonInteraction) {
     .setDescription(
       [
         '**/setup-roles** — Configura el panel de selección de rango y el mensaje de estadísticas.',
+        '**/apex-status** — Muestra el estado de Apex (mapas, Predator RP).',
         '**/total-jugadores** — Muestra el número total de jugadores con un rol de rango.',
         '**/api-status** — Muestra el estado actual de la API externa.',
         '',

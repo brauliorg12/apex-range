@@ -97,12 +97,25 @@ Debajo del embed de estado, encontrarás el botón:
 | Comando / Acción               | Descripción                                                        | Permisos      |
 | ------------------------------ | ------------------------------------------------------------------ | ------------- |
 | `/setup-roles`                 | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
+| `/apex-status`                 | Muestra el estado de Apex (mapas, Predator RP)                     | Todos         |
 | `/total-jugadores`             | Muestra el número total de jugadores con rango                     | Todos         |
 | `/api-status`                  | Muestra el estado actual de la API externa                         | Todos         |
 | `Ver mi rango Apex` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
 | **Ver mi perfil Apex** (botón) | Consulta tu perfil de Apex Legends usando la API Mozambique        | Todos         |
 
-> **Nota:** El comando de contexto aparece al hacer click derecho sobre un usuario.
+> **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
+
+---
+
+## 🌐 Uso en Múltiples Canales
+
+Una de las características más poderosas del bot es su capacidad para funcionar en diferentes canales de forma simultánea e independiente.
+
+-   **Panel de Roles y Estadísticas (`/setup-roles`)**: Puedes ejecutar este comando en un canal principal o de bienvenida (ej: `#bienvenida-y-roles`). El bot recordará este canal y mantendrá el panel de rangos y las estadísticas de jugadores siempre actualizado allí.
+
+-   **Panel de Estado de Apex (`/apex-status`)**: Este comando puedes ejecutarlo en un canal completamente diferente (ej: `#noticias-apex`). El bot mostrará y actualizará la rotación de mapas y el RP de Predator en ese canal, sin interferir con el panel de roles.
+
+Esta separación te permite organizar tu servidor de manera más eficiente, manteniendo la información relevante en los canales adecuados.
 
 ---
 
