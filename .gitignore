@@ -10,3 +10,6 @@
 # Database
 db/
 !db/.gitkeep
+
+# Cache
+.apex-cache

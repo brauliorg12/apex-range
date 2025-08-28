@@ -113,7 +113,10 @@ export async function updateApexInfoMessage(guild: Guild) {
     const channel = await fetchChannel(guild, apexStatusState.channelId);
     if (!channel) return;
 
-    const embeds = await createApexStatusEmbeds();
+    const embeds = await createApexStatusEmbeds(
+      apexStatusState.guildId,
+      apexStatusState.channelId
+    );
 
     await channel.messages.edit(apexStatusState.apexInfoMessageId, { embeds });
   } catch (error: any) {

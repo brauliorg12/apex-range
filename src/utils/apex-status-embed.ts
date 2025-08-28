@@ -1,218 +1,176 @@
-import { EmbedBuilder } from 'discord.js';
-import { getMapRotation, getPredatorRank } from '../services/apex-api';
+import { retry } from './retry-helper';
+import {
+  getMapRotation,
+  getPredatorRank,
+  getServerStatus,
+} from '../services/apex-api';
+import { writeApiCache, readApiCache } from './apex-api-cache';
+import { buildMainEmbed } from './cards/card-main.js';
+import { buildPubsEmbed } from './cards/card-pubs.js';
+import { buildRankedEmbed } from './cards/card-ranked.js';
+import { buildLtmEmbed } from './cards/card-ltm.js';
+import { buildPredatorEmbed } from './cards/card-predator.js';
+import { buildServerStatusEmbed } from './cards/card-server-status.js';
 
-// Utilidad para formatear fecha a "HH:MM AM/PM" (corrige zona horaria)
-function formatHour(dateStr?: string) {
-  if (!dateStr) return 'N/A';
-  let iso = dateStr.replace(' ', 'T');
-  if (!iso.endsWith('Z')) iso += 'Z';
-  const date = new Date(iso);
-  return date.toLocaleTimeString('es-ES', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
-
-// Utilidad para mostrar "Queda: xx min"
-function formatRemaining(remaining?: string) {
-  if (!remaining) return '';
-  // Espera formato "HH:MM:SS"
-  const [h, m, s] = remaining.split(':').map(Number);
-  if (isNaN(h) || isNaN(m)) return '';
-  let parts = [];
-  if (h > 0) parts.push(`${h}h`);
-  if (m > 0) parts.push(`${m}m`);
-  return parts.length ? `Queda: ${parts.join(' ')}.` : '';
-}
-
-function formatTimeLeft(remaining?: string) {
-  if (!remaining) return 'N/A';
-  const [h, m, s] = remaining.split(':').map(Number);
-  let parts = [];
-  if (h > 0) parts.push(`${h} hrs`);
-  if (m > 0) parts.push(`${m} mins`);
-  if (s > 0) parts.push(`${s} segs`);
-  return parts.length ? parts.join(' ') : 'N/A';
-}
-
-function formatNextMap(map?: string, dateStr?: string) {
-  if (!map || !dateStr) return 'No disponible';
-  const now = new Date();
-  const nextDate = new Date(dateStr.replace(' ', 'T') + 'Z');
-  const isToday = nextDate.toDateString() === now.toDateString();
-  const isTomorrow = nextDate.getDate() === now.getDate() + 1;
-  let dayText = isToday
-    ? 'hoy'
-    : isTomorrow
-    ? 'mañana'
-    : nextDate.toLocaleDateString('es-ES');
-  return `Próximo mapa: ${map} • ${dayText} a las ${formatHour(dateStr)}`;
-}
-
-export async function createApexStatusEmbeds() {
-  let mapRotation: any = null;
-  let predatorRank: any = null;
+/**
+ * Obtiene y construye los embeds de estado de Apex Legends para mostrar en Discord.
+ *
+ * - Consulta los endpoints críticos (rotación de mapas y estado de servidores) primero,
+ *   luego los secundarios (rango depredador).
+ * - Usa un sistema de cache: si la API falla, intenta recuperar datos en cache.
+ * - Valida la integridad de los datos antes de actualizar la cache.
+ * - Registra en consola el estado de cada endpoint y si los datos provienen de cache.
+ * - Construye y retorna un array de embeds listos para enviar/editar en Discord,
+ *   utilizando helpers especializados para cada sección (main, pubs, ranked, etc).
+ *
+ * @param guildId   ID de la guild (servidor) de Discord, usado para la cache.
+ * @param channelId ID del canal de Discord, usado para la cache.
+ * @returns         Array de embeds de Discord con el estado actual de Apex Legends.
+ */
+export async function createApexStatusEmbeds(
+  guildId?: string,
+  channelId?: string
+) {
+  let cacheInfo: { [k: string]: boolean } = {};
+  let cacheTimestamps: { [k: string]: number | undefined } = {};
   const now = new Date();
 
-  try {
-    [mapRotation, predatorRank] = await Promise.all([
-      getMapRotation(),
-      getPredatorRank(),
-    ]);
-  } catch (error) {
-    console.error('Error consultando la API de Mozambique:', error);
+  // Endpoints críticos primero
+  const criticalKeys = ['mapRotation', 'serverStatus'];
+  const secondaryKeys = ['predatorRank'];
+
+  async function fetchWithCache<T>(
+    key: string,
+    fn: () => Promise<T>
+  ): Promise<T | null> {
+    try {
+      const data = await retry(fn, 3, 1200);
+
+      // Validación de datos según endpoint
+      let isValid = true;
+      if (key === 'mapRotation') {
+        isValid = !!(data && (data as any).battle_royale);
+      } else if (key === 'predatorRank') {
+        isValid = !!(data && (data as any).RP);
+      } else if (key === 'serverStatus') {
+        isValid = !!data && !(data as any).error;
+      }
+
+      if (isValid) {
+        await writeApiCache(key, data, guildId, channelId);
+        cacheInfo[key] = false;
+        cacheTimestamps[key] = Date.now();
+        console.log(`[ApexStatus] ${key}: Datos actualizados correctamente.`);
+        return data;
+      } else {
+        throw new Error(`[ApexStatus] ${key}: Respuesta inválida de la API`);
+      }
+    } catch (err) {
+      const cached = await readApiCache(key, guildId, channelId);
+      if (cached) {
+        cacheInfo[key] = true;
+        cacheTimestamps[key] = cached.ts;
+        console.warn(
+          `[ApexStatus] ${key}: Usando datos en cache por error de API.`
+        );
+        return cached.data;
+      }
+      cacheInfo[key] = false;
+      cacheTimestamps[key] = undefined;
+      console.error(
+        `[ApexStatus] ${key}: No se pudo obtener datos ni de la API ni de cache.`
+      );
+      return null;
+    }
   }
 
+  // Consulta críticos primero
+  const criticalResults = await Promise.all(
+    criticalKeys.map((key) => {
+      switch (key) {
+        case 'mapRotation':
+          return fetchWithCache('mapRotation', () => getMapRotation());
+        case 'serverStatus':
+          return fetchWithCache('serverStatus', () => getServerStatus());
+        default:
+          return Promise.resolve(null);
+      }
+    })
+  );
+
+  // Espera 1 segundo para no saturar el rate limit
+  await new Promise((res) => setTimeout(res, 1000));
+
+  // Consulta secundarios después
+  const secondaryResults = await Promise.all(
+    secondaryKeys.map((key) => {
+      switch (key) {
+        case 'predatorRank':
+          return fetchWithCache('predatorRank', () => getPredatorRank());
+        default:
+          return Promise.resolve(null);
+      }
+    })
+  );
+
+  // Asigna resultados
+  const resultMap: { [k: string]: any } = {};
+  criticalKeys.forEach((key, idx) => {
+    resultMap[key] = criticalResults[idx];
+  });
+  secondaryKeys.forEach((key, idx) => {
+    resultMap[key] = secondaryResults[idx];
+  });
+
+  // Para los que no se consultaron, usa cache si existe
+  for (const key of [...criticalKeys, ...secondaryKeys]) {
+    if (!(key in resultMap)) {
+      const cached = await readApiCache(key, guildId, channelId);
+      resultMap[key] = cached?.data ?? null;
+    }
+  }
+
+  const mapRotation = resultMap.mapRotation;
+  const predatorRank = resultMap.predatorRank;
+  const serverStatus = resultMap.serverStatus;
+
+  // LOG para inspección de assets/imágenes de mapas
+  if (mapRotation) {
+    console.log(
+      '[ApexStatus][DEBUG] mapRotation objeto completo:',
+      JSON.stringify(mapRotation, null, 2)
+    );
+  }
+
+  // Logging resumen de ciclo
+  console.log(`[ApexStatus] Actualización completada.`);
+
+  // Construcción de embeds usando helpers separados
   const br = mapRotation?.battle_royale;
   const ranked = mapRotation?.ranked;
   const ltm = mapRotation?.ltm;
 
-  // Card principal de estado
-  const mainEmbed = new EmbedBuilder()
-    .setColor('#e74c3c')
-    .setTitle('ℹ️ Información de Apex Legends')
-    .setDescription(
-      [
-        '🔄 Se actualiza cada 5 minutos.',
-        `🕒 Última actualización: ${now.toLocaleString()}`,
-        '',
-        '🌐 Datos desde la API de Mozambique',
-        '[Más info](https://apexlegendsapi.com/)',
-      ].join('\n')
-    )
-    .setFooter({
-      text: 'by Burlon23',
-    });
+  const mainEmbed = buildMainEmbed(now, cacheInfo);
+  const pubsEmbed = buildPubsEmbed(br, cacheInfo, cacheTimestamps);
+  const rankedEmbed = buildRankedEmbed(ranked, cacheInfo, cacheTimestamps);
+  const ltmEmbed = buildLtmEmbed(ltm, cacheInfo, cacheTimestamps);
+  const predatorEmbed = buildPredatorEmbed(
+    predatorRank,
+    cacheInfo,
+    cacheTimestamps
+  );
+  const serverStatusEmbed = buildServerStatusEmbed(
+    serverStatus,
+    cacheInfo,
+    cacheTimestamps
+  );
 
-  // Card Battle Royale (Pubs)
-  const pubsEmbed = new EmbedBuilder()
-    .setColor('#3498db')
-    .setTitle('🗺️ Battle Royale | Normales')
-    .setImage(br?.current?.asset || null)
-    .addFields(
-      {
-        name: 'Mapa actual',
-        value: br?.current?.map ? `${br.current.map}` : 'No disponible',
-        inline: true,
-      },
-      {
-        name: 'Tiempo restante',
-        value: br?.current?.remainingTimer
-          ? formatTimeLeft(br.current.remainingTimer)
-          : 'No disponible',
-        inline: true,
-      },
-      {
-        name: '\u200B',
-        value: br?.next?.map
-          ? formatNextMap(br.next.map, br.next.readableDate_start)
-          : 'No disponible',
-        inline: false,
-      }
-    );
-
-  // Card Ranked
-  const rankedDescArr = [
-    ranked?.current?.eventType === 'split'
-      ? `El split termina en ${ranked?.current?.eventEnd || 'N/A'}`
-      : '',
-    ranked?.current?.seasonEnd
-      ? `La temporada termina en ${ranked?.current?.seasonEnd}`
-      : '',
-  ].filter(Boolean);
-
-  const rankedEmbed = new EmbedBuilder()
-    .setColor('#8e44ad')
-    .setTitle('🏆 Battle Royale | Ranked')
-    .setImage(ranked?.current?.asset || null)
-    .setDescription(rankedDescArr.length > 0 ? rankedDescArr.join(' • ') : ' ')
-    .addFields(
-      {
-        name: 'Mapa actual',
-        value: ranked?.current?.map ? `${ranked.current.map}` : 'No disponible',
-        inline: true,
-      },
-      {
-        name: 'Tiempo restante',
-        value: ranked?.current?.remainingTimer
-          ? formatTimeLeft(ranked.current.remainingTimer)
-          : 'No disponible',
-        inline: true,
-      },
-      {
-        name: '\u200B',
-        value: ranked?.next?.map
-          ? formatNextMap(ranked.next.map, ranked.next.readableDate_start)
-          : 'No disponible',
-        inline: false,
-      }
-    );
-
-  // Card LTM
-  const ltmEmbed = new EmbedBuilder()
-    .setColor('#f39c12')
-    .setTitle('🌀 LTM (Modo por Tiempo Limitado)')
-    .setImage(ltm?.current?.asset || null)
-    .addFields(
-      {
-        name: 'Mapa actual',
-        value: ltm?.current?.map ? `${ltm.current.map}` : 'No disponible',
-        inline: true,
-      },
-      {
-        name: 'Tiempo restante',
-        value: ltm?.current?.remainingTimer
-          ? formatTimeLeft(ltm.current.remainingTimer)
-          : 'No disponible',
-        inline: true,
-      },
-      {
-        name: '\u200B',
-        value: ltm?.next?.map
-          ? formatNextMap(ltm.next.map, ltm.next.readableDate_start)
-          : 'No disponible',
-        inline: false,
-      }
-    );
-
-  // Card Predator RP
-  const predatorEmbed = new EmbedBuilder()
-    .setColor('#e67e22')
-    .setTitle('👹 RP necesario para Predator (Top global)')
-    .setDescription(
-      'RP requerido para entrar al top global Predator en cada plataforma.'
-    )
-    .addFields(
-      predatorRank && predatorRank.RP
-        ? [
-            {
-              name: '🖥️ PC',
-              value: `${predatorRank.RP.PC.val} RP`,
-              inline: true,
-            },
-            {
-              name: '🎮 PS4',
-              value: `${predatorRank.RP.PS4.val} RP`,
-              inline: true,
-            },
-            {
-              name: '🎮 Xbox',
-              value: `${predatorRank.RP.X1.val} RP`,
-              inline: true,
-            },
-          ]
-        : [
-            {
-              name: 'RP necesario para Predator',
-              value: 'No se pudo obtener la información.',
-              inline: false,
-            },
-          ]
-    )
-    .setThumbnail(
-      'https://static.wikia.nocookie.net/apexlegends_gamepedia_en/images/7/7e/Ranked_Predator.png'
-    );
-
-  return [rankedEmbed, pubsEmbed, ltmEmbed, predatorEmbed, mainEmbed];
+  return [
+    rankedEmbed,
+    pubsEmbed,
+    ltmEmbed,
+    predatorEmbed,
+    serverStatusEmbed,
+    mainEmbed,
+  ];
 }

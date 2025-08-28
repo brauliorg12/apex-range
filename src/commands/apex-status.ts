@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
 import { writeApexStatusState } from '../utils/state-manager';
+import { clearApiCache } from '../utils/apex-api-cache';
 
 export const data = new SlashCommandBuilder()
   .setName('apex-status')
@@ -17,7 +18,16 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   try {
-    const embeds = await createApexStatusEmbeds();
+    // Limpiar cache antes de consultar la API
+    await clearApiCache(
+      interaction.guildId ?? undefined,
+      interaction.channelId ?? undefined
+    );
+
+    const embeds = await createApexStatusEmbeds(
+      interaction.guildId ?? undefined,
+      interaction.channelId ?? undefined
+    );
 
     // Botón "Ver mi perfil Apex"
     const apexProfileButtonRow =

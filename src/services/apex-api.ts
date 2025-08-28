@@ -117,3 +117,28 @@ export async function getPredatorRank(): Promise<any | null> {
     return null;
   }
 }
+
+/**
+ * Obtiene el estado de los servidores de Apex Legends.
+ * @returns Datos del estado de los servidores o null si hay error.
+ */
+export async function getServerStatus(): Promise<any | null> {
+  if (!MOZA_API_KEY) {
+    throw new Error('MOZA_API_KEY no está configurada en el entorno.');
+  }
+  const url = `${MOZA_URL}/servers?auth=${MOZA_API_KEY}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || (data && (data as any).Error)) {
+      console.log(`[API][getServerStatus] status: ERROR | url: ${url}`);
+      return null;
+    }
+    console.log(`[API][getServerStatus] status: OK | url: ${url}`);
+    return data;
+  } catch (error) {
+    console.log(`[API][getServerStatus] status: ERROR | url: ${url}`);
+    console.error('Error al consultar el estado de los servidores:', error);
+    return null;
+  }
+}
