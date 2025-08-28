@@ -13,3 +13,6 @@ db/
 
 # Cache
 .apex-cache
+
+# Estado del bot segun servidor
+.bot-state

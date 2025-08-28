@@ -8,6 +8,7 @@ import {
   data as showMyRankCommand,
   execute as showMyRankExecute,
 } from './commands/show-my-rank';
+import { handleServerStatusInfo } from './commands/apex-status';
 
 export function registerInteractionHandler(client: Client) {
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -68,6 +69,10 @@ export function registerInteractionHandler(client: Client) {
         }
       }
     } else if (interaction.isButton()) {
+      if (interaction.customId === 'server_status_info') {
+        await handleServerStatusInfo(interaction);
+        return;
+      }
       try {
         await handleButtonInteraction(interaction);
         console.log(

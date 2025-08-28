@@ -17,7 +17,7 @@ async function fetchChannel(guild: Guild, channelId: string) {
 
 export async function updateRoleCountMessage(guild: Guild) {
   try {
-    const rolesState = await readRolesState();
+    const rolesState = await readRolesState(guild.id);
     if (
       !rolesState?.channelId ||
       !rolesState.roleCountMessageId ||
@@ -105,7 +105,7 @@ export async function updateRoleCountMessage(guild: Guild) {
 
 export async function updateApexInfoMessage(guild: Guild) {
   try {
-    const apexStatusState = await readApexStatusState();
+    const apexStatusState = await readApexStatusState(guild.id);
     if (!apexStatusState?.channelId || !apexStatusState.apexInfoMessageId) {
       return;
     }
@@ -118,24 +118,29 @@ export async function updateApexInfoMessage(guild: Guild) {
       apexStatusState.channelId
     );
 
-    await channel.messages.edit(apexStatusState.apexInfoMessageId, { embeds });
-  } catch (error: any) {
-    if (error.code === 10008) {
-      console.warn(
-        'El mensaje de información de Apex no fue encontrado, limpiando estado.'
-      );
-      const currentState = await readApexStatusState();
-      if (currentState) {
-        await writeApexStatusState({
-          ...currentState,
-          apexInfoMessageId: undefined,
-        });
+    try {
+      await channel.messages.edit(apexStatusState.apexInfoMessageId, { embeds });
+    } catch (error: any) {
+      if (error.code === 10008) {
+        console.warn(
+          'El mensaje de información de Apex no fue encontrado, limpiando estado.'
+        );
+        const currentState = await readApexStatusState(guild.id);
+        if (currentState) {
+          await writeApexStatusState({
+            ...currentState,
+            apexInfoMessageId: undefined,
+            guildId: guild.id,
+          });
+        }
+      } else {
+        console.error(
+          'Error al actualizar el mensaje de información de Apex:',
+          error
+        );
       }
-    } else {
-      console.error(
-        'Error al actualizar el mensaje de información de Apex:',
-        error
-      );
     }
+  } catch (error) {
+    console.error('Error al actualizar el mensaje de información de Apex:', error);
   }
 }

@@ -2,48 +2,63 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { BotState, RolesState, ApexStatusState } from '../types/bot-state';
 
-const STATE_FILE_PATH = path.join(__dirname, '..', '..', 'bot-state.json');
-const DB_DIR = path.resolve(__dirname, '../../db');
+const STATE_DIR = path.join(__dirname, '../../.bot-state');
 
-// Funciones genéricas para leer y escribir el estado completo
-export async function readState(): Promise<BotState> {
-  try {
-    await fs.access(STATE_FILE_PATH);
-    const data = await fs.readFile(STATE_FILE_PATH, 'utf-8');
-    return JSON.parse(data) as BotState;
-  } catch (error) {
-    return {};
-  }
-}
-
-export async function writeState(state: BotState): Promise<void> {
-  await fs.writeFile(STATE_FILE_PATH, JSON.stringify(state, null, 2));
+// Función para obtener la ruta del archivo de estado
+function getStateFile(guildId: string) {
+  return path.join(STATE_DIR, `${guildId}.json`);
 }
 
 // --- Gestión del estado de Roles ---
-export async function readRolesState(): Promise<RolesState | undefined> {
-  const state = await readState();
-  return state.roles;
+export async function readRolesState(
+  guildId: string
+): Promise<RolesState | null> {
+  const file = getStateFile(guildId);
+  try {
+    const raw = await fs.readFile(file, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
-export async function writeRolesState(rolesState: RolesState): Promise<void> {
-  const state = await readState();
-  const newState: BotState = { ...state, roles: rolesState };
-  await writeState(newState);
+export async function writeRolesState(
+  state: RolesState & { guildId: string }
+): Promise<void> {
+  await fs.mkdir(STATE_DIR, { recursive: true });
+  if (!state.guildId) throw new Error('guildId es requerido para el estado');
+  const file = getStateFile(state.guildId);
+  await fs.writeFile(file, JSON.stringify(state, null, 2));
 }
 
 // --- Gestión del estado de Apex Status ---
-export async function readApexStatusState(): Promise<ApexStatusState | undefined> {
-  const state = await readState();
-  return state.apexStatus;
+export async function readApexStatusState(
+  guildId: string
+): Promise<ApexStatusState | null> {
+  const file = getStateFile(guildId);
+  try {
+    const raw = await fs.readFile(file, 'utf8');
+    const data = JSON.parse(raw);
+    return data.apexStatus || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function writeApexStatusState(
-  apexStatusState: ApexStatusState
+  state: ApexStatusState & { guildId: string }
 ): Promise<void> {
-  const state = await readState();
-  const newState: BotState = { ...state, apexStatus: apexStatusState };
-  await writeState(newState);
+  await fs.mkdir(STATE_DIR, { recursive: true });
+  if (!state.guildId) throw new Error('guildId es requerido para el estado');
+  const file = getStateFile(state.guildId);
+  let current = {};
+  try {
+    current = (await readRolesState(state.guildId)) || {};
+  } catch {}
+  await fs.writeFile(
+    file,
+    JSON.stringify({ ...current, apexStatus: state }, null, 2)
+  );
 }
 
 // --- Funciones de base de datos de jugadores (sin cambios) ---
@@ -64,6 +79,7 @@ function ensureGuildId(
 
 export async function readPlayers(guildId: string) {
   ensureGuildId(guildId);
+  const DB_DIR = path.resolve(__dirname, '../../db');
   await fs.mkdir(DB_DIR, { recursive: true });
   const file = path.join(DB_DIR, `players_${guildId}.json`);
   try {
@@ -76,6 +92,7 @@ export async function readPlayers(guildId: string) {
 
 export async function writePlayers(guildId: string, players: any[]) {
   ensureGuildId(guildId);
+  const DB_DIR = path.resolve(__dirname, '../../db');
   await fs.mkdir(DB_DIR, { recursive: true });
   const file = path.join(DB_DIR, `players_${guildId}.json`);
   await fs.writeFile(file, JSON.stringify(players, null, 2), 'utf8');

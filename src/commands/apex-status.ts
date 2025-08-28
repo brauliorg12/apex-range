@@ -4,6 +4,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  Interaction,
 } from 'discord.js';
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
 import { writeApexStatusState } from '../utils/state-manager';
@@ -29,18 +30,25 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       interaction.channelId ?? undefined
     );
 
-    // Botón "Ver mi perfil Apex"
-    const apexProfileButtonRow =
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId('show_apex_profile_modal')
-          .setLabel('Ver mi perfil Apex')
-          .setStyle(ButtonStyle.Primary)
-      );
+    // Botón "Ver mi perfil Apex" y "Más info"
+    const apexProfileButton = new ButtonBuilder()
+      .setCustomId('show_apex_profile_modal')
+      .setLabel('Ver mi perfil Apex')
+      .setStyle(ButtonStyle.Primary);
+
+    const moreInfoButton = new ButtonBuilder()
+      .setCustomId('server_status_info')
+      .setLabel('¿Qué significan los colores?')
+      .setStyle(ButtonStyle.Secondary);
+
+    const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      apexProfileButton,
+      moreInfoButton
+    );
 
     const reply = await interaction.editReply({
       embeds,
-      components: [apexProfileButtonRow],
+      components: [buttonRow],
     });
 
     // Fijar el mensaje principal de estado
@@ -77,4 +85,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       content: 'No se pudo obtener el estado de Apex Legends.',
     });
   }
+}
+
+// Handler para el botón "Más info"
+export async function handleServerStatusInfo(interaction: Interaction) {
+  if (!interaction.isButton() || interaction.customId !== 'server_status_info')
+    return;
+  await interaction.reply({
+    content:
+      `**Significado de los colores de estado de servidor:**\n\n` +
+      `🟢 UP: Operativo\n` +
+      `🟡 SLOW: Lento/intermitente\n` +
+      `🔴 DOWN: Caído\n` +
+      `⚪ Desconocido: Estado desconocido\n\n` +
+      `Estos colores indican el estado de los servidores de Apex Legends en cada región o plataforma.`,
+    ephemeral: true,
+  });
 }
