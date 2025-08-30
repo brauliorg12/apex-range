@@ -206,6 +206,19 @@ Esta separación te permite organizar tu servidor de manera más eficiente, mant
 
 ---
 
+### Rol común "Apex"
+
+Además de los roles de rango, debes crear manualmente un **rol llamado `Apex`** en tu servidor.  
+Este rol se asignará automáticamente a cualquier usuario que tenga un rango de Apex, y se removerá si el usuario ya no tiene ningún rango.
+
+Puedes usar este rol para mencionar a todos los jugadores registrados fácilmente:
+
+```
+@Apex ¡Hay evento nuevo!
+```
+
+---
+
 ## Comando `/api-status`
 
 Consulta el estado de la API externa utilizada por el bot.  

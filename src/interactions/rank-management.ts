@@ -15,6 +15,10 @@ import {
   updatePlayerRankDate,
   removePlayerRankDate,
 } from '../utils/player-data-manager';
+import {
+  ensureCommonApexRole,
+  removeCommonApexRoleIfNoRank,
+} from '../utils/role-helper';
 
 /**
  * Construye el payload (embed y botones) para el menú de gestión de rango privado de un usuario.
@@ -156,6 +160,7 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
 
     await member.roles.remove(rolesToRemove);
     await member.roles.add(roleToAssign);
+    await ensureCommonApexRole(member);
 
     // Guardar la fecha de asignación
     await updatePlayerRankDate(guild.id, member.id);
@@ -223,6 +228,7 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
     }
 
     await member.roles.remove(rolesToRemove);
+    await removeCommonApexRoleIfNoRank(member);
 
     // Eliminar la fecha de asignación
     await removePlayerRankDate(guild.id, member.id);

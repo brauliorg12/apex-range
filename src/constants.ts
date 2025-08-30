@@ -8,6 +8,8 @@ export interface ApexRank {
   apiName: string;
 }
 
+export const COMMON_APEX_ROLE_NAME = 'Apex';
+
 export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier1_Bronze:1406723914633052296>',
