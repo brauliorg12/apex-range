@@ -1,5 +1,5 @@
 import { Client, Guild, Events } from 'discord.js';
-import { readRolesState } from './utils/state-manager';
+import { readRolesState, readApexStatusState } from './utils/state-manager';
 import {
   updateRoleCountMessage,
   updateApexInfoMessage,
@@ -58,6 +58,15 @@ export async function initBot(client: Client) {
           );
 
           throttler.requestUpdate(guild);
+
+          // Actualizar mensaje de /apex-status si existe al iniciar
+          const apexStatusState = await readApexStatusState(guildId);
+          if (
+            apexStatusState?.apexInfoMessageId &&
+            apexStatusState.channelId
+          ) {
+            await updateApexInfoMessage(guild);
+          }
 
           // Update Apex Info message every 5 minutes
           setInterval(() => {
