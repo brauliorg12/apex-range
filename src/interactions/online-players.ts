@@ -3,6 +3,7 @@ import { APEX_RANKS } from '../constants';
 import { getOnlineMembersByRole } from '../utils/player-stats';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
+import { filterAllowedRoles } from '../utils/role-filter';
 
 /**
  * Muestra un embed con los jugadores online de un rango específico.
@@ -60,16 +61,12 @@ export async function handleShowOnlineByRank(interaction: ButtonInteraction) {
 
     const memberList = onlineMembers
       .map((member) => {
-        const allRoles = member.roles.cache
-          .filter(
-            (role) =>
-              role.name !== '@everyone' &&
-              !APEX_RANKS.some((rank) => rank.roleName === role.name) &&
-              role.name !== 'Server Booster'
-          )
-          .map((role) => role.name)
-          .join(', ');
-        const rolesDisplay = allRoles ? ` (${allRoles})` : '';
+        const allowedRoles = filterAllowedRoles(
+          member.roles.cache.map((role) => role)
+        );
+        const rolesDisplay = allowedRoles.length
+          ? ` (${allowedRoles.map((role) => role.name).join(', ')})`
+          : '';
         return `- <@${member.id}>${rolesDisplay}`;
       })
       .join('\n');

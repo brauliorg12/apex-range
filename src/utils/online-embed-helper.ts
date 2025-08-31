@@ -10,6 +10,7 @@ import { APEX_RANKS } from '../constants';
 import { getOnlineMembersByRole } from './player-stats';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { getRankEmoji } from './emoji-helper';
+import { filterAllowedRoles } from './role-filter';
 
 /**
  * Construye un embed visual para mostrar los jugadores online de un rango específico.
@@ -38,16 +39,12 @@ export async function buildOnlineEmbedForRank(
       '\n\n' +
       onlineMembers
         .map((member: GuildMember) => {
-          const allRoles = member.roles.cache
-            .filter(
-              (role) =>
-                role.name !== '@everyone' &&
-                !APEX_RANKS.some((r) => r.roleName === role.name) &&
-                role.name !== 'Server Booster'
-            )
-            .map((role) => role.name)
-            .join(', ');
-          const rolesDisplay = allRoles ? ` (${allRoles})` : '';
+          const allowedRoles = filterAllowedRoles(
+            member.roles.cache.map((role) => role)
+          );
+          const rolesDisplay = allowedRoles.length
+            ? ` (${allowedRoles.map((role) => role.name).join(', ')})`
+            : '';
           return `• <@${member.id}>${rolesDisplay}`;
         })
         .join('\n');

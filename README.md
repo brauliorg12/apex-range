@@ -303,6 +303,20 @@ DISCORD_TOKEN=TU_TOKEN_DEL_BOT
 CLIENT_ID=TU_CLIENT_ID
 ```
 
+### Variables de entorno adicionales
+
+Para ocultar ciertos roles (por ejemplo, Admin, Apex, Server Booster, etc.) en los listados de jugadores, puedes usar la variable `EXCLUDED_ROLES` en tu archivo `.env`:
+
+```
+EXCLUDED_ROLES=Admin,Apex,Server Booster,Moderador,Embajador,Illuminati
+```
+
+- Separa los nombres de los roles por comas.
+- Los roles listados aquí **no aparecerán** junto a los usuarios en los paneles ni listados del bot.
+- El filtro también excluye automáticamente los roles de rango y `@everyone`.
+
+Recuerda reiniciar el bot después de modificar el `.env` para que los cambios tengan efecto.
+
 ### 4. Compila el proyecto
 
 ```bash
