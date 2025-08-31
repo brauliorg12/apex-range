@@ -11,6 +11,7 @@ import { getOnlineMembersByRole } from './player-stats';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { getRankEmoji } from './emoji-helper';
 import { filterAllowedRoles } from './role-filter';
+import { getCountryFlag } from './country-flag';
 
 /**
  * Construye un embed visual para mostrar los jugadores online de un rango específico.
@@ -33,7 +34,19 @@ export async function buildOnlineEmbedForRank(
 
   const rankEmoji = getRankEmoji(guild.client, rank);
 
+  /**
+   * Para cada usuario online:
+   * - Se filtran los roles extra permitidos (excluyendo rangos, @everyone y los definidos en EXCLUDED_ROLES).
+   * - Cada rol permitido se traduce a su bandera de país (si el nombre coincide con un país en mayúsculas, ej: ARGENTINA, MEXICO, VENEZUELA) usando getCountryFlag.
+   * - Si el usuario tiene varios roles de país, se muestran varias banderas.
+   * - Si el rol no es un país conocido, se muestra el nombre original del rol.
+   * Ejemplo de resultado:
+   *   • @usuario1 (🇦🇷, 🇪🇸)
+   *   • @usuario2 (🇲🇽)
+   *   • @usuario3
+   */
   let description = `> ${rankEmoji} **${onlineCount}** ${jugadoresLabel}`;
+
   if (onlineCount > 0) {
     description +=
       '\n\n' +
@@ -42,8 +55,21 @@ export async function buildOnlineEmbedForRank(
           const allowedRoles = filterAllowedRoles(
             member.roles.cache.map((role) => role)
           );
+          // Para cada rol permitido, muestra la bandera y el nombre capitalizado en cursiva si es país, si no, solo el nombre
           const rolesDisplay = allowedRoles.length
-            ? ` (${allowedRoles.map((role) => role.name).join(', ')})`
+            ? ` (${allowedRoles
+                .map((role) => {
+                  const flag = getCountryFlag(role.name);
+                  // Capitaliza el nombre del país o rol
+                  const capitalized =
+                    role.name.charAt(0).toUpperCase() +
+                    role.name.slice(1).toLowerCase();
+                  // Siempre muestra en cursiva, con bandera si aplica
+                  return flag !== role.name
+                    ? `${flag} _${capitalized}_`
+                    : `_${capitalized}_`;
+                })
+                .join(', ')})`
             : '';
           return `• <@${member.id}>${rolesDisplay}`;
         })

@@ -258,6 +258,27 @@ Permite consultar el rango de cualquier usuario (incluyéndote a ti mismo) desde
 
 ---
 
+## 🌎 Visualización de países con banderas
+
+Cuando un usuario tiene roles de país (por ejemplo, `ARGENTINA`, `MEXICO`, `VENEZUELA`), el bot mostrará automáticamente la bandera correspondiente junto al nombre del país en los listados de jugadores online.  
+El nombre del país aparecerá capitalizado y en _cursiva_ para mayor claridad y menor impacto visual.
+
+Ejemplo de visualización:
+
+```
+• @usuario1 (🇦🇷 _Argentina_, 🇲🇽 _Mexico_)
+• @usuario2 (_Embajador_)
+• @usuario3 (_Venelzuela_)
+```
+
+- Si el rol coincide con un país conocido, se muestra la bandera y el nombre capitalizado.
+- Si el rol no es un país conocido, se muestra solo el nombre capitalizado y en cursiva.
+- Puedes ampliar la lista de países editando el archivo `src/utils/country-flag.ts` y agregando más entradas al objeto `COUNTRY_NAME_TO_ISO`.
+
+> **Nota:** Los roles de país deben estar en mayúsculas y escritos exactamente igual que en Discord para que la bandera se muestre correctamente.
+
+---
+
 ## ✨ Características principales
 
 - Panel persistente y auto-actualizable.
