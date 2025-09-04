@@ -1,14 +1,16 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { APEX_RANKS, APEX_LOGO_EMOJI } from '../constants';
+import { renderPredatorBadge } from './predator-badge-canvas';
 
 /**
  * Genera un embed profesional para mostrar el perfil de Apex Legends.
+ * Si el jugador es Predator, retorna también el badge visual.
  * @param profile Perfil obtenido de la API externa.
  * @param playerName Nombre del jugador consultado.
  * @param platform Plataforma del jugador (PC, PS4, X1).
- * @returns EmbedBuilder listo para enviar.
+ * @returns { embed, files? }
  */
-export function buildApexProfileEmbed(
+export async function buildApexProfileEmbed(
   profile: any,
   playerName: string,
   platform: string
@@ -76,7 +78,7 @@ export function buildApexProfileEmbed(
   // Construye el embed profesional
   const embed = new EmbedBuilder()
     .setTitle(`${APEX_LOGO_EMOJI} Perfil de Apex: \`\`${playerName}\`\``)
-    .setDescription(`Nombre Global: \`\`\`${global.name}\`\`\``)
+    .setDescription(`**Nombre Global:** \`\`\`${global.name}\`\`\``)
     .setColor(embedColor)
     .setThumbnail(rankImg || undefined)
     .addFields(
@@ -127,5 +129,30 @@ export function buildApexProfileEmbed(
   // Si hay banner de leyenda, lo agrega como imagen
   if (legendBanner) embed.setImage(legendBanner);
 
-  return embed;
+  // Si es Predator y tiene ladderPos, genera badge visual
+  if (
+    rankName === 'Apex Predator' &&
+    ladderPos &&
+    rankImg &&
+    !isNaN(Number(ladderPos))
+  ) {
+    try {
+      const logoRes = await fetch(rankImg);
+      const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
+      const { buffer } = await renderPredatorBadge(
+        logoBuffer,
+        Number(ladderPos)
+      );
+      const attachment = new AttachmentBuilder(buffer, {
+        name: 'predator-badge.png',
+      });
+      embed.setThumbnail('attachment://predator-badge.png');
+      return { embed, files: [attachment] };
+    } catch (e) {
+      // Si falla, retorna solo el embed
+      return { embed };
+    }
+  }
+
+  return { embed };
 }

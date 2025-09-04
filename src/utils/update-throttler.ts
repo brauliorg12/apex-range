@@ -2,6 +2,15 @@ import { Guild } from 'discord.js';
 
 type UpdateFn = (guild: Guild) => Promise<void>;
 
+/**
+ * Crea un throttler para limitar la frecuencia de ejecución de una función de actualización.
+ * - Ejecuta la función inmediatamente si ha pasado suficiente tiempo desde la última ejecución.
+ * - Si no, programa la ejecución para después del tiempo restante.
+ * - Solo ejecuta la última actualización solicitada en el intervalo.
+ * @param waitMs Tiempo mínimo (ms) entre ejecuciones.
+ * @param updateFn Función asíncrona que realiza la actualización.
+ * @returns { requestUpdate, flush, cancel }
+ */
 export function createUpdateThrottler(waitMs: number, updateFn: UpdateFn) {
   let lastRun = 0;
   let timer: NodeJS.Timeout | null = null;

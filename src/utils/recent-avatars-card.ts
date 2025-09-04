@@ -1,15 +1,24 @@
-import { AttachmentBuilder, EmbedBuilder, Guild } from 'discord.js';
-import { loadImage } from '@napi-rs/canvas'; // <-- quitado createCanvas
+import { AttachmentBuilder, EmbedBuilder, Guild, Role } from 'discord.js';
+import { loadImage } from '@napi-rs/canvas';
 import { getPlayerData } from './player-data-manager';
 import { APEX_RANKS } from '../constants';
 import { getRankEmoji } from './emoji-helper';
-import { performance } from 'node:perf_hooks'; // <-- NUEVO
-import { renderRecentAvatarsCanvas } from './recent-avatars-canvas'; // <-- NUEVO
+import { performance } from 'node:perf_hooks';
+import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
 
+/**
+ * Genera un card visual mostrando los avatares y rangos de los últimos 5 usuarios registrados.
+ * - Descarga los avatares y badges de rango (emoji personalizado si aplica).
+ * - Renderiza una imagen con los avatares, badges y nombres.
+ * - Construye un embed con la descripción y adjunta la imagen generada.
+ * @param guild Instancia del servidor Discord.
+ * @returns { embed, files } para enviar en Discord.
+ */
 export async function buildRecentAvatarsCard(guild: Guild) {
-  const tStart = performance.now(); // <-- NUEVO
+  const tStart = performance.now();
   console.log('[Canvas] Iniciando generación de card (últimos 5 registrados)');
 
+  // Obtiene los datos de jugadores registrados en el servidor
   const playerData = await getPlayerData(guild);
   if (playerData.length < 5) {
     console.log(
@@ -18,6 +27,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     return null;
   }
 
+  // Ordena y selecciona los 5 registros más recientes
   const recent = [...playerData]
     .sort(
       (a, b) =>
@@ -27,9 +37,9 @@ export async function buildRecentAvatarsCard(guild: Guild) {
 
   const size = 128;
   const pad = 16;
-  const labelHeight = 36; // <-- antes 28, más espacio para texto grande
+  const labelHeight = 36;
 
-  // Helper: fetch con timeout y métricas
+  // Helper para descargar imágenes con timeout y métricas
   const fetchWithTimeout = async (url: string, ms = 5000) => {
     const controller = new AbortController();
     const to = setTimeout(() => controller.abort(), ms);
@@ -75,7 +85,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     }
   };
 
-  // NUEVO: parsea emoji custom de Discord a URL de CDN PNG
+  // Helper para convertir emoji personalizado a URL de imagen PNG
   const emojiToCdnPng = (emoji: string): string | null => {
     // Formatos: <:name:id> o <a:name:id>
     const m = emoji.match(/^<a?:\w+:(\d+)>$/);
@@ -85,9 +95,9 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     return `https://cdn.discordapp.com/emojis/${id}.png?size=64`;
   };
 
-  // Prepara datos y avatares
-  let okCount = 0; // <-- NUEVO
-  let failCount = 0; // <-- NUEVO
+  // Prepara los datos de cada usuario (avatar, badge, nombre)
+  let okCount = 0;
+  let failCount = 0;
   const descriptions: string[] = [];
   const items = await Promise.all(
     recent.map(async (r, i) => {
@@ -95,19 +105,20 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       let avatarUrl: string | null = null;
       const mention = `<@${r.userId}>`;
       let emoji = '';
-      let displayName = ''; // <-- NUEVO
+      let displayName = '';
+      let member: any = null; // <-- Declaración aquí
 
       try {
-        const member =
+        member =
           guild.members.cache.get(r.userId) ||
           (await guild.members.fetch(r.userId).catch(() => null));
         if (member) {
           const user = member.user;
           avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
-          displayName = member.displayName || user.username; // <-- NUEVO
+          displayName = member.displayName || user.username;
           // Detecta rango por rol y obtiene solo el emoji
           const rankRoleNames = new Set(APEX_RANKS.map((rk) => rk.roleName));
-          const rankRole = member.roles.cache.find((role) =>
+          const rankRole = member.roles.cache.find((role: Role) =>
             rankRoleNames.has(role.name)
           );
           if (rankRole) {
@@ -123,7 +134,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
             .catch(() => null);
           if (user) {
             avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
-            displayName = user.username; // <-- NUEVO
+            displayName = user.username;
           }
         }
       } catch {
@@ -164,10 +175,20 @@ export async function buildRecentAvatarsCard(guild: Guild) {
         }
       }
 
-      // NUEVO: badge del rango (imagen desde CDN si es emoji custom; si no, texto)
+      // Badge del rango (imagen desde CDN si es emoji custom; si no, texto)
       let badgeImg: any | null = null;
       let badgeText: string | null = null;
-      if (emoji) {
+      let badgeColor: string | undefined = undefined;
+
+      if (emoji && member && member.roles?.cache) {
+        const rankRoleNames = new Set(APEX_RANKS.map((rk) => rk.roleName));
+        const rankRole = member.roles.cache.find((role: Role) =>
+          rankRoleNames.has(role.name)
+        );
+        if (rankRole) {
+          const rank = APEX_RANKS.find((rk) => rk.roleName === rankRole.name);
+          badgeColor = rank?.color || '#2ecc71';
+        }
         const cdn = emojiToCdnPng(emoji);
         if (cdn) {
           const ef = await fetchWithTimeout(cdn, 5000);
@@ -188,34 +209,40 @@ export async function buildRecentAvatarsCard(guild: Guild) {
         badgeImg,
         badgeText,
         label: displayName || 'Usuario',
-      }; // <-- NUEVO
+        badgeColor,
+      };
     })
   );
 
-  // Dibuja avatares con renderer externo
+  // Renderiza la imagen con los avatares y badges usando renderer externo
   const { buffer: pngBuffer, encodeMs } = await renderRecentAvatarsCanvas(
     items,
     {
       size,
       pad,
       labelHeight,
+      auraSize: 40, // <-- Aura
+      // TODO pasar a una variable global / parametrizable para reutilizar la misma
     }
-  ); // <-- NUEVO
+  );
 
+  // Adjunta la imagen generada al embed
   const attachment = new AttachmentBuilder(pngBuffer, {
     name: 'recent-avatars.png',
   });
 
+  // Construye el embed con la descripción de los usuarios
   const embed = new EmbedBuilder()
     .setColor('#2ecc71')
     .setTitle('🆕 Últimos 5 registrados')
     .setDescription(descriptions.join('\n'))
     .setImage('attachment://recent-avatars.png');
 
-  const totalMs = Math.round(performance.now() - tStart); // <-- NUEVO
+  const totalMs = Math.round(performance.now() - tStart);
   console.log(
     `[Canvas] Card generado: ok=${okCount} error=${failCount} | encode=${encodeMs}ms | total=${totalMs}ms`
   );
 
+  // Retorna el embed y el archivo PNG para enviar en Discord
   return { embed, files: [attachment] };
 }

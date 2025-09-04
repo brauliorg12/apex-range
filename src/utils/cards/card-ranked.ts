@@ -1,5 +1,9 @@
 import { EmbedBuilder } from 'discord.js';
 
+/**
+ * Convierte un string de tiempo restante (hh:mm:ss) en formato legible.
+ * Ejemplo: "01:23:45" → "1 hrs 23 mins 45 segs"
+ */
 function formatTimeLeft(remaining?: string) {
   if (!remaining) return 'N/A';
   const [h, m, s] = remaining.split(':').map(Number);
@@ -10,6 +14,10 @@ function formatTimeLeft(remaining?: string) {
   return parts.length ? parts.join(' ') : 'N/A';
 }
 
+/**
+ * Formatea la información del próximo mapa y fecha en texto legible.
+ * Ejemplo: "Próximo mapa: World's Edge • hoy a las 08:00 p. m."
+ */
 function formatNextMap(map?: string, dateStr?: string) {
   if (!map || !dateStr) return 'No disponible';
   const now = new Date();
@@ -31,6 +39,10 @@ function formatNextMap(map?: string, dateStr?: string) {
   )}`;
 }
 
+/**
+ * Calcula cuántos minutos han pasado desde un timestamp y lo describe.
+ * Ejemplo: "hace 3 minutos"
+ */
 function formatCacheAge(ts?: number) {
   if (!ts) return '';
   const mins = Math.floor((Date.now() - ts) / 60000);
@@ -39,16 +51,30 @@ function formatCacheAge(ts?: number) {
   return `hace ${mins} minutos`;
 }
 
+/**
+ * Construye el embed visual para la rotación de mapas Ranked.
+ * - Muestra el mapa actual, tiempo restante y próximo mapa.
+ * - Incluye descripción de split y fin de temporada si aplica.
+ * - Agrega aviso de cache si los datos son cacheados.
+ * - Usa color y emoji personalizado en el título.
+ * @param ranked Datos de rotación de mapas Ranked.
+ * @param cacheInfo Estado de la cache por endpoint.
+ * @param cacheTimestamps Timestamps de última actualización de cache.
+ * @returns EmbedBuilder listo para enviar.
+ */
 export function buildRankedEmbed(
   ranked: any,
   cacheInfo: Record<string, boolean>,
   cacheTimestamps?: Record<string, number | undefined>
 ) {
+  // Determina si hay datos válidos para mostrar
   const hasData =
     ranked &&
     ranked.current &&
     ranked.current.map &&
     ranked.current.remainingTimer;
+
+  // Prepara el texto del footer si los datos son cacheados
   const footerText =
     cacheInfo.mapRotation && hasData && cacheTimestamps?.mapRotation
       ? `⚠️ Datos en cache cargados ${formatCacheAge(
@@ -56,6 +82,7 @@ export function buildRankedEmbed(
         )}`
       : undefined;
 
+  // Construye la descripción con info de split y fin de temporada
   const rankedDescArr = [
     ranked?.current?.eventType === 'split'
       ? `El split termina en ${ranked?.current?.eventEnd || 'N/A'}`
@@ -65,9 +92,12 @@ export function buildRankedEmbed(
       : '',
   ].filter(Boolean);
 
+  // Construye el embed visual con color, título, imagen y campos principales
   const embed = new EmbedBuilder()
     .setColor('#8e44ad')
-    .setTitle('🏆 Battle Royale | Ranked')
+    .setTitle(
+      '<:Ranked_Tier6_Master:1406723974313934968> Battle Royale | Ranked'
+    )
     .setImage(hasData ? ranked.current.asset : null)
     .setDescription(rankedDescArr.length > 0 ? rankedDescArr.join(' • ') : ' ')
     .addFields(
@@ -79,12 +109,13 @@ export function buildRankedEmbed(
       {
         name: 'Tiempo restante',
         value: hasData
-          ? `\`\`\`${formatTimeLeft(ranked.current.remainingTimer)}\`\`\``
+          ? `\`\`\`${formatTimeLeft(ranked.current.remainingTimer)}\`\`\`` // Formatea el tiempo restante
           : 'No disponible',
         inline: true,
       }
     );
 
+  // Footer con info de próximo mapa y cache
   if (footerText) {
     embed.setFooter({
       text: ranked?.next?.map

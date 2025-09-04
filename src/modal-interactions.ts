@@ -24,7 +24,7 @@ export async function handleModalInteraction(
       const allowed = ['PC', 'PS4', 'X1'];
       if (!allowed.includes(platform)) {
         await interaction.editReply({
-          content: `Plataforma inválida. Solo se permite: PC, PS4 o X1.`,
+          content: `Plataforma inválida. Solo se permite: PC, PS4 (PlayStation) o X1 (Xbox).`,
           components: [createCloseButtonRow()],
         });
         return;
@@ -52,12 +52,21 @@ export async function handleModalInteraction(
       }
 
       // Genera el embed profesional usando función separada
-      const embed = buildApexProfileEmbed(profile, playerName, platform);
+      const result = await buildApexProfileEmbed(profile, playerName, platform);
 
-      await interaction.editReply({
-        embeds: [embed],
-        components: [createCloseButtonRow()],
-      });
+      // Si hay badge visual, adjunta el archivo
+      if (result.files) {
+        await interaction.editReply({
+          embeds: [result.embed],
+          files: result.files,
+          components: [createCloseButtonRow()],
+        });
+      } else {
+        await interaction.editReply({
+          embeds: [result.embed],
+          components: [createCloseButtonRow()],
+        });
+      }
     }
   } catch (error) {
     console.error('Error en handleModalInteraction:', error);

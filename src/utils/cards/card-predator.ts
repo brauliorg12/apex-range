@@ -24,7 +24,7 @@ export function buildPredatorEmbed(
   const embed = new EmbedBuilder()
     .setColor('#e74c3c')
     .setTitle(
-      '<:Ranked_Tier7_Apex_Predator:1406723982887223416> RP necesario para Predator (Top global)'
+      '<a:pred_gif:1413017869012308018> RP necesario para Predator (Top global)'
     )
     .setDescription(
       'RP requerido para entrar al top global Predator en cada plataforma.'
