@@ -5,11 +5,13 @@ import {
   ButtonBuilder,
   ButtonStyle,
   Interaction,
+  EmbedBuilder,
 } from 'discord.js';
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
 import { writeApexStatusState } from '../utils/state-manager';
 import { clearApiCache } from '../utils/apex-api-cache';
 import { APEX_LOGO_EMOJI } from '../constants';
+import { createCloseButtonRow } from '../utils/button-helper';
 
 export const data = new SlashCommandBuilder()
   .setName('apex-status')
@@ -94,14 +96,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function handleServerStatusInfo(interaction: Interaction) {
   if (!interaction.isButton() || interaction.customId !== 'server_status_info')
     return;
+
+  const embed = new EmbedBuilder()
+    .setTitle('¿Qué significan los colores de estado de servidor?')
+    .setDescription(
+      `Los colores representan el estado actual de los servidores de Apex Legends según la región o plataforma:\n\n` +
+        `🟢 **UP:** El servidor está operativo y funcionando correctamente.\n` +
+        `🟡 **SLOW:** El servidor presenta lentitud o intermitencias.\n` +
+        `🔴 **DOWN:** El servidor está caído y no disponible.\n` +
+        `⚪ **Desconocido:** No se pudo determinar el estado del servidor.\n\n` +
+        `Consulta este panel para saber si puedes jugar sin problemas o si hay incidencias en tu región.`
+    )
+    .setColor(0x5865f2);
+
   await interaction.reply({
-    content:
-      `**Significado de los colores de estado de servidor:**\n\n` +
-      `🟢 UP: Operativo\n` +
-      `🟡 SLOW: Lento/intermitente\n` +
-      `🔴 DOWN: Caído\n` +
-      `⚪ Desconocido: Estado desconocido\n\n` +
-      `Estos colores indican el estado de los servidores de Apex Legends en cada región o plataforma.`,
+    embeds: [embed],
+    components: [createCloseButtonRow()], // Botón cerrar reutilizable
     ephemeral: true,
   });
 }
