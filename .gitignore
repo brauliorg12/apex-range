@@ -21,3 +21,5 @@ db/
 # Logs
 logs/
 !logs/.gitkeep
+# Ignorar todos los archivos .log
+*.log

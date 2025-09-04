@@ -5,3 +5,4 @@ node_modules/
 dist/
 .apex-cache
 .bot-state
+*.log
