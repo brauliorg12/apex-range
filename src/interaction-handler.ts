@@ -9,6 +9,7 @@ import {
   execute as showMyRankExecute,
 } from './commands/show-my-rank';
 import { handleServerStatusInfo } from './commands/apex-status';
+import { logInteraction } from './utils/logger';
 
 export function registerInteractionHandler(client: Client) {
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -17,6 +18,16 @@ export function registerInteractionHandler(client: Client) {
     const commands = (client as any).commands;
 
     if (interaction.isChatInputCommand()) {
+      await logInteraction({
+        type: 'ChatInputCommand',
+        userTag: interaction.user.tag,
+        userId: interaction.user.id,
+        guildName: interaction.guild.name,
+        guildId: interaction.guild.id,
+        commandName: interaction.commandName,
+        details: `Options: ${JSON.stringify(interaction.options?.data ?? {})}`,
+      });
+
       const command = commands.get(interaction.commandName);
       if (!command) {
         console.warn(
@@ -47,6 +58,15 @@ export function registerInteractionHandler(client: Client) {
         }
       }
     } else if (interaction.isUserContextMenuCommand()) {
+      await logInteraction({
+        type: 'UserContextMenuCommand',
+        userTag: interaction.user.tag,
+        userId: interaction.user.id,
+        guildName: interaction.guild.name,
+        guildId: interaction.guild.id,
+        commandName: interaction.commandName,
+      });
+
       try {
         if (interaction.commandName === showMyRankCommand.name) {
           await showMyRankExecute(interaction);
@@ -69,6 +89,15 @@ export function registerInteractionHandler(client: Client) {
         }
       }
     } else if (interaction.isButton()) {
+      await logInteraction({
+        type: 'Button',
+        userTag: interaction.user.tag,
+        userId: interaction.user.id,
+        guildName: interaction.guild.name,
+        guildId: interaction.guild.id,
+        customId: interaction.customId,
+      });
+
       if (interaction.customId === 'server_status_info') {
         await handleServerStatusInfo(interaction);
         return;
@@ -96,6 +125,16 @@ export function registerInteractionHandler(client: Client) {
         }
       }
     } else if (interaction.isStringSelectMenu()) {
+      await logInteraction({
+        type: 'StringSelectMenu',
+        userTag: interaction.user.tag,
+        userId: interaction.user.id,
+        guildName: interaction.guild.name,
+        guildId: interaction.guild.id,
+        customId: interaction.customId,
+        details: `Values: ${JSON.stringify(interaction.values)}`,
+      });
+
       try {
         await handleSelectMenuInteraction(interaction);
       } catch (error) {
@@ -113,6 +152,15 @@ export function registerInteractionHandler(client: Client) {
         }
       }
     } else if (interaction.isModalSubmit()) {
+      await logInteraction({
+        type: 'ModalSubmit',
+        userTag: interaction.user.tag,
+        userId: interaction.user.id,
+        guildName: interaction.guild.name,
+        guildId: interaction.guild.id,
+        customId: interaction.customId,
+      });
+
       try {
         await handleModalInteraction(interaction);
       } catch (error) {

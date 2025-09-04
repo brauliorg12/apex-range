@@ -8,6 +8,7 @@ import { updateBotPresence } from './utils/presence-helper';
 import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
 import { createUpdateThrottler } from './utils/update-throttler';
+import { logApp } from './utils/logger';
 
 function printBanner(client: Client, guild: Guild, channelInfo: string) {
   const now = new Date();
@@ -22,6 +23,7 @@ function printBanner(client: Client, guild: Guild, channelInfo: string) {
   console.log(`[App] Inicio: ${fechaLocal} (local) | ${fechaUTC} (UTC)`);
   console.log(`[App] Servidor: ${guild.name} (${guild.id})`);
   console.log(`[App] ${channelInfo}`);
+  logApp(`Bot conectado como ${client.user?.tag} en guild ${guild.name} (${guild.id}). ${channelInfo}`);
 }
 
 export async function initBot(client: Client) {
@@ -49,11 +51,14 @@ export async function initBot(client: Client) {
 
           printBanner(client, guild, channelInfo);
 
+          logApp(`Inicializando ciclo de actualización para guild ${guild.name} (${guild.id})`);
+
           const throttler = createUpdateThrottler(
             60_000,
             async (guild: Guild) => {
               await updateRoleCountMessage(guild);
               await updateBotPresence(client, guild);
+              logApp(`Actualización de roles y presencia ejecutada en guild ${guild.name} (${guild.id})`);
             }
           );
 
@@ -71,6 +76,7 @@ export async function initBot(client: Client) {
           // Update Apex Info message every 5 minutes
           setInterval(() => {
             updateApexInfoMessage(guild);
+            logApp(`Actualización periódica de mensaje Apex Info en guild ${guild.name} (${guild.id})`);
           }, 5 * 60 * 1000);
 
           // Chequeo de salud y actualización de embed solo al iniciar
@@ -80,6 +86,7 @@ export async function initBot(client: Client) {
           const lastChecked = apiStatus.lastChecked
             ? apiStatus.lastChecked.toLocaleString()
             : 'Nunca';
+          logApp(`Estado API: ${apiStatus.ok ? 'Conectado' : 'Desconectado'} | Última vez chequeado: ${lastChecked}`);
           console.log('------------------------------------------');
           console.log('  SERVIDOR/API Apex Range ');
           console.log(
@@ -90,6 +97,7 @@ export async function initBot(client: Client) {
 
           // Eventos que disparan actualización coalescida
           client.on(Events.GuildMemberAdd, (member) => {
+            logApp(`Nuevo miembro: ${member.user.tag} (${member.id}) en guild ${member.guild.name} (${member.guild.id})`);
             console.log(
               `[Evento] Nuevo miembro: ${member.user.tag} (${member.id})`
             );
@@ -97,6 +105,7 @@ export async function initBot(client: Client) {
           });
 
           client.on(Events.GuildMemberRemove, (member) => {
+            logApp(`Miembro salió: ${member.user.tag} (${member.id}) en guild ${member.guild.name} (${member.guild.id})`);
             console.log(
               `[Evento] Miembro salió: ${member.user.tag} (${member.id})`
             );
@@ -105,12 +114,14 @@ export async function initBot(client: Client) {
 
           client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
             if (newPresence.guild) {
+              logApp(`PresenceUpdate: ${newPresence.user?.tag ?? ''} (${newPresence.user?.id ?? ''}) en guild ${newPresence.guild.name} (${newPresence.guild.id})`);
               throttler.requestUpdate(newPresence.guild);
             }
           });
         }
       }
     } catch (error) {
+      logApp(`ERROR durante la inicialización del bot: ${error}`);
       console.error('Error durante la inicialización del bot:', error);
     }
   });

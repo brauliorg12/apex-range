@@ -29,7 +29,7 @@ jobs:
         run: docker build -t discord-apex-bot .
 
     # Optional: Push Docker image to a registry (e.g., Docker Hub, GitHub Container Registry)
-    # This step requires setting up secrets for Docker credentials in your GitHub repository.
+    # Este paso está comentado. Si quieres publicar en Docker Hub, descomenta y configura tus credenciales.
     # - name: Log in to Docker Hub
     #   uses: docker/login-action@v3
     #   with:

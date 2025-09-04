@@ -5,7 +5,6 @@ Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Lege
 ![Version](https://img.shields.io/github/v/release/brauliorg12/apex-range)
 ![License](https://img.shields.io/github/license/brauliorg12/apex-range)
 ![GHCR Pulls](https://img.shields.io/badge/GHCR-pulls-blue?logo=github)
-![Docker Pulls](https://img.shields.io/docker/pulls/brauliorg12/apex-range)
 
 ---
 
@@ -426,7 +425,7 @@ Migración automática de formatos antiguos incluida.
 
 ## 🐳 Docker
 
-Puedes ejecutar el bot fácilmente usando Docker desde GitHub Container Registry:
+Puedes ejecutar el bot fácilmente usando Docker desde GitHub Container Registry (GHCR):
 
 ```bash
 docker pull ghcr.io/brauliorg12/discord-apex:latest
