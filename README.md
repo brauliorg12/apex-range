@@ -1,5 +1,3 @@
-![Apex Legends Rank Bot Logo](https://cdn.discordapp.com/app-icons/1406424026427031696/8bdee35a57f297417a714ded942fb456.png)
-
 # <img src="https://cdn.discordapp.com/emojis/1410729026410119269.webp?size=40&quality=lossless" alt="Apex Icon" width="32" style="vertical-align:middle"> Apex Legends Rank Bot
 
 Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en tu servidor, con panel interactivo, estadísticas y cards visuales.
