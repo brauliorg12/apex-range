@@ -8,8 +8,13 @@ export interface ApexRank {
   apiName: string;
 }
 
+// Nombre común del rol de Apex Legends
 export const COMMON_APEX_ROLE_NAME = 'Apex';
 
+// Logo de Apex
+export const APEX_LOGO_EMOJI = '<:apex_logo:1412989316426367086>';
+
+// Lista de rangos de Apex Legends
 export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier1_Bronze:1406723914633052296>',

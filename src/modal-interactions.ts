@@ -1,8 +1,12 @@
-import { ModalSubmitInteraction, EmbedBuilder } from 'discord.js';
+import { ModalSubmitInteraction } from 'discord.js';
 import { createCloseButtonRow } from './utils/button-helper';
 import { getApexProfileByName } from './services/apex-api';
-import { APEX_RANKS } from './constants';
+import { buildApexProfileEmbed } from './utils/apex-profile-embed'; // Nuevo import
 
+/**
+ * Handler principal para interacciones de modal de perfil de Apex.
+ * Valida plataforma, consulta la API y responde con un embed profesional.
+ */
 export async function handleModalInteraction(
   interaction: ModalSubmitInteraction
 ) {
@@ -10,11 +14,13 @@ export async function handleModalInteraction(
     if (interaction.customId === 'apex_profile_modal') {
       await interaction.deferReply({ ephemeral: true });
 
+      // Obtiene datos del modal
       const playerName = interaction.fields.getTextInputValue('apex_name');
       const platform = interaction.fields
         .getTextInputValue('apex_platform')
         .toUpperCase();
 
+      // Valida plataforma permitida
       const allowed = ['PC', 'PS4', 'X1'];
       if (!allowed.includes(platform)) {
         await interaction.editReply({
@@ -24,9 +30,10 @@ export async function handleModalInteraction(
         return;
       }
 
+      // Consulta la API externa
       const profile = await getApexProfileByName(playerName, platform);
 
-      // Log solo el status
+      // Si hay error en la respuesta, muestra mensaje de error
       if (!profile || profile.Error) {
         console.log('[API][Perfil] status: ERROR');
         await interaction.editReply({
@@ -34,7 +41,7 @@ export async function handleModalInteraction(
             {
               title: 'Error al obtener perfil',
               description: `No se pudo obtener el perfil para **${playerName}** (${platform}).`,
-              color: 0xED4245, // rojo
+              color: 0xed4245,
             },
           ],
           components: [createCloseButtonRow()],
@@ -44,56 +51,13 @@ export async function handleModalInteraction(
         console.log('[API][Perfil] status: OK');
       }
 
-      const global = profile.global || {};
-      const selectedLegend =
-        profile.legends?.selected?.LegendName || 'Desconocida';
-      let legendBanner = profile.legends?.selected?.ImgAssets?.banner;
-      let rankImg = global.rank?.rankImg;
-      const rankDiv = global.rank?.rankDiv ?? '';
-      const rankName = global.rank?.rankName ?? 'N/A';
+      // Genera el embed profesional usando función separada
+      const embed = buildApexProfileEmbed(profile, playerName, platform);
 
-      if (legendBanner) legendBanner = encodeURI(legendBanner);
-      if (rankImg) rankImg = encodeURI(rankImg);
-
-      // Traducción del rango usando APEX_RANKS
-      let rankLabel = rankName;
-      const rankConst = APEX_RANKS.find(
-        r => r.apiName?.toLowerCase() === rankName.toLowerCase()
-      );
-      if (rankConst && rankConst.label) {
-        rankLabel = rankConst.label;
-      }
-
-      // Si es rookie, puedes dejarlo vacío o poner "Sin rango"
-      if (rankLabel.toLowerCase().includes('rookie')) {
-        rankLabel = 'Sin rango';
-      }
-
-      const kills = profile.total?.career_kills?.value ?? 'N/A';
-      const rank = `${rankLabel} ${rankDiv}`.trim();
-
-      // Usa el color del rango si existe, si no, usa naranja por defecto
-      // Convierte el string hexadecimal a número
-      const embedColorStr = (rankConst?.color || 'e67e22').replace(/^#/, '');
-      const embedColor = parseInt(embedColorStr, 16);
-
-      const embed = new EmbedBuilder()
-        .setTitle(`Perfil de Apex: ${global.name || playerName}`)
-        .setColor(embedColor)
-        .setThumbnail(rankImg || undefined)
-        .addFields(
-          { name: 'Nivel:', value: `**${global.level ?? 'N/A'}**`, inline: true },
-          { name: 'Rango:', value: `**${rank}**`, inline: true },
-          { name: 'Kills:', value: `**${kills}**`, inline: true },
-          { name: 'Leyenda seleccionada:', value: `**${selectedLegend}**`, inline: true },
-          { name: 'UID:', value: `**${global.uid ?? 'N/A'}**`, inline: true },
-          { name: 'Plataforma:', value: `**${platform}**`, inline: true }
-        )
-        .setFooter({ text: 'Datos obtenidos de la API de Mozambique' });
-
-      if (legendBanner) embed.setImage(legendBanner);
-
-      await interaction.editReply({ embeds: [embed], components: [createCloseButtonRow()] });
+      await interaction.editReply({
+        embeds: [embed],
+        components: [createCloseButtonRow()],
+      });
     }
   } catch (error) {
     console.error('Error en handleModalInteraction:', error);

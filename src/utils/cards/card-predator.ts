@@ -34,22 +34,22 @@ export function buildPredatorEmbed(
         ? [
             {
               name: '🖥️ PC',
-              value: `\`\`${predatorRank.RP.PC.val} RP\`\``,
+              value: `\`\`\`${predatorRank.RP.PC.val} RP\`\`\``,
               inline: true,
             },
             {
               name: '🎮 PlayStation',
-              value: `\`\`${predatorRank.RP.PS4.val} RP\`\``,
+              value: `\`\`\`${predatorRank.RP.PS4.val} RP\`\`\``,
               inline: true,
             },
             {
               name: '🎮 Xbox',
-              value: `\`\`${predatorRank.RP.X1.val} RP\`\``,
+              value: `\`\`\`${predatorRank.RP.X1.val} RP\`\`\``,
               inline: true,
             },
             {
               name: '🎮 Switch',
-              value: `\`\`${predatorRank.RP.SWITCH.val} RP\`\``,
+              value: `\`\`\`${predatorRank.RP.SWITCH.val} RP\`\`\``,
               inline: true,
             },
           ]

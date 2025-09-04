@@ -14,7 +14,7 @@ import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayers } from '../utils/players-manager';
 
 export const data = new ContextMenuCommandBuilder()
-  .setName('Ver mi rango Apex')
+  .setName('Ver mi rango de Apex Leyends')
   .setType(ApplicationCommandType.User);
 
 export async function execute(interaction: UserContextMenuCommandInteraction) {
@@ -68,7 +68,6 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
     } else {
       // Si no tiene rango, muestra los botones para seleccionar rango
       const isSelf = interaction.user.id === interaction.targetId;
-      const displayName = member.displayName || member.user.username;
       const mention = `<@${member.id}>`;
 
       const embed = new EmbedBuilder()

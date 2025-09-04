@@ -9,6 +9,7 @@ import {
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
 import { writeApexStatusState } from '../utils/state-manager';
 import { clearApiCache } from '../utils/apex-api-cache';
+import { APEX_LOGO_EMOJI } from '../constants';
 
 export const data = new SlashCommandBuilder()
   .setName('apex-status')
@@ -33,12 +34,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Botón "Ver mi perfil Apex" y "Más info"
     const apexProfileButton = new ButtonBuilder()
       .setCustomId('show_apex_profile_modal')
-      .setLabel('Ver mi perfil Apex')
-      .setStyle(ButtonStyle.Primary);
+      .setLabel('Ver perfil Apex Global')
+      .setEmoji(APEX_LOGO_EMOJI)
+      .setStyle(ButtonStyle.Secondary);
 
     const moreInfoButton = new ButtonBuilder()
       .setCustomId('server_status_info')
       .setLabel('¿Qué significan los colores?')
+      .setEmoji('🛰️')
       .setStyle(ButtonStyle.Secondary);
 
     const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
