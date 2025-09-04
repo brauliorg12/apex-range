@@ -163,10 +163,22 @@ export async function getLeaderboard(
       '[ApexAPI][DEBUG] Respuesta completa de getLeaderboard:',
       JSON.stringify(data, null, 2)
     );
-    if (!res.ok || (data && (data as any).Error)) {
+    // Verifica si la respuesta indica que necesitas estar en la whitelist
+    if (
+      !res.ok ||
+      (data && (data as any).Error) ||
+      (data &&
+        (data as any).Error ===
+          'Unauthorized. You must be whitelisted to use this API.')
+    ) {
       console.log(`[API][getLeaderboard] status: ERROR | url: ${url}`);
-      // It's common for this endpoint to be restricted, so we'll return a specific object.
-      return { error: 'Restricted access or no data' };
+      // Mensaje específico para frontend/bot
+      return {
+        error:
+          'No tienes acceso al leaderboard global. Esta funcionalidad requiere estar en la whitelist de la API de Mozambique. Puedes ver el leaderboard en https://apexlegendsstatus.com/leaderboard',
+        apexStatusLink: 'https://apexlegendsstatus.com/leaderboard',
+        notice: 'Data provided by Apex Legends Status',
+      };
     }
     console.log(`[API][getLeaderboard] status: OK | url: ${url}`);
     return data;

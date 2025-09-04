@@ -6,3 +6,4 @@ dist/
 .apex-cache
 .bot-state
 *.log
+website/

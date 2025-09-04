@@ -23,3 +23,6 @@ logs/
 !logs/.gitkeep
 # Ignorar todos los archivos .log
 *.log
+
+# Website
+/website
