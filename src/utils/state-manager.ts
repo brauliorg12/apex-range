@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { BotState, RolesState, ApexStatusState } from '../types/bot-state';
+import { RolesState, ApexStatusState } from '../interfaces/bot-state';
 
 const STATE_DIR = path.join(__dirname, '../../.bot-state');
 

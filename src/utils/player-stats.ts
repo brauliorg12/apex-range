@@ -1,5 +1,5 @@
 import { Guild, Role, GuildMember } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 
 /**
  * Obtiene todos los miembros del servidor que tienen algún rol de rango de Apex.

@@ -4,7 +4,7 @@ import {
   ButtonStyle,
   Client,
 } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 
 /**
@@ -17,6 +17,7 @@ import { getRankEmoji } from './emoji-helper';
 export function createRankButtons(
   client: Client
 ): ActionRowBuilder<ButtonBuilder>[] {
+  // Mapea los rangos de Apex a botones con emoji y nombre
   const buttons = APEX_RANKS.map((rank) =>
     new ButtonBuilder()
       .setCustomId(rank.shortId)
@@ -25,7 +26,7 @@ export function createRankButtons(
       .setStyle(ButtonStyle.Secondary)
   );
 
-  // Divide en filas de máximo 5 botones
+  // Divide los botones en filas de máximo 5 componentes
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (let i = 0; i < buttons.length; i += 5) {
     rows.push(
@@ -37,6 +38,11 @@ export function createRankButtons(
   return rows;
 }
 
+/**
+ * Crea una fila de botones para gestión y navegación en el panel principal.
+ * Incluye botones para ver jugadores, filtrar, gestionar rango y ayuda.
+ * @returns Array con una sola ActionRowBuilder<ButtonBuilder> con los botones de gestión.
+ */
 export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -63,6 +69,10 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
   return [row];
 }
 
+/**
+ * Crea una fila con un solo botón para cerrar el menú de ayuda.
+ * @returns ActionRowBuilder<ButtonBuilder> con el botón de cerrar.
+ */
 export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -72,6 +82,10 @@ export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
   );
 }
 
+/**
+ * Crea una fila con un solo botón para mostrar opciones de filtrado.
+ * @returns ActionRowBuilder<ButtonBuilder> con el botón de filtrar.
+ */
 export function createMoreOptionsButtonRow(): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()

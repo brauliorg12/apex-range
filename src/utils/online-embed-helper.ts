@@ -6,7 +6,7 @@ import {
   Role,
   GuildMember,
 } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { getOnlineMembersByRole } from './player-stats';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { getRankEmoji } from './emoji-helper';

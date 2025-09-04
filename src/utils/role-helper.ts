@@ -1,5 +1,5 @@
 import { GuildMember } from 'discord.js';
-import { COMMON_APEX_ROLE_NAME, APEX_RANKS } from '../constants';
+import { COMMON_APEX_ROLE_NAME, APEX_RANKS } from '../models/constants';
 
 // Asigna el rol común "Apex" si no lo tiene
 export async function ensureCommonApexRole(member: GuildMember) {

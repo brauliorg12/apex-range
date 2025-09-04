@@ -1,5 +1,5 @@
 import { EmbedBuilder, StringSelectMenuInteraction } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getOnlineMembersByRole } from '../utils/player-stats';

@@ -1,7 +1,12 @@
 import { Role } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 
-export function getExcludedRoles(): string[] {
+/**
+ * Obtiene la lista de nombres de roles excluidos desde la variable de entorno EXCLUDED_ROLES.
+ * Útil para filtrar roles en distintos módulos del proyecto.
+ * @returns Array de nombres de roles excluidos.
+ */
+function getExcludedRoles(): string[] {
   const env = process.env.EXCLUDED_ROLES;
   if (!env) return [];
   return env

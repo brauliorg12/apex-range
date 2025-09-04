@@ -1,6 +1,7 @@
 import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
-import { APEX_RANKS, APEX_LOGO_EMOJI } from '../constants';
+import { APEX_RANKS, APEX_LOGO_EMOJI } from '../models/constants';
 import { renderPredatorBadge } from './predator-badge-canvas';
+import { ApexProfileEmbedResult } from '../interfaces/profile-embed';
 
 /**
  * Genera un embed profesional para mostrar el perfil de Apex Legends.
@@ -11,10 +12,10 @@ import { renderPredatorBadge } from './predator-badge-canvas';
  * @returns { embed, files? }
  */
 export async function buildApexProfileEmbed(
-  profile: any,
+  profile: Record<string, any>,
   playerName: string,
   platform: string
-) {
+): Promise<ApexProfileEmbedResult> {
   // Extrae datos globales y de leyenda
   const global = profile.global || {};
   const selectedLegend = profile.legends?.selected?.LegendName || 'Desconocida';

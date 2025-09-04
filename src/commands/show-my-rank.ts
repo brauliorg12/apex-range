@@ -4,7 +4,7 @@ import {
   UserContextMenuCommandInteraction,
   EmbedBuilder,
 } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import {
   createRankButtons,
   createManagementButtons,

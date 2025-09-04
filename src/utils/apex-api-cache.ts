@@ -3,12 +3,14 @@ import path from 'path';
 
 const CACHE_DIR = path.join(__dirname, '../../.apex-cache');
 
+// Se asegura de que el directorio de caché exista, creándolo si es necesario.
 async function ensureCacheDir() {
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
   } catch {}
 }
 
+// Genera la ruta del archivo de caché usando la clave, guildId y channelId.
 function getCacheFile(key: string, guildId?: string, channelId?: string) {
   if (!guildId || !channelId) {
     throw new Error(
@@ -18,6 +20,7 @@ function getCacheFile(key: string, guildId?: string, channelId?: string) {
   return path.join(CACHE_DIR, `${key}_${guildId}_${channelId}.json`);
 }
 
+// Escribe datos en la caché para una clave específica, junto con la marca de tiempo actual.
 export async function writeApiCache(
   key: string,
   data: any,
@@ -38,6 +41,7 @@ export async function writeApiCache(
   }
 }
 
+// Lee y devuelve los datos y la marca de tiempo de la caché para una clave específica.
 export async function readApiCache(
   key: string,
   guildId?: string,
@@ -58,6 +62,7 @@ export async function readApiCache(
   }
 }
 
+// Elimina los archivos de caché para las claves predefinidas usando guildId y channelId.
 export async function clearApiCache(guildId?: string, channelId?: string) {
   const keys = ['mapRotation', 'predatorRank', 'serverStatus'];
   for (const key of keys) {

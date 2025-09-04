@@ -10,7 +10,7 @@ import {
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
 import { writeApexStatusState } from '../utils/state-manager';
 import { clearApiCache } from '../utils/apex-api-cache';
-import { APEX_LOGO_EMOJI } from '../constants';
+import { APEX_LOGO_EMOJI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 
 export const data = new SlashCommandBuilder()

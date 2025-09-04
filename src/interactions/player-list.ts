@@ -5,16 +5,11 @@ import {
   Guild,
   GuildMember,
 } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
-import type { PlayerRecord } from '../utils/player-data-manager';
-
-interface Player {
-  member: GuildMember;
-  rankName: string;
-}
+import { Player, PlayerRecord } from '../interfaces/player';
 
 async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
   await guild.members.fetch(); // Asegurarse de que todos los miembros están en caché
@@ -62,7 +57,7 @@ export async function handleShowAllPlayersMenu(
     // --- FILTRA LOS RANGOS SI rankShortId ESTÁ PRESENTE ---
     let filteredRanks = APEX_RANKS;
     if (rankShortId) {
-      filteredRanks = APEX_RANKS.filter(r => r.shortId === rankShortId);
+      filteredRanks = APEX_RANKS.filter((r) => r.shortId === rankShortId);
     }
     // ------------------------------------------------------
 

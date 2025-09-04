@@ -1,12 +1,4 @@
-export interface ApexRank {
-  id: string;
-  shortId: string;
-  label: string;
-  roleName: string;
-  icon: string;
-  color: string;
-  apiName: string;
-}
+import { ApexRank } from '../interfaces/apex-rank';
 
 // Nombre común del rol de Apex Legends
 export const COMMON_APEX_ROLE_NAME = 'Apex';

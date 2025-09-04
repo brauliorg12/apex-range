@@ -7,7 +7,7 @@ import {
   EmbedBuilder,
   Guild,
 } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';

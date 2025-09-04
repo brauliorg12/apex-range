@@ -5,7 +5,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
 } from 'discord.js';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { writeRolesState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import {

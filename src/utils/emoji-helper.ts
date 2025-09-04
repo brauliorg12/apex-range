@@ -1,5 +1,5 @@
 import { Client, GuildEmoji } from 'discord.js';
-import { ApexRank } from '../constants';
+import { ApexRank } from '../interfaces/apex-rank';
 
 // Expresión regular para extraer el ID de un emoji personalizado de Discord.
 // Soporta emojis estáticos (<:nombre:id>) y animados (<a:nombre:id>).

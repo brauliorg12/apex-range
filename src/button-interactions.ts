@@ -7,7 +7,7 @@ import {
   TextInputStyle,
   StringSelectMenuInteraction,
 } from 'discord.js';
-import { APEX_RANKS } from './constants';
+import { APEX_RANKS } from './models/constants';
 import { createCloseButtonRow } from './utils/button-helper';
 import {
   handleManageRankMenu,

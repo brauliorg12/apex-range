@@ -1,10 +1,11 @@
 import { AttachmentBuilder, EmbedBuilder, Guild, Role } from 'discord.js';
 import { loadImage } from '@napi-rs/canvas';
 import { getPlayerData } from './player-data-manager';
-import { APEX_RANKS } from '../constants';
+import { APEX_RANKS } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { performance } from 'node:perf_hooks';
 import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
+import { logCanvas } from './logger';
 
 /**
  * Genera un card visual mostrando los avatares y rangos de los últimos 5 usuarios registrados.
@@ -16,13 +17,13 @@ import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
  */
 export async function buildRecentAvatarsCard(guild: Guild) {
   const tStart = performance.now();
-  console.log('[Canvas] Iniciando generación de card (últimos 5 registrados)');
+  logCanvas('Iniciando generación de card (últimos 5 registrados)');
 
   // Obtiene los datos de jugadores registrados en el servidor
   const playerData = await getPlayerData(guild);
   if (playerData.length < 5) {
-    console.log(
-      '[Canvas] No hay suficientes registros para generar el card (min: 5).'
+    logCanvas(
+      'No hay suficientes registros para generar el card (min: 5).'
     );
     return null;
   }
@@ -48,8 +49,8 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       const res = await fetch(url, { signal: controller.signal });
       const elapsed = Math.round(performance.now() - start);
       if (!res.ok) {
-        console.warn(
-          `[Canvas] Fetch avatar fallo HTTP ${res.status} en ${elapsed}ms – ${url}`
+        logCanvas(
+          `Fetch avatar fallo HTTP ${res.status} en ${elapsed}ms – ${url}`
         );
         return {
           ok: false as const,
@@ -62,16 +63,16 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       const buffer = Buffer.from(ab);
       const size =
         Number(res.headers.get('content-length')) || buffer.byteLength || 0;
-      console.log(`[Canvas] Avatar OK ${size}B en ${elapsed}ms – ${url}`);
+      logCanvas(`Avatar OK ${size}B en ${elapsed}ms – ${url}`);
       return { ok: true as const, buffer, elapsed, size };
     } catch (e: any) {
       const elapsed = Math.round(performance.now() - start);
       if (e?.name === 'AbortError') {
-        console.warn(`[Canvas] Timeout (${ms}ms) al obtener avatar – ${url}`);
+        logCanvas(`Timeout (${ms}ms) al obtener avatar – ${url}`);
       } else {
-        console.warn(
-          `[Canvas] Error al obtener avatar en ${elapsed}ms – ${url}:`,
-          e?.message || e
+        logCanvas(
+          'Error al obtener avatar en ' +
+          `${elapsed}ms – ${url}: ${e?.message || e}`
         );
       }
       return {
@@ -151,8 +152,8 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       let img: any = null;
       if (!avatarUrl) {
         failCount++;
-        console.warn(
-          '[Canvas] No se encontró URL de avatar, se usará placeholder.'
+        logCanvas(
+          'No se encontró URL de avatar, se usará placeholder.'
         );
       } else {
         const ft = performance.now();
@@ -163,13 +164,13 @@ export async function buildRecentAvatarsCard(guild: Guild) {
           try {
             img = await loadImage(fetched.buffer);
             const loadMs = Math.round(performance.now() - ft);
-            console.log(`[Canvas] Imagen decodificada en ${loadMs}ms`);
+            logCanvas(`Imagen decodificada en ${loadMs}ms`);
             okCount++;
           } catch (e) {
             failCount++;
-            console.warn(
-              '[Canvas] Error al decodificar imagen:',
-              (e as any)?.message || e
+            logCanvas(
+              'Error al decodificar imagen: ' +
+              ((e as any)?.message || e)
             );
           }
         }
@@ -239,8 +240,8 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     .setImage('attachment://recent-avatars.png');
 
   const totalMs = Math.round(performance.now() - tStart);
-  console.log(
-    `[Canvas] Card generado: ok=${okCount} error=${failCount} | encode=${encodeMs}ms | total=${totalMs}ms`
+  logCanvas(
+    `Card generado: ok=${okCount} error=${failCount} | encode=${encodeMs}ms | total=${totalMs}ms`
   );
 
   // Retorna el embed y el archivo PNG para enviar en Discord

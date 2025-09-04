@@ -10,8 +10,3 @@ export interface ApexStatusState {
   channelId?: string;
   guildId?: string;
 }
-
-export interface BotState {
-  roles?: RolesState;
-  apexStatus?: ApexStatusState;
-}

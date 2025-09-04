@@ -1,12 +1,6 @@
 import { Guild } from 'discord.js';
 import { getPlayers, savePlayers } from './players-manager';
-
-export interface PlayerRecord {
-  userId: string;
-  assignedAt: string; // ISO 8601 date string
-}
-
-export type PlayerData = PlayerRecord[];
+import { PlayerData, PlayerRecord } from '../interfaces/player';
 
 // Obtiene todos los jugadores registrados para un guild
 export async function getPlayerData(guild: Guild): Promise<PlayerData> {
@@ -40,13 +34,4 @@ export async function removePlayerRankDate(
   if (next.length !== data.length) {
     await savePlayers(guildId, next);
   }
-}
-
-// Utilidad para obtener la fecha por usuario (opcional)
-export async function getAssignedAtForUser(
-  guildId: string,
-  userId: string
-): Promise<string | undefined> {
-  const data = await getPlayers(guildId);
-  return data.find((r: PlayerRecord) => r.userId === userId)?.assignedAt;
 }
