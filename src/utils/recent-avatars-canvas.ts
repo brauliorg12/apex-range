@@ -109,7 +109,7 @@ const drawRankBadge = (
   y: number,
   size: number,
   badge: { img?: Img | null; text?: string | null; color?: string },
-  auraSize: number // <-- nuevo parámetro
+  auraSize: number
 ) => {
   if (!badge.img && !badge.text) return;
   const r = Math.round(size * 0.26);

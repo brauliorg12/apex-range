@@ -38,9 +38,16 @@ export async function renderRankCardCanvas(
   // Logo pulse y texto
   const logoSize = height * 0.88;
   const logoY = (height - logoSize) / 2;
+
+  /**
+   * Buffer PNG generado con el logo del rango y efecto "pulse" (halo circular).
+   * Se obtiene dinámicamente llamando a renderRankPulsePng, optimizando recursos y evitando cargar el módulo si no es necesario.
+   * Este buffer se usa para dibujar el logo visualmente destacado en la card.
+   */
   const pulseBuffer = await (
     await import('./rank-pulse-canvas')
   ).renderRankPulsePng(emojiUrl, color, logoSize);
+
   const pulseImg = await loadImage(pulseBuffer);
 
   // Texto
