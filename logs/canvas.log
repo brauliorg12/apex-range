@@ -814,3 +814,122 @@
 [2025-09-04T10:35:48.413Z] [Canvas] Avatar OK 6868B en 35ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
 [2025-09-04T10:35:48.433Z] [Canvas] Avatar OK 10668B en 29ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
 [2025-09-04T10:35:48.451Z] [Canvas] Card generado: ok=5 error=0 | encode=15ms | total=149ms
+[2025-09-04T10:36:48.464Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:36:48.519Z] [Canvas] Avatar OK 33332B en 51ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:36:48.521Z] [Canvas] Avatar OK 19830B en 54ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:36:48.522Z] [Canvas] Avatar OK 37976B en 53ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:36:48.523Z] [Canvas] Imagen decodificada en 55ms
+[2025-09-04T10:36:48.523Z] [Canvas] Imagen decodificada en 57ms
+[2025-09-04T10:36:48.524Z] [Canvas] Imagen decodificada en 56ms
+[2025-09-04T10:36:48.526Z] [Canvas] Avatar OK 34463B en 60ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:36:48.527Z] [Canvas] Imagen decodificada en 62ms
+[2025-09-04T10:36:48.544Z] [Canvas] Avatar OK 23596B en 74ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:36:48.545Z] [Canvas] Imagen decodificada en 75ms
+[2025-09-04T10:36:48.549Z] [Canvas] Avatar OK 9547B en 24ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:36:48.552Z] [Canvas] Avatar OK 10668B en 28ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:36:48.557Z] [Canvas] Avatar OK 10109B en 29ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:36:48.572Z] [Canvas] Avatar OK 6868B en 27ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:36:48.590Z] [Canvas] Avatar OK 10668B en 66ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:36:48.609Z] [Canvas] Card generado: ok=5 error=0 | encode=17ms | total=144ms
+[2025-09-04T10:37:30.280Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:37:30.347Z] [Canvas] Avatar OK 34463B en 61ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:37:30.350Z] [Canvas] Avatar OK 23596B en 58ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:37:30.350Z] [Canvas] Imagen decodificada en 68ms
+[2025-09-04T10:37:30.351Z] [Canvas] Imagen decodificada en 61ms
+[2025-09-04T10:37:30.354Z] [Canvas] Avatar OK 33332B en 66ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:37:30.355Z] [Canvas] Imagen decodificada en 68ms
+[2025-09-04T10:37:30.362Z] [Canvas] Avatar OK 37976B en 72ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:37:30.364Z] [Canvas] Avatar OK 19830B en 77ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:37:30.364Z] [Canvas] Imagen decodificada en 76ms
+[2025-09-04T10:37:30.365Z] [Canvas] Imagen decodificada en 79ms
+[2025-09-04T10:37:30.376Z] [Canvas] Avatar OK 10109B en 25ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:37:30.377Z] [Canvas] Avatar OK 6868B en 26ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:37:30.394Z] [Canvas] Avatar OK 10668B en 39ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:37:30.404Z] [Canvas] Avatar OK 9547B en 39ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:37:30.420Z] [Canvas] Avatar OK 10668B en 54ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:37:30.444Z] [Canvas] Card generado: ok=5 error=0 | encode=18ms | total=164ms
+[2025-09-04T10:38:29.663Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:38:29.722Z] [Canvas] Avatar OK 33332B en 55ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:38:29.723Z] [Canvas] Imagen decodificada en 57ms
+[2025-09-04T10:38:29.728Z] [Canvas] Avatar OK 19830B en 62ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:38:29.728Z] [Canvas] Imagen decodificada en 63ms
+[2025-09-04T10:38:29.742Z] [Canvas] Avatar OK 37976B en 74ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:38:29.744Z] [Canvas] Avatar OK 34463B en 79ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:38:29.744Z] [Canvas] Imagen decodificada en 77ms
+[2025-09-04T10:38:29.745Z] [Canvas] Imagen decodificada en 80ms
+[2025-09-04T10:38:29.750Z] [Canvas] Avatar OK 10668B en 27ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:38:29.755Z] [Canvas] Avatar OK 10668B en 26ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:38:29.764Z] [Canvas] Avatar OK 23596B en 96ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:38:29.764Z] [Canvas] Imagen decodificada en 97ms
+[2025-09-04T10:38:29.786Z] [Canvas] Avatar OK 9547B en 42ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:38:29.787Z] [Canvas] Avatar OK 10109B en 42ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:38:29.792Z] [Canvas] Avatar OK 6868B en 27ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:38:29.810Z] [Canvas] Card generado: ok=5 error=0 | encode=15ms | total=147ms
+[2025-09-04T10:39:29.636Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:39:29.695Z] [Canvas] Avatar OK 33332B en 54ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:39:29.695Z] [Canvas] Imagen decodificada en 56ms
+[2025-09-04T10:39:29.699Z] [Canvas] Avatar OK 19830B en 60ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:39:29.700Z] [Canvas] Imagen decodificada en 62ms
+[2025-09-04T10:39:29.702Z] [Canvas] Avatar OK 34463B en 64ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:39:29.704Z] [Canvas] Avatar OK 23596B en 62ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:39:29.705Z] [Canvas] Imagen decodificada en 67ms
+[2025-09-04T10:39:29.705Z] [Canvas] Imagen decodificada en 64ms
+[2025-09-04T10:39:29.713Z] [Canvas] Avatar OK 37976B en 72ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:39:29.714Z] [Canvas] Imagen decodificada en 73ms
+[2025-09-04T10:39:29.732Z] [Canvas] Avatar OK 10668B en 31ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:39:29.733Z] [Canvas] Avatar OK 10109B en 28ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:39:29.736Z] [Canvas] Avatar OK 6868B en 30ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:39:29.742Z] [Canvas] Avatar OK 10668B en 46ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:39:29.764Z] [Canvas] Avatar OK 9547B en 50ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:39:29.785Z] [Canvas] Card generado: ok=5 error=0 | encode=18ms | total=149ms
+[2025-09-04T10:40:29.669Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:40:29.723Z] [Canvas] Avatar OK 23596B en 48ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:40:29.724Z] [Canvas] Imagen decodificada en 49ms
+[2025-09-04T10:40:29.730Z] [Canvas] Avatar OK 33332B en 57ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:40:29.732Z] [Canvas] Avatar OK 19830B en 60ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:40:29.732Z] [Canvas] Imagen decodificada en 60ms
+[2025-09-04T10:40:29.732Z] [Canvas] Imagen decodificada en 61ms
+[2025-09-04T10:40:29.735Z] [Canvas] Avatar OK 34463B en 63ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:40:29.735Z] [Canvas] Imagen decodificada en 65ms
+[2025-09-04T10:40:29.742Z] [Canvas] Avatar OK 37976B en 68ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:40:29.743Z] [Canvas] Imagen decodificada en 70ms
+[2025-09-04T10:40:29.753Z] [Canvas] Avatar OK 6868B en 29ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:40:29.761Z] [Canvas] Avatar OK 10668B en 28ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:40:29.762Z] [Canvas] Avatar OK 10668B en 29ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:40:29.765Z] [Canvas] Avatar OK 10109B en 29ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:40:29.786Z] [Canvas] Avatar OK 9547B en 43ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:40:29.804Z] [Canvas] Card generado: ok=5 error=0 | encode=15ms | total=135ms
+[2025-09-04T10:41:30.658Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:41:30.710Z] [Canvas] Avatar OK 34463B en 51ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:41:30.711Z] [Canvas] Imagen decodificada en 53ms
+[2025-09-04T10:41:30.715Z] [Canvas] Avatar OK 19830B en 55ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:41:30.715Z] [Canvas] Imagen decodificada en 56ms
+[2025-09-04T10:41:30.720Z] [Canvas] Avatar OK 23596B en 58ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:41:30.721Z] [Canvas] Imagen decodificada en 60ms
+[2025-09-04T10:41:30.723Z] [Canvas] Avatar OK 33332B en 62ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:41:30.724Z] [Canvas] Imagen decodificada en 64ms
+[2025-09-04T10:41:30.727Z] [Canvas] Avatar OK 37976B en 65ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:41:30.727Z] [Canvas] Imagen decodificada en 67ms
+[2025-09-04T10:41:30.741Z] [Canvas] Avatar OK 10668B en 25ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:41:30.743Z] [Canvas] Avatar OK 10109B en 32ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:41:30.752Z] [Canvas] Avatar OK 9547B en 25ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:41:30.755Z] [Canvas] Avatar OK 6868B en 34ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:41:30.767Z] [Canvas] Avatar OK 10668B en 43ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:41:30.785Z] [Canvas] Card generado: ok=5 error=0 | encode=16ms | total=128ms
+[2025-09-04T10:42:30.598Z] [Canvas] Iniciando generación de card (últimos 5 registrados)
+[2025-09-04T10:42:30.653Z] [Canvas] Avatar OK 23596B en 50ms – https://cdn.discordapp.com/avatars/1044774334113271828/e355de29e2de9a0eca93a33fe0551509.png?size=128
+[2025-09-04T10:42:30.654Z] [Canvas] Imagen decodificada en 51ms
+[2025-09-04T10:42:30.659Z] [Canvas] Avatar OK 37976B en 57ms – https://cdn.discordapp.com/avatars/304790336587169795/6798afd271b4729ae4a16dadb17c6ad9.png?size=128
+[2025-09-04T10:42:30.660Z] [Canvas] Imagen decodificada en 59ms
+[2025-09-04T10:42:30.664Z] [Canvas] Avatar OK 33332B en 62ms – https://cdn.discordapp.com/avatars/755162605806420029/53e86de272f5f2c087ce769a98fb9c7b.png?size=128
+[2025-09-04T10:42:30.665Z] [Canvas] Imagen decodificada en 64ms
+[2025-09-04T10:42:30.671Z] [Canvas] Avatar OK 34463B en 72ms – https://cdn.discordapp.com/avatars/335236507340111873/cc7255a390a6681efb9597a397fe05ab.png?size=128
+[2025-09-04T10:42:30.672Z] [Canvas] Imagen decodificada en 73ms
+[2025-09-04T10:42:30.685Z] [Canvas] Avatar OK 19830B en 84ms – https://cdn.discordapp.com/avatars/832694285035372595/0df93f38e17b1db11473a25d84e94c7a.png?size=128
+[2025-09-04T10:42:30.685Z] [Canvas] Imagen decodificada en 85ms
+[2025-09-04T10:42:30.687Z] [Canvas] Avatar OK 9547B en 27ms – https://cdn.discordapp.com/emojis/1406723982887223416.png?size=64
+[2025-09-04T10:42:30.709Z] [Canvas] Avatar OK 10109B en 37ms – https://cdn.discordapp.com/emojis/1406723943787925546.png?size=64
+[2025-09-04T10:42:30.710Z] [Canvas] Avatar OK 10668B en 45ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:42:30.717Z] [Canvas] Avatar OK 10668B en 31ms – https://cdn.discordapp.com/emojis/1406723955682705418.png?size=64
+[2025-09-04T10:42:30.811Z] [Canvas] Avatar OK 6868B en 157ms – https://cdn.discordapp.com/emojis/1406723933608083599.png?size=64
+[2025-09-04T10:42:30.830Z] [Canvas] Card generado: ok=5 error=0 | encode=16ms | total=232ms
