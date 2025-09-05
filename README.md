@@ -480,7 +480,7 @@ El uso de este bot implica la aceptación de los [Términos y Condiciones](https
 - GitHub: [@brauliorg12](https://github.com/brauliorg12)
 - Discord: burlon23
 - Email: cubanovainfo@gmail.com
-
+- Company: CubaNova
 ---
 
 ¿Te gusta este bot?  
