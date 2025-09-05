@@ -11,14 +11,12 @@ export async function handleModalInteraction(
   interaction: ModalSubmitInteraction
 ) {
   try {
-    if (interaction.customId === 'apex_profile_modal') {
+    if (interaction.customId.startsWith('apex_profile_modal_')) {
       await interaction.deferReply({ ephemeral: true });
 
       // Obtiene datos del modal
       const playerName = interaction.fields.getTextInputValue('apex_name');
-      const platform = interaction.fields
-        .getTextInputValue('apex_platform')
-        .toUpperCase();
+      const platform = interaction.customId.replace('apex_profile_modal_', '');
 
       // Valida plataforma permitida
       const allowed = ['PC', 'PS4', 'X1'];

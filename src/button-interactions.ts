@@ -17,6 +17,18 @@ import {
 import { handleShowAllPlayersMenu } from './interactions/player-list';
 import { handleHelpMenu, handleCloseHelpMenu } from './interactions/help-menu';
 
+/**
+ * Asynchronously handles button interactions initiated by users.
+ *
+ * This function serves as a central router for all button clicks within the bot.
+ * It retrieves the `customId` from the interaction object to determine which action to perform.
+ * Based on the `customId`, it delegates the handling to more specific functions,
+ * such as managing ranks, assigning roles, showing player lists, or displaying help menus.
+ * It also handles interactions that trigger modals or select menus for further user input.
+ * Error handling is included to gracefully manage any issues during the process.
+ *
+ * @param {ButtonInteraction} interaction The button interaction object from discord.js.
+ */
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
   try {
     console.log('[DEBUG] handleButtonInteraction', interaction.customId);
@@ -53,29 +65,33 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       });
       return;
     } else if (customId === 'show_apex_profile_modal') {
-      const modal = new ModalBuilder()
-        .setCustomId('apex_profile_modal')
-        .setTitle('Consulta tu perfil de Apex Legends')
-        .addComponents(
-          new ActionRowBuilder<TextInputBuilder>().addComponents(
-            new TextInputBuilder()
-              .setCustomId('apex_name')
-              .setLabel('Nombre de usuario de Apex Legends')
-              .setStyle(TextInputStyle.Short)
-              .setPlaceholder('Ejemplo: Burlon23')
-              .setRequired(true)
-          ),
-          new ActionRowBuilder<TextInputBuilder>().addComponents(
-            new TextInputBuilder()
-              .setCustomId('apex_platform')
-              .setLabel('Plataforma (PC, PS4, X1)')
-              .setStyle(TextInputStyle.Short)
-              .setPlaceholder('PC, PS4 o X1')
-              .setRequired(true)
-          )
+      const platformSelectRow =
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId('apex_platform_select')
+            .setPlaceholder('Selecciona una plataforma')
+            .addOptions([
+              {
+                label: 'PC',
+                value: 'PC',
+              },
+              {
+                label: 'PlayStation',
+                value: 'PS4',
+              },
+              {
+                label: 'Xbox',
+                value: 'X1',
+              },
+            ])
         );
 
-      await interaction.showModal(modal);
+      const closeButtonRow = createCloseButtonRow();
+      await interaction.reply({
+        content: 'Por favor, selecciona tu plataforma para continuar.',
+        components: [platformSelectRow, closeButtonRow],
+        ephemeral: true,
+      });
       return;
     }
   } catch (error) {
@@ -89,6 +105,17 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
   }
 }
 
+/**
+ * Asynchronously handles select menu interactions initiated by users.
+ *
+ * This function is responsible for processing user selections from string select menus.
+ * It uses the `customId` of the interaction to identify the specific menu being used.
+ * Current implementations include handling platform selection for Apex Legends profiles,
+ * which then triggers a modal for username input, and filtering online players by their rank.
+ * It includes error handling to ensure a smooth user experience.
+ *
+ * @param {StringSelectMenuInteraction} interaction The select menu interaction object from discord.js.
+ */
 export async function handleSelectMenuInteraction(
   interaction: StringSelectMenuInteraction
 ) {
@@ -117,14 +144,6 @@ export async function handleSelectMenuInteraction(
       await interaction.showModal(modal);
       return;
     }
-    // --- RESTAURA EL BLOQUE PARA FILTRO DE RANGO ---
-    else if (customId === 'RANK_FILTER') {
-      const selectedRankShortId = interaction.values[0];
-      // Solo mostrar los jugadores en línea para el filtro
-      await handleShowAllPlayersMenu(interaction, selectedRankShortId, true);
-      return;
-    }
-    // ------------------------------------------------
   } catch (error) {
     console.error('Error en handleSelectMenuInteraction:', error);
     if (!interaction.replied && !interaction.deferred) {
