@@ -29,6 +29,8 @@ El bot ahora permite consultar el perfil de cualquier jugador de Apex Legends us
 - Muestra estadísticas básicas: nivel, rango, kills, leyenda seleccionada, UID y plataforma.
 - El card/embed del perfil usa el color correspondiente al rango del jugador.
 - Si ocurre un error (por ejemplo, usuario no encontrado), se muestra un card de error con borde rojo y botón cerrar.
+- Estadísticas y rango del modo Arenas, si están disponibles.
+- Información en tiempo real del jugador (estado online, sala, etc), si la API lo provee.
 
 ### Configuración
 
@@ -47,6 +49,9 @@ El bot ahora permite consultar el perfil de cualquier jugador de Apex Legends us
 - Haz click en el botón **"Ver mi perfil Apex"** en el panel del bot.
 - Completa el modal con tu nombre de usuario y plataforma (PC, PS4 o X1).
 - Recibirás un mensaje privado con tu perfil y estadísticas.
+- **Además del embed principal**, recibirás:
+  - Un **embed de Arenas** con tu rango y estadísticas en ese modo.
+  - Un **embed de Realtime** con tu estado actual en el juego (si la API lo provee).
 
 ---
 
@@ -81,6 +86,10 @@ Debajo del embed de estado, encontrarás el botón:
 - **Acceso rápido**: Todo desde el canal principal, sin comandos complicados.
 - **Privacidad**: Tu perfil se muestra solo a ti mediante mensaje ephemeral.
 - **Integración total**: El botón y el embed están siempre visibles y actualizados en el panel.
+- **NUEVO:** Al consultar tu perfil, verás **hasta tres embeds**:
+  - El embed principal con tus estadísticas globales.
+  - El embed de Arenas con tu rango y datos de ese modo.
+  - El embed de Realtime con tu estado actual en el juego (si está disponible).
 
 #### Detalles técnicos
 
