@@ -33,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       interaction.channelId ?? undefined
     );
 
-    // Botón "Ver mi perfil Apex" y "Más info"
+    // Botón "Ver perfil Apex Global" y "Más info"
     const apexProfileButton = new ButtonBuilder()
       .setCustomId('show_apex_profile_modal')
       .setLabel('Ver perfil Apex Global')

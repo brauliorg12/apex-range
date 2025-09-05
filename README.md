@@ -56,7 +56,7 @@ El bot ahora permite consultar el perfil de cualquier jugador de Apex Legends us
 
 ### Cómo usarlo
 
-- Haz click en el botón **"Ver mi perfil Apex"** en el panel del bot.
+- Haz click en el botón **"Ver perfil Apex Global"** en el panel del bot.
 - Completa el modal con tu nombre de usuario y plataforma (PC, PS4 o X1).
 - Recibirás un mensaje privado con tu perfil y estadísticas.
 - **Además del embed principal**, recibirás:
@@ -78,15 +78,15 @@ El bot ahora incluye un **embed dinámico** que muestra información en tiempo r
 
 Esto permite a tu comunidad estar informada al instante sobre el estado del juego y los requisitos competitivos.
 
-### Botón "Ver mi perfil Apex"
+### Botón "Ver perfil Apex Global"
 
 Debajo del embed de estado, encontrarás el botón:
 
 ```
-[ Ver mi perfil Apex ]
+[ Ver perfil Apex Global ]
 ```
 
-- Al pulsarlo, se abre un modal donde puedes ingresar tu usuario y plataforma.
+- Al pulsarlo, se abre un modal donde puedes ingresar tu plataforma y usuario.
 - El bot consulta la API de Mozambique y te envía un **card privado** con tus estadísticas principales: nivel, kills, rango, leyenda principal, UID y plataforma.
 - El embed utiliza colores y emojis personalizados según tu rango.
 - Si ocurre un error (usuario no encontrado, API caída, etc), recibirás un mensaje claro y profesional.
@@ -96,7 +96,7 @@ Debajo del embed de estado, encontrarás el botón:
 - **Acceso rápido**: Todo desde el canal principal, sin comandos complicados.
 - **Privacidad**: Tu perfil se muestra solo a ti mediante mensaje ephemeral.
 - **Integración total**: El botón y el embed están siempre visibles y actualizados en el panel.
-- **NUEVO:** Al consultar tu perfil, verás **hasta tres embeds**:
+- Al consultar tu perfil, verás **hasta tres embeds**:
   - El embed principal con tus estadísticas globales.
   - El embed de Arenas con tu rango y datos de ese modo.
   - El embed de Realtime con tu estado actual en el juego (si está disponible).
@@ -199,16 +199,18 @@ Para adaptarse a las limitaciones de la API de Mozambique y evitar bloqueos, el 
 
 ## 🟢 Comandos Disponibles
 
-| Comando / Acción               | Descripción                                                        | Permisos      |
-| ------------------------------ | ------------------------------------------------------------------ | ------------- |
-| `/setup-roles`                 | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
-| `/apex-status`                 | Muestra el estado de Apex (mapas, Predator RP)                     | Todos         |
-| `/total-jugadores`             | Muestra el número total de jugadores con rango                     | Todos         |
-| `/api-status`                  | Muestra el estado actual de la API externa                         | Todos         |
-| `Ver mi rango en Apex Range` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
-| **Ver mi perfil Apex** (botón) | Consulta tu perfil de Apex Legends usando la API Mozambique        | Todos         |
+| Comando / Acción   | Descripción                                                        | Permisos      |
+| ------------------ | ------------------------------------------------------------------ | ------------- |
+| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
+| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                     | Todos         |
+| `/total-jugadores` | Muestra el número total de jugadores con rango                     | Todos         |
+| `/api-status`      | Muestra el estado actual de la API externa                         | Todos         |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
+
+## Menú Contextual
+
+- `Ver mi rango en Apex Range` (contexto) | Muestra tu rango actual y opciones de gestión | Todos |
 
 ---
 
@@ -236,8 +238,6 @@ Puedes usar este rol para mencionar a todos los jugadores registrados fácilment
 ```
 
 ---
-
-
 
 ## Comando `/api-status`
 
@@ -487,6 +487,7 @@ El uso de este bot implica la aceptación de los [Términos y Condiciones](https
 - Discord: burlon23
 - Email: cubanovainfo@gmail.com
 - Company: CubaNova
+
 ---
 
 ¿Te gusta este bot?  
