@@ -2,6 +2,8 @@ import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { APEX_RANKS, APEX_LOGO_EMOJI } from '../models/constants';
 import { renderPredatorBadge } from './predator-badge-canvas';
 import { ApexProfileEmbedResult } from '../interfaces/profile-embed';
+import { buildArenasEmbed } from './arenas-embed';
+import { buildRealtimeEmbed } from './realtime-embed';
 
 /**
  * Genera un embed profesional para mostrar el perfil de Apex Legends.
@@ -71,6 +73,7 @@ export async function buildApexProfileEmbed(
   // Extrae otros datos relevantes
   const rankScore = global.rank?.rankScore ?? 'N/A';
   const ladderPos = global.rank?.ladderPosPlatform ?? 'N/A';
+  const tag = global?.tag ? `[${global.tag}]` : '';
 
   // Determina color del embed según rango
   const embedColorStr = (rankConst?.color || 'e67e22').replace(/^#/, '');
@@ -78,10 +81,10 @@ export async function buildApexProfileEmbed(
 
   // Construye el embed profesional
   const embed = new EmbedBuilder()
-    .setTitle(`${APEX_LOGO_EMOJI} Perfil de Apex: \`\`${playerName}\`\``)
-    .setDescription(`**Nombre Global:** \`\`\`${global.name}\`\`\``)
+    .setTitle(`${APEX_LOGO_EMOJI} Perfil de Ranked: \`\`${playerName}\`\``)
+    .setDescription(`**Nombre Global:** \`\`\`${tag} ${global.name}\`\`\``)
     .setColor(embedColor)
-    .setThumbnail(rankImg || undefined)
+    .setThumbnail(rankImg ?? null)
     .addFields(
       {
         name: 'Nivel',
@@ -128,7 +131,7 @@ export async function buildApexProfileEmbed(
     });
 
   // Si hay banner de leyenda, lo agrega como imagen
-  if (legendBanner) embed.setImage(legendBanner);
+  if (legendBanner) embed.setImage(legendBanner ?? null);
 
   // Si es Predator y tiene ladderPos, genera badge visual
   if (
@@ -148,12 +151,35 @@ export async function buildApexProfileEmbed(
         name: 'predator-badge.png',
       });
       embed.setThumbnail('attachment://predator-badge.png');
-      return { embed, files: [attachment] };
+      // Embed de Arenas
+      const arenasEmbed = buildArenasEmbed(profile, playerName);
+      // Embed de realtime si existe
+      let embeds = [embed, arenasEmbed];
+      if (profile.realtime) {
+        const realtimeEmbed = buildRealtimeEmbed(profile.realtime, playerName);
+        embeds.push(realtimeEmbed);
+      }
+      return { embeds, files: [attachment] };
     } catch (e) {
       // Si falla, retorna solo el embed
-      return { embed };
+      const arenasEmbed = buildArenasEmbed(profile, playerName);
+      // Embed de realtime si existe
+      let embeds = [embed, arenasEmbed];
+      if (profile.realtime) {
+        const realtimeEmbed = buildRealtimeEmbed(profile.realtime, playerName);
+        embeds.push(realtimeEmbed);
+      }
+      return { embeds };
     }
   }
 
-  return { embed };
+  // Embed de Arenas
+  const arenasEmbed = buildArenasEmbed(profile, playerName);
+  // Embed de realtime si existe
+  let embeds = [embed, arenasEmbed];
+  if (profile.realtime) {
+    const realtimeEmbed = buildRealtimeEmbed(profile.realtime, playerName);
+    embeds.push(realtimeEmbed);
+  }
+  return { embeds };
 }

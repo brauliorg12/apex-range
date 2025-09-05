@@ -1,7 +1,7 @@
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
 
 // Tipo para el resultado de la función buildApexProfileEmbed
-export type ApexProfileEmbedResult = {
-  embed: EmbedBuilder;
+export interface ApexProfileEmbedResult {
+  embeds: EmbedBuilder[]; // Cambiado de 'embed' a 'embeds'
   files?: AttachmentBuilder[];
-};
+}

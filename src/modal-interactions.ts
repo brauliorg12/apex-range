@@ -57,13 +57,13 @@ export async function handleModalInteraction(
       // Si hay badge visual, adjunta el archivo
       if (result.files) {
         await interaction.editReply({
-          embeds: [result.embed],
+          embeds: result.embeds,
           files: result.files,
           components: [createCloseButtonRow()],
         });
       } else {
         await interaction.editReply({
-          embeds: [result.embed],
+          embeds: result.embeds,
           components: [createCloseButtonRow()],
         });
       }
