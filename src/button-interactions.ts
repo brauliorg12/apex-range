@@ -144,6 +144,14 @@ export async function handleSelectMenuInteraction(
       await interaction.showModal(modal);
       return;
     }
+    // --- RESTAURA EL BLOQUE PARA FILTRO DE RANGO ---
+    else if (customId === 'RANK_FILTER') {
+      const selectedRankShortId = interaction.values[0];
+      // Solo mostrar los jugadores en línea para el filtro
+      await handleShowAllPlayersMenu(interaction, selectedRankShortId, true);
+      return;
+    }
+    // ------------------------------------------------
   } catch (error) {
     console.error('Error en handleSelectMenuInteraction:', error);
     if (!interaction.replied && !interaction.deferred) {
