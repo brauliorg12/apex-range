@@ -16,7 +16,7 @@ function printBanner(client: Client, guild: Guild, channelInfo: string) {
   const fechaUTC = now.toISOString();
   console.log('\x1b[36m');
   console.log('   🛡️  Apex Discord Bot - Panel de Jugadores 🛡️');
-  console.log('   by Burlon23');
+  console.log('   by Burlon23 - CubaNova');
   console.log('\x1b[0m');
   console.log('\x1b[32m%s\x1b[0m', '🟢 Bot conectado');
   console.log(`[App] Usuario Discord: ${client.user?.tag}`);

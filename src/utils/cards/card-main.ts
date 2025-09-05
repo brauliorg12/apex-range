@@ -22,6 +22,6 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
       ].join('\n')
     )
     .setFooter({
-      text: 'by Burlon23',
+      text: 'by CubaNova Company - 2025',
     });
 }
