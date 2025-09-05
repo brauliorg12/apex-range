@@ -205,7 +205,7 @@ Para adaptarse a las limitaciones de la API de Mozambique y evitar bloqueos, el 
 | `/apex-status`                 | Muestra el estado de Apex (mapas, Predator RP)                     | Todos         |
 | `/total-jugadores`             | Muestra el número total de jugadores con rango                     | Todos         |
 | `/api-status`                  | Muestra el estado actual de la API externa                         | Todos         |
-| `Ver mi rango Apex` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
+| `Ver mi rango en Apex Range` (contexto) | Muestra tu rango actual y opciones de gestión                      | Todos         |
 | **Ver mi perfil Apex** (botón) | Consulta tu perfil de Apex Legends usando la API Mozambique        | Todos         |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
@@ -246,12 +246,12 @@ Muestra si la API está conectada y la última vez que se verificó.
 
 ---
 
-## Comando de Contexto: Ver mi rango Apex
+## Comando de Contexto: Ver mi rango en Apex Range
 
 Permite consultar el rango de cualquier usuario (incluyéndote a ti mismo) desde el menú contextual:
 
 1. Haz click derecho sobre el nombre de usuario (en la lista de miembros o en el chat).
-2. Selecciona **"Ver mi rango Apex"** en la sección de Apps.
+2. Selecciona **"Ver mi rango en Apex Range"** en la sección de Apps.
 
 ### Funcionamiento
 
@@ -434,7 +434,7 @@ Migración automática de formatos antiguos incluida.
 2. El panel aparece con botones para seleccionar rango.
 3. Los usuarios eligen su rango y el bot les asigna el rol.
 4. El mensaje de estadísticas se actualiza automáticamente.
-5. Los usuarios pueden ver su rango con el menú contextual "Ver mi rango Apex".
+5. Los usuarios pueden ver su rango con el menú contextual "Ver mi rango en Apex Range".
 
 ---
 
