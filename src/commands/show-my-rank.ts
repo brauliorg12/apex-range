@@ -14,7 +14,7 @@ import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayers } from '../utils/players-manager';
 
 export const data = new ContextMenuCommandBuilder()
-  .setName('Ver mi rango de Apex Leyends')
+  .setName('Ver mi rango en Apex Range')
   .setType(ApplicationCommandType.User);
 
 export async function execute(interaction: UserContextMenuCommandInteraction) {

@@ -6,6 +6,16 @@ Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Lege
 ![License](https://img.shields.io/github/license/brauliorg12/apex-range)
 ![GHCR Pulls](https://img.shields.io/badge/GHCR-pulls-blue?logo=github)
 
+**🌐 Website: [https://apex-range.cubanova.com](https://apex-range.cubanova.com)**
+
+---
+
+## 🔗 Invita al Bot
+
+Para agregar el bot a tu servidor de Discord, usa el siguiente enlace de invitación. Ya tiene los permisos necesarios pre-configurados.
+
+**[>> Invitar Apex Legends Rank Bot a tu Servidor <<](https://discord.com/oauth2/authorize?client_id=1406424026427031696&scope=bot+applications.commands&permissions=268560384)**
+
 ---
 
 ## 🚀 ¿Qué es Apex Legends Rank Bot?
@@ -227,11 +237,7 @@ Puedes usar este rol para mencionar a todos los jugadores registrados fácilment
 
 ---
 
-## Website
 
-Accede al portal oficial: [apex-range.cubanova.com](https://apex-range.cubanova.com)
-
----
 
 ## Comando `/api-status`
 

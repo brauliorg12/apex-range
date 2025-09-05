@@ -5,12 +5,12 @@ import {
   getServerStatus,
 } from '../services/apex-api';
 import { writeApiCache, readApiCache } from './apex-api-cache';
-import { buildMainEmbed } from './cards/card-main.js';
-import { buildPubsEmbed } from './cards/card-pubs.js';
-import { buildRankedEmbed } from './cards/card-ranked.js';
-import { buildLtmEmbed } from './cards/card-ltm.js';
-import { buildPredatorEmbed } from './cards/card-predator.js';
-import { buildServerStatusEmbed } from './cards/card-server-status.js';
+import { buildMainEmbed } from './cards/card-main';
+import { buildPubsEmbed } from './cards/card-pubs';
+import { buildRankedEmbed } from './cards/card-ranked';
+import { buildLtmEmbed } from './cards/card-ltm';
+import { buildPredatorEmbed } from './cards/card-predator';
+import { buildServerStatusEmbed } from './cards/card-server-status';
 
 /**
  * Obtiene y construye los embeds de estado de Apex Legends para mostrar en Discord.

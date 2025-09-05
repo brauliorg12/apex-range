@@ -4,10 +4,7 @@ import {
   handleSelectMenuInteraction,
 } from './button-interactions';
 import { handleModalInteraction } from './modal-interactions';
-import {
-  data as showMyRankCommand,
-  execute as showMyRankExecute,
-} from './commands/show-my-rank';
+
 import { handleServerStatusInfo } from './commands/apex-status';
 import { logInteraction } from './utils/logger';
 
@@ -67,23 +64,32 @@ export function registerInteractionHandler(client: Client) {
         commandName: interaction.commandName,
       });
 
+      const command = commands.get(interaction.commandName);
+      if (!command) {
+        console.warn(
+          `[Advertencia] Comando de contexto desconocido: ${interaction.commandName}`
+        );
+        return;
+      }
+
       try {
-        if (interaction.commandName === showMyRankCommand.name) {
-          await showMyRankExecute(interaction);
-        }
+        await command.execute(interaction);
+        console.log(
+          `[Interacción] Comando de contexto '${interaction.commandName}' ejecutado por ${interaction.user.tag}.`
+        );
       } catch (error) {
         console.error(
-          '[ERROR] Error al manejar el comando de contexto:',
+          `[ERROR] Error al ejecutar el comando de contexto '${interaction.commandName}':`,
           error
         );
-        if (interaction.deferred || interaction.replied) {
+        if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
-            content: '¡Hubo un error al procesar tu solicitud!',
+            content: '¡Hubo un error al ejecutar este comando!',
             ephemeral: true,
           });
         } else {
           await interaction.reply({
-            content: '¡Hubo un error al procesar tu solicitud!',
+            content: '¡Hubo un error al ejecutar este comando!',
             ephemeral: true,
           });
         }
