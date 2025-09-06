@@ -63,7 +63,7 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
   ESLOVAQUIA: 'SK',
   ESLOVENIA: 'SI',
   ESPAÑA: 'ES',
-  'ESTADOS UNIDOS': 'US',
+  USA: 'US',
   ESTONIA: 'EE',
   ETIOPIA: 'ET',
   FILIPINAS: 'PH',
