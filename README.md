@@ -144,6 +144,18 @@ Esto te permite identificar rápidamente el estado de los servidores de Apex Leg
 
 ---
 
+## 🎨 Tipografía utilizada
+
+El bot utiliza la fuente **Montserrat Bold** para todos los cards visuales y textos generados con canvas, logrando un estilo moderno y profesional.
+
+La fuente se encuentra en la carpeta:
+
+```
+assets/fonts/Montserrat-Bold.ttf
+```
+
+---
+
 ## 🆘 Ayuda y Mensaje de Estado
 
 Cuando uses `/apex-status` o veas el panel de estado, ten en cuenta:
@@ -317,6 +329,8 @@ Ejemplo de visualización:
 - `src/interactions/`: Handlers de botones y selects.
 - `src/index.ts`: Punto de entrada principal.
 - `src/deploy-commands.ts`: Script para desplegar comandos.
+- `assets/fonts/`: **Fuentes utilizadas para los cards visuales (ej: Montserrat-Bold.ttf)**
+- `db/`: Archivos de datos JSON.
 
 ---
 

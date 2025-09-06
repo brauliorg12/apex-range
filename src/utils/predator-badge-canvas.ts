@@ -1,4 +1,9 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { join } from 'path';
+
+// Registra Montserrat Bold
+GlobalFonts.registerFromPath(join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'), 'Montserrat Bold');
+console.log('Fuentes registradas:', GlobalFonts.families);
 
 /**
  * Renderiza un badge de Apex Predator con el logo y la posición ladder.
@@ -52,8 +57,8 @@ export async function renderPredatorBadge(
   // LadderPos: texto grande, blanco, sin borde
   ctx.save();
   ctx.font = `bold ${Math.floor(
-    size / 2.8
-  )}px 'Arial Black', Arial, sans-serif`;
+    size / 3.6 // Reducido para achicar el texto
+  )}px "Montserrat Bold", Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.shadowColor = '#000';

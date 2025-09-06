@@ -1,4 +1,13 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { join } from 'path';
+
+// Registra Montserrat Bold
+GlobalFonts.registerFromPath(
+  join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'),
+  'Montserrat Bold'
+);
+console.log('Fuentes registradas:', GlobalFonts.families);
+
 import { performance } from 'node:perf_hooks';
 import { AvatarCardItem, AvatarCardOptions, Img } from '../interfaces/avatars';
 
@@ -33,13 +42,11 @@ const drawUserLabel = (
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (; fontSize >= 16; fontSize--) {
-    ctx.font = `700 ${fontSize}px sans-serif`;
+    ctx.font = `${fontSize}px "Montserrat Bold"`; // Usa Montserrat Bold
     if (ctx.measureText(label).width <= maxWidth) break;
   }
   const text = ellipsize(ctx, label, maxWidth);
-  ctx.lineWidth = Math.max(2, Math.round(fontSize / 4));
-  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-  ctx.strokeText(text, centerX, centerY);
+  ctx.font = `20px "Montserrat Bold"`;
   ctx.fillStyle = '#ffffff';
   ctx.fillText(text, centerX, centerY);
 };
@@ -111,12 +118,9 @@ const drawRankBadge = (
     ctx.drawImage(badge.img, cx - d / 2, cy - d / 2, d, d);
     ctx.restore();
   } else if (badge.text) {
-    ctx.font = `bold ${Math.max(16, Math.round(r * 1.2))}px sans-serif`;
+    ctx.font = `${Math.max(16, Math.round(r * 1.2))}px "Montserrat Bold"`; // Usa Montserrat Bold
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-    ctx.strokeText(badge.text!, cx, cy);
     ctx.fillStyle = '#ffffff';
     ctx.fillText(badge.text!, cx, cy);
   }
@@ -178,7 +182,7 @@ export async function renderRecentAvatarsCanvas(
       ctx.fillStyle = '#2c3e50';
       ctx.fillRect(x, y, size, size);
       ctx.fillStyle = '#ecf0f1';
-      ctx.font = 'bold 20px sans-serif';
+      ctx.font = '20px "Montserrat Bold"';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('?', centerX, centerY);
@@ -202,7 +206,7 @@ export async function renderRecentAvatarsCanvas(
     // Label
     const labelCenterX = x + size / 2;
     const labelCenterY = y + size + Math.floor(labelHeight / 2) - 2;
-    drawUserLabel(ctx, it.label, labelCenterX, labelCenterY, size);
+    drawUserLabel(ctx, it.label, labelCenterX, labelCenterY, size * 0.85);
   });
 
   // Encode y métricas
@@ -269,7 +273,7 @@ export async function renderRankPlayersCard(
       ctx.fillStyle = '#2c3e50';
       ctx.fillRect(x, y, size, size);
       ctx.fillStyle = '#ecf0f1';
-      ctx.font = 'bold 20px sans-serif';
+      ctx.font = '20px "Montserrat Bold"';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('?', centerX, centerY);
@@ -293,7 +297,7 @@ export async function renderRankPlayersCard(
     // Label debajo del avatar
     const labelCenterX = x + size / 2;
     const labelCenterY = y + size + Math.floor(labelHeight / 2) - 2;
-    drawUserLabel(ctx, it.label, labelCenterX, labelCenterY, size);
+    drawUserLabel(ctx, it.label, labelCenterX, labelCenterY, size * 0.85);
   });
 
   // Encode y métricas

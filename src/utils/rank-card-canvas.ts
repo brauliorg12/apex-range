@@ -1,4 +1,12 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { join } from 'path';
+
+// Registra Montserrat Bold
+GlobalFonts.registerFromPath(
+  join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'),
+  'Montserrat Bold'
+);
+console.log('Font registered:', GlobalFonts.families);
 
 /**
  * Genera una imagen de card visual para un rango de Apex.
@@ -51,7 +59,7 @@ export async function renderRankCardCanvas(
   const pulseImg = await loadImage(pulseBuffer);
 
   // Texto
-  ctx.font = `bold 20px sans-serif`;
+  ctx.font = `bold 20px "Montserrat Bold"`;
   const text = label.toUpperCase();
   const paddingLeft = 4;
   const logoX = paddingLeft;
