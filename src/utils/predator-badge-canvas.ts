@@ -2,8 +2,10 @@ import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { join } from 'path';
 
 // Registra Montserrat Bold
-GlobalFonts.registerFromPath(join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'), 'Montserrat Bold');
-console.log('Fuentes registradas:', GlobalFonts.families);
+GlobalFonts.registerFromPath(
+  join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'),
+  'Montserrat Bold'
+);
 
 /**
  * Renderiza un badge de Apex Predator con el logo y la posición ladder.

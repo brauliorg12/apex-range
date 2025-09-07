@@ -1,148 +1,163 @@
 import {
   Guild,
-  EmbedBuilder,
-  ColorResolvable,
   AttachmentBuilder,
   Role,
-  GuildMember,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  Client,
 } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
-import { getOnlineMembersByRole } from './player-stats';
+import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { getRankEmoji } from './emoji-helper';
-import { filterAllowedRoles } from './role-filter';
-import { getCountryFlag } from './country-flag';
+import { createCloseButtonRow } from './button-helper';
+import { buildOnlineEmbedForRank } from './build-online-embed-rank';
+import {
+  getAllMembersByRole,
+  sortMembersByPriority,
+} from './build-all-online-embed';
 
 /**
- * Construye un embed visual para mostrar los jugadores online de un rango específico.
- * Incluye el logo pulse y el nombre del rango como imagen principal.
- * @param guild Servidor Discord.
- * @param rank Objeto de rango de APEX_RANKS.
- * @param onlineMembers Lista de miembros online de ese rango.
- * @param cardUrl (opcional) URL de la imagen generada para el card.
- * @returns EmbedBuilder listo para enviar.
+ * Crea una fila con el botón "Ver más jugadores" solo si hay más jugadores que el máximo por card.
  */
-export async function buildOnlineEmbedForRank(
-  guild: Guild,
+export function createSeeMoreButtonRow(
   rank: (typeof APEX_RANKS)[number],
-  onlineMembers: GuildMember[],
-  cardUrl?: string
+  totalCount: number,
+  maxPerCard: number,
+  client: Client
 ) {
-  const onlineCount = onlineMembers.length;
-  const jugadoresLabel =
-    onlineCount === 1 ? '_jugador en línea_' : '_jugadores en línea_';
-
-  const rankEmoji = getRankEmoji(guild.client, rank);
-
-  /**
-   * Para cada usuario online:
-   * - Se filtran los roles extra permitidos (excluyendo rangos, @everyone y los definidos en EXCLUDED_ROLES).
-   * - Cada rol permitido se traduce a su bandera de país (si el nombre coincide con un país en mayúsculas, ej: ARGENTINA, MEXICO, VENEZUELA) usando getCountryFlag.
-   * - Si el usuario tiene varios roles de país, se muestran varias banderas.
-   * - Si el rol no es un país conocido, se muestra el nombre original del rol.
-   * Ejemplo de resultado:
-   *   • @usuario1 (🇦🇷, 🇪🇸)
-   *   • @usuario2 (🇲🇽)
-   *   • @usuario3
-   */
-  let description = `> ${rankEmoji} **${onlineCount}** ${jugadoresLabel}`;
-
-  if (onlineCount > 0) {
-    description +=
-      '\n\n' +
-      onlineMembers
-        .map((member: GuildMember) => {
-          const allowedRoles = filterAllowedRoles(
-            member.roles.cache.map((role) => role)
-          );
-          // Para cada rol permitido, muestra la bandera y el nombre capitalizado en cursiva si es país, si no, solo el nombre
-          const rolesDisplay = allowedRoles.length
-            ? ` (${allowedRoles
-                .map((role) => {
-                  const flag = getCountryFlag(role.name);
-                  // Capitaliza el nombre del país o rol
-                  const capitalized =
-                    role.name.charAt(0).toUpperCase() +
-                    role.name.slice(1).toLowerCase();
-                  // Siempre muestra en cursiva, con bandera si aplica
-                  return flag !== role.name
-                    ? `${flag} _${capitalized}_`
-                    : `_${capitalized}_`;
-                })
-                .join(', ')})`
-            : '';
-          return `• <@${member.id}>${rolesDisplay}`;
-        })
-        .join('\n');
+  if (totalCount > maxPerCard) {
+    const rankEmoji = getRankEmoji(client, rank);
+    return [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`rank_${rank.shortId}_vermas`)
+          .setLabel('Ver más')
+          .setEmoji(rankEmoji)
+          .setStyle(ButtonStyle.Secondary)
+      ),
+    ];
   }
-
-  const embed = new EmbedBuilder()
-    .setColor(rank.color as ColorResolvable)
-    .setDescription(description);
-
-  // Imagen principal: solo logo pulse + texto de rango
-  if (cardUrl) {
-    embed.setImage(cardUrl);
-  }
-
-  return embed;
+  return [];
 }
 
 /**
- * Genera todos los embeds y archivos de imagen para mostrar los jugadores online por rango.
- * Cada embed contiene el card visual del rango y la lista de jugadores online.
- * @param guild Servidor Discord.
- * @returns { embeds, files } para enviar en un mensaje.
+ * Crea los botones de paginación para un rango.
  */
-export async function buildAllOnlineEmbeds(guild: Guild) {
-  const embeds: EmbedBuilder[] = [];
-  const files: AttachmentBuilder[] = [];
+export function createPaginationButtons(
+  rankId: string,
+  currentPage: number,
+  totalPages: number
+) {
+  if (totalPages <= 1) return []; // Devuelve array vacío si no hay paginación
 
-  for (const rank of APEX_RANKS) {
-    if (files.length >= 10) break;
+  const row = new ActionRowBuilder<ButtonBuilder>();
+  row.addComponents(
+    new ButtonBuilder()
+      .setCustomId(`rank_${rankId}_prev`)
+      .setLabel('⬅️ Anterior')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(currentPage === 1),
+    new ButtonBuilder()
+      .setCustomId(`rank_${rankId}_next`)
+      .setLabel('Siguiente ➡️')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(currentPage === totalPages),
+    // Boton Cerrar
+    ...createCloseButtonRow().components
+  );
+  return [row];
+}
 
-    const role: Role | undefined = guild.roles.cache.find(
-      (r): r is Role => r.name === rank.roleName
-    );
-    if (!role) continue;
+/**
+ * Genera el embed, archivos y botones para una página específica de jugadores por rango.
+ * Solo retorna un embed por card, respetando el máximo por parámetro.
+ */
+export async function getRankPageEmbed(
+  guild: Guild,
+  rankId: string,
+  page: number,
+  maxPerCard = MAX_PLAYERS_PER_CARD,
+  showNumbers: boolean = true
+) {
+  const { getPlayerData } = await import('./player-data-manager');
+  const playerData = await getPlayerData(guild);
 
-    const onlineMembers = Array.from(
-      getOnlineMembersByRole(role).values()
-    ) as GuildMember[];
+  const rank = APEX_RANKS.find((r) => r.shortId === rankId);
+  if (!rank) return null;
 
-    // Obtener URL del emoji grande
-    const emojiMatch =
-      typeof rank.id === 'string' && rank.id.match(/^<a?:\w+:(\d+)>$/);
-    let emojiUrl = undefined;
-    if (emojiMatch) {
-      const emojiId = emojiMatch[1];
-      emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.png?size=96&quality=lossless`;
-    }
+  const role: Role | undefined = guild.roles.cache.find(
+    (r): r is Role => r.name === rank.roleName
+  );
+  if (!role) return null;
 
-    // Genera la imagen (solo logo pulse + texto de rango)
-    let cardUrl = undefined;
-    if (emojiUrl && files.length < 10) {
-      const cardBuffer = await renderRankCardCanvas(
-        emojiUrl,
-        rank.color,
-        rank.label
-      );
-      const cardName = `rankcard_${rank.shortId}.png`;
-      const cardAttachment = new AttachmentBuilder(cardBuffer, {
-        name: cardName,
-      });
-      files.push(cardAttachment);
-      cardUrl = `attachment://${cardName}`;
-    }
+  const allMembers = getAllMembersByRole(guild, role, playerData);
+  const sortedMembers = sortMembersByPriority(allMembers, playerData);
 
-    const embed = await buildOnlineEmbedForRank(
-      guild,
-      rank,
-      onlineMembers,
-      cardUrl
-    );
-    embeds.push(embed);
+  const totalPages = Math.ceil(sortedMembers.length / maxPerCard);
+  const pageNum = Math.max(1, Math.min(page, totalPages));
+  const pageMembers = sortedMembers.slice(
+    (pageNum - 1) * maxPerCard,
+    pageNum * maxPerCard
+  );
+
+  // Obtener URL del emoji grande
+  const emojiMatch =
+    typeof rank.id === 'string' && rank.id.match(/^<a?:\w+:(\d+)>$/);
+  let emojiUrl = undefined;
+  if (emojiMatch) {
+    const emojiId = emojiMatch[1];
+    emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.png?size=96&quality=lossless`;
   }
 
-  return { embeds, files };
+  let cardUrl = undefined;
+  const files: AttachmentBuilder[] = [];
+  if (emojiUrl) {
+    const cardBuffer = await renderRankCardCanvas(
+      emojiUrl,
+      rank.color,
+      rank.label
+    );
+    const cardName = `rankcard_${rank.shortId}.png`;
+    const cardAttachment = new AttachmentBuilder(cardBuffer, {
+      name: cardName,
+    });
+    files.push(cardAttachment);
+    cardUrl = `attachment://${cardName}`;
+  }
+
+  const embed = await buildOnlineEmbedForRank(
+    guild,
+    rank,
+    pageMembers,
+    cardUrl,
+    sortedMembers.length, // totalCount
+    pageNum, // página actual
+    maxPerCard, // máximo por página
+    showNumbers // mostrar numeración en la lista de jugadores (solo para embeds efímeros)
+  );
+
+  const totalCount = sortedMembers.length;
+  const startIdx = (pageNum - 1) * maxPerCard + 1;
+  const endIdx = startIdx + pageMembers.length - 1;
+
+  let footerText = `📄 Página ${pageNum} de ${totalPages} | 👥 Mostrando jugadores ${startIdx}-${endIdx} de ${totalCount}`;
+  if (totalPages > 1) {
+    footerText += '\n👉 Usa los botones para navegar';
+  }
+  embed.setFooter({ text: footerText });
+
+  const componentsBtns: ActionRowBuilder<ButtonBuilder>[] =
+    totalPages > 1
+      ? createPaginationButtons(rank.shortId, pageNum, totalPages)
+      : [createCloseButtonRow()];
+
+  // Solo retorna el embed, archivos y botones de la página actual
+  return {
+    embed,
+    files,
+    components: componentsBtns,
+    page: pageNum,
+    totalPages,
+  };
 }

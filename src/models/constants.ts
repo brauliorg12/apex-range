@@ -1,5 +1,14 @@
 import { ApexRank } from '../interfaces/apex-rank';
 
+// Parámetro global de aura para los canvas / pulse de los rangos
+export const COMMON_AURA_SIZE = 40;
+
+// Parámetro global para controlar el máximo de jugadores por card en panel principal rankeds
+export const MAX_PLAYERS_PER_CARD = 5;
+
+// Límite máximo de archivos adjuntos por mensaje (Discord y Canvas)
+export const MAX_ATTACHMENTS_PER_MESSAGE = 10; 
+
 // Nombre común del rol de Apex Legends
 export const COMMON_APEX_ROLE_NAME = 'Apex';
 

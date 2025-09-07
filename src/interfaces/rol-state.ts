@@ -5,9 +5,3 @@ export interface RolesState {
   guildId?: string;
   rankCardMessageIds?: { [shortId: string]: string };
 }
-
-export interface ApexStatusState {
-  apexInfoMessageId?: string;
-  channelId?: string;
-  guildId?: string;
-}

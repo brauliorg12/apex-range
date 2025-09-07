@@ -6,7 +6,6 @@ GlobalFonts.registerFromPath(
   join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'),
   'Montserrat Bold'
 );
-console.log('Fuentes registradas:', GlobalFonts.families);
 
 import { performance } from 'node:perf_hooks';
 import { AvatarCardItem, AvatarCardOptions, Img } from '../interfaces/avatars';

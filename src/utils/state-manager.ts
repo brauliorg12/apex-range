@@ -1,10 +1,12 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { RolesState, ApexStatusState } from '../interfaces/bot-state';
+import { ApexStatusState, RolesState } from '../interfaces/bot-state';
 
 const STATE_DIR = path.join(__dirname, '../../.bot-state');
 
-// Función para obtener la ruta del archivo de estado
+/**
+ * Obtiene la ruta del archivo de estado para un servidor específico.
+ */
 function getStateFile(guildId: string) {
   return path.join(STATE_DIR, `${guildId}.json`);
 }
@@ -22,6 +24,11 @@ export async function readRolesState(
   }
 }
 
+/**
+ * Escribe el estado de roles para un servidor específico.
+ * Guarda la información de roles en el archivo de estado correspondiente al guildId.
+ * Crea el directorio si no existe y lanza un error si falta el guildId.
+ */
 export async function writeRolesState(
   state: RolesState & { guildId: string }
 ): Promise<void> {
@@ -61,7 +68,10 @@ export async function writeApexStatusState(
   );
 }
 
-// --- Funciones de base de datos de jugadores (sin cambios) ---
+/**
+ * Verifica que el guildId sea válido antes de acceder a la base de datos de jugadores.
+ * Lanza un error si el guildId es nulo, indefinido o inválido.
+ */
 function ensureGuildId(
   guildId: string | null | undefined
 ): asserts guildId is string {
@@ -77,6 +87,10 @@ function ensureGuildId(
   }
 }
 
+/**
+ * Lee la base de datos de jugadores para un servidor específico.
+ * Devuelve un array de jugadores o un array vacío si no existe el archivo.
+ */
 export async function readPlayers(guildId: string) {
   ensureGuildId(guildId);
   const DB_DIR = path.resolve(__dirname, '../../db');
@@ -90,6 +104,10 @@ export async function readPlayers(guildId: string) {
   }
 }
 
+/**
+ * Escribe la base de datos de jugadores para un servidor específico.
+ * Guarda el array de jugadores en el archivo correspondiente.
+ */
 export async function writePlayers(guildId: string, players: any[]) {
   ensureGuildId(guildId);
   const DB_DIR = path.resolve(__dirname, '../../db');

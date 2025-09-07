@@ -1,15 +1,14 @@
 import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
 import {
   readRolesState,
-  writeRolesState,
   readApexStatusState,
   writeApexStatusState,
 } from './state-manager';
 import { getPlayerStats } from './player-stats';
-import { createRankButtons, createManagementButtons } from './button-helper';
-import { buildAllOnlineEmbeds } from './online-embed-helper';
+import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 import { createApexStatusEmbeds } from './apex-status-embed';
+import { MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
 
 async function fetchChannel(guild: Guild, channelId: string) {
   return (await guild.channels.fetch(channelId)) as TextChannel;
@@ -62,33 +61,20 @@ export async function updateRoleCountMessage(guild: Guild) {
         .setTitle('Estadísticas de Jugadores')
         .setFields(fields);
 
-      const { embeds: onlineEmbeds, files: onlineFiles } =
-        await buildAllOnlineEmbeds(guild);
       const recentCard = await buildRecentAvatarsCard(guild);
 
-      const headerEmbed = new EmbedBuilder()
-        .setColor('#bdc3c7')
-        .setDescription(
-          '🛡️ **Jugadores en línea por Rango**\n' +
-            '> Puede clickear sobre los jugadores para interactuar'
-        );
+      // Solo el resumen y el card de avatares, NO el header ni los cards por rango
+      const embedsToSend = [embed, ...(recentCard ? [recentCard.embed] : [])];
 
-      const embedsToSend = [
-        embed,
-        ...(recentCard ? [recentCard.embed] : []),
-        headerEmbed,
-        ...onlineEmbeds,
-      ];
-
-      const filesToSend = [
-        ...(recentCard ? recentCard.files : []),
-        ...(onlineFiles ?? []),
-      ].slice(0, 10);
+      const filesToSend = [...(recentCard ? recentCard.files : [])].slice(
+        0,
+        MAX_ATTACHMENTS_PER_MESSAGE
+      );
 
       await statsMessage.edit({
         content: '',
         embeds: embedsToSend,
-        components: [...createManagementButtons()],
+        components: [],
         files: filesToSend,
       });
     } catch (error: any) {
@@ -119,7 +105,9 @@ export async function updateApexInfoMessage(guild: Guild) {
     );
 
     try {
-      await channel.messages.edit(apexStatusState.apexInfoMessageId, { embeds });
+      await channel.messages.edit(apexStatusState.apexInfoMessageId, {
+        embeds,
+      });
     } catch (error: any) {
       if (error.code === 10008) {
         console.warn(
@@ -141,6 +129,9 @@ export async function updateApexInfoMessage(guild: Guild) {
       }
     }
   } catch (error) {
-    console.error('Error al actualizar el mensaje de información de Apex:', error);
+    console.error(
+      'Error al actualizar el mensaje de información de Apex:',
+      error
+    );
   }
 }

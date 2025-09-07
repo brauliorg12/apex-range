@@ -12,10 +12,10 @@ import { createCloseButtonRow } from './utils/button-helper';
 import {
   handleManageRankMenu,
   handleRoleAssignment,
-  handleRemoveRank,
 } from './interactions/rank-management';
 import { handleShowAllPlayersMenu } from './interactions/player-list';
 import { handleHelpMenu, handleCloseHelpMenu } from './interactions/help-menu';
+import { handleRemoveRank } from './helpers/handle-remove-rank';
 
 /**
  * Asynchronously handles button interactions initiated by users.
@@ -59,7 +59,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
         );
       const closeButtonRow = createCloseButtonRow();
       await interaction.reply({
-        content: 'Filtra los jugadores en línea por rango:',
+        content: 'Filtra los jugadores 🟢 en línea por rango:',
         components: [rankFilterRow, closeButtonRow],
         ephemeral: true,
       });

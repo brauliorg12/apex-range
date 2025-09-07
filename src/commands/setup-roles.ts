@@ -12,6 +12,7 @@ import {
   createRankButtons,
   createManagementButtons,
 } from '../utils/button-helper';
+import { sendOnlinePanel } from '../utils/send-online-panel';
 
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
@@ -30,6 +31,9 @@ export const data = new SlashCommandBuilder()
  */
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guild || !interaction.guildId) return;
+
+  // Marca el inicio del comando para medir duración
+  const startTime = Date.now();
 
   // 1. Comprobar permisos de administrador
   if (
@@ -114,10 +118,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     roleSelectionMessageId: roleSelectionMessage.id,
     channelId: channel.id,
     guildId: interaction.guild.id,
+    rankCardMessageIds: {},
   });
 
   // 6. Actualizar mensajes
   await updateRoleCountMessage(interaction.guild);
 
-  await interaction.editReply({ content: '¡Configuración completada!' }); // Note: This string literal is correctly escaped.
+  // Envía el panel de rangos SOLO UNA VEZ aquí, y los fija
+  await sendOnlinePanel(channel, interaction.guild);
+
+  // Calcula segundos transcurridos
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
+  await interaction.editReply({
+    content: `¡Configuración completada en ${elapsed} segundos!`,
+  });
 }

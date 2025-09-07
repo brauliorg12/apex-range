@@ -1,7 +1,7 @@
 import { AttachmentBuilder, EmbedBuilder, Guild, Role } from 'discord.js';
 import { loadImage } from '@napi-rs/canvas';
 import { getPlayerData } from './player-data-manager';
-import { APEX_RANKS } from '../models/constants';
+import { APEX_RANKS, COMMON_AURA_SIZE } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { performance } from 'node:perf_hooks';
 import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
@@ -22,9 +22,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
   // Obtiene los datos de jugadores registrados en el servidor
   const playerData = await getPlayerData(guild);
   if (playerData.length < 5) {
-    logCanvas(
-      'No hay suficientes registros para generar el card (min: 5).'
-    );
+    logCanvas('No hay suficientes registros para generar el card (min: 5).');
     return null;
   }
 
@@ -72,7 +70,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       } else {
         logCanvas(
           'Error al obtener avatar en ' +
-          `${elapsed}ms – ${url}: ${e?.message || e}`
+            `${elapsed}ms – ${url}: ${e?.message || e}`
         );
       }
       return {
@@ -152,9 +150,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       let img: any = null;
       if (!avatarUrl) {
         failCount++;
-        logCanvas(
-          'No se encontró URL de avatar, se usará placeholder.'
-        );
+        logCanvas('No se encontró URL de avatar, se usará placeholder.');
       } else {
         const ft = performance.now();
         const fetched = await fetchWithTimeout(avatarUrl, 5000);
@@ -169,8 +165,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
           } catch (e) {
             failCount++;
             logCanvas(
-              'Error al decodificar imagen: ' +
-              ((e as any)?.message || e)
+              'Error al decodificar imagen: ' + ((e as any)?.message || e)
             );
           }
         }
@@ -222,8 +217,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       size,
       pad,
       labelHeight,
-      auraSize: 40, // <-- Aura
-      // TODO pasar a una variable global / parametrizable para reutilizar la misma
+      auraSize: COMMON_AURA_SIZE,
     }
   );
 

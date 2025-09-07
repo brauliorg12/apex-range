@@ -6,7 +6,6 @@ GlobalFonts.registerFromPath(
   join(__dirname, '..', 'assets', 'fonts', 'Montserrat-Bold.ttf'),
   'Montserrat Bold'
 );
-console.log('Font registered:', GlobalFonts.families);
 
 /**
  * Genera una imagen de card visual para un rango de Apex.
