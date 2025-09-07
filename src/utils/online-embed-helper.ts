@@ -6,6 +6,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   Client,
+  GuildMember,
 } from 'discord.js';
 import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
 import { renderRankCardCanvas } from './rank-card-canvas';
@@ -134,7 +135,8 @@ export async function getRankPageEmbed(
     sortedMembers.length, // totalCount
     pageNum, // página actual
     maxPerCard, // máximo por página
-    showNumbers // mostrar numeración en la lista de jugadores (solo para embeds efímeros)
+    showNumbers, // mostrar numeración en la lista de jugadores (solo para embeds efímeros)
+    allMembers as GuildMember[] // <-- aquí pasas todos los miembros del rango
   );
 
   const totalCount = sortedMembers.length;

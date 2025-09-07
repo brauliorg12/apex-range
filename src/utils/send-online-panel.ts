@@ -8,13 +8,6 @@ import { buildAllOnlineEmbeds } from './build-all-online-embed';
  * Envía el panel de rangos con un header y cards con botón "Ver más", fijando todos los mensajes.
  */
 export async function sendOnlinePanel(channel: any, guild: Guild) {
-  // Obtiene el ID del mensaje de selección de roles para no eliminarlo
-  let selectionMessageId: string | undefined;
-  try {
-    const rolesState = await readRolesState(guild.id);
-    selectionMessageId = rolesState?.roleSelectionMessageId;
-  } catch {}
-
   // Header embed arriba
   const headerEmbed = new EmbedBuilder()
     .setColor('#bdc3c7')
@@ -64,6 +57,7 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
 
   // Actualiza el estado con los IDs de los cards por rango
   let rolesState = await readRolesState(guild.id);
+
   if (!rolesState) {
     rolesState = {
       guildId: guild.id,
@@ -73,6 +67,7 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
       rankCardMessageIds: {},
     };
   }
+
   await writeRolesState({
     ...rolesState,
     guildId: guild.id,

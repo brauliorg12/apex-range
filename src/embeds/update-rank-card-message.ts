@@ -1,4 +1,10 @@
-import { Guild, AttachmentBuilder, Role, TextChannel } from 'discord.js';
+import {
+  Guild,
+  AttachmentBuilder,
+  Role,
+  TextChannel,
+  GuildMember,
+} from 'discord.js';
 import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
 import {
   getAllMembersByRole,
@@ -69,7 +75,11 @@ export async function updateRankCardMessage(
     rank,
     pageMembers,
     cardUrl,
-    sortedMembers.length // <-- totalCount para el footer
+    sortedMembers.length, // totalCount para el footer
+    1, // página actual (puedes ajustar si tienes paginación)
+    MAX_PLAYERS_PER_CARD,
+    false, // showNumbers (solo true en efímeros)
+    allMembers as GuildMember[] // <-- aquí pasas todos los miembros del rango
   );
 
   // Edita el mensaje del card

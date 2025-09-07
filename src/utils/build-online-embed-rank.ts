@@ -23,19 +23,41 @@ export async function buildOnlineEmbedForRank(
   totalCount?: number,
   pageNum?: number,
   maxPerCard?: number,
-  showNumbers?: boolean
+  showNumbers?: boolean,
+  allRankMembers?: GuildMember[] // <-- Todos los del rango
 ) {
   const count = members.length;
-  const jugadoresLabel = count === 1 ? '_jugador_' : '_jugadores_';
 
   // Obtiene el emoji del rango
   const rankEmoji = getRankEmoji(guild.client, rank);
+
+  const onlineMembers = members.filter(
+    (member) => member.presence && member.presence.status === 'online'
+  );
+
+  // onlineCount: Cuenta cuántos miembros están en línea.
+  const onlineCount = (allRankMembers ?? onlineMembers).filter(
+    (member) => member.presence && member.presence.status === 'online'
+  ).length;
+
+  // jugadoresLabel: Usa singular o plural según la cantidad en línea.
+  const jugadoresLabel = onlineCount === 1 ? '_jugador_' : '_jugadores_';
+
+  // totalLabel: Muestra el total de jugadores del rango, por ejemplo "de 10".
+  // Se utiliza para indicar cuántos jugadores hay en total, además de los que están en línea.
+  const totalLabel =
+    typeof totalCount === 'number' ? `de **${totalCount}**` : '';
 
   // Calcula el índice inicial para la numeración en la página actual
   const startIdx = pageNum && maxPerCard ? (pageNum - 1) * maxPerCard + 1 : 1;
 
   // Encabezado con cantidad de jugadores y emoji de rango
-  let description = `> ${rankEmoji} **${count}** ${jugadoresLabel}`;
+  let description = '';
+  if (onlineCount > 0) {
+    description = `> ${rankEmoji} **${onlineCount}** ${jugadoresLabel} en línea ${totalLabel}`;
+  } else {
+    description = `> ${rankEmoji} No hay jugadores en línea${totalLabel}`;
+  }
 
   if (count > 0) {
     // Genera la lista de jugadores con numeración, estado y roles/banderas

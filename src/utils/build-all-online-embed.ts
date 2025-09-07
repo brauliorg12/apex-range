@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   EmbedBuilder,
   Guild,
+  GuildMember,
   Role,
 } from 'discord.js';
 import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
@@ -109,7 +110,11 @@ export async function buildAllOnlineEmbeds(
       rank,
       pageMembers,
       cardUrl,
-      sortedMembers.length // <-- Pasa el totalCount aquí
+      sortedMembers.length, // totalCount
+      1, // página actual (si tienes paginación)
+      maxPerCard, // máximo por card
+      false, // showNumbers (solo true en efímeros)
+      allMembers as GuildMember[] // <-- aquí pasas todos los miembros del rango
     );
 
     embeds.push(embed);
