@@ -1,15 +1,15 @@
 import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
 import {
-  readRolesState,
   readApexStatusState,
+  readRolesState,
   writeApexStatusState,
 } from './state-manager';
 import { getPlayerStats } from './player-stats';
 import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
-import { createApexStatusEmbeds } from './apex-status-embed';
 import { APEX_RANKS, MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
 import { updateRankCardMessage } from '../embeds/update-rank-card-message';
+import { createApexStatusEmbeds } from './apex-status-embed';
 
 async function fetchChannel(guild: Guild, channelId: string) {
   return (await guild.channels.fetch(channelId)) as TextChannel;
@@ -44,7 +44,7 @@ export async function updateRoleCountMessage(guild: Guild) {
     } catch (error: any) {
       if (error.code === 10008) {
         console.warn(
-          'El mensaje de selección de roles no fue encontrado. No se pudo actualizar.'
+          'El mensaje de selección de roles no fue encontrado. Ejecuta el comando de setup para restaurar el panel.'
         );
       }
     }
@@ -69,7 +69,6 @@ export async function updateRoleCountMessage(guild: Guild) {
 
       // Solo el resumen y el card de avatares, NO el header ni los cards por rango
       const embedsToSend = [embed, ...(recentCard ? [recentCard.embed] : [])];
-
       const filesToSend = [...(recentCard ? recentCard.files : [])].slice(
         0,
         MAX_ATTACHMENTS_PER_MESSAGE
@@ -84,22 +83,35 @@ export async function updateRoleCountMessage(guild: Guild) {
     } catch (error: any) {
       if (error.code === 10008) {
         console.warn(
-          'El mensaje de estadísticas no fue encontrado. No se pudo actualizar.'
+          'El mensaje de estadísticas no fue encontrado. Ejecuta el comando de setup para restaurar el panel.'
         );
       }
     }
 
-    // --- NUEVO: Actualizar los cards por rango ---
+    // --- Actualizar los cards por rango ---
     if (rolesState && rolesState.channelId) {
       for (const rank of APEX_RANKS) {
         const msgId = rolesState.rankCardMessageIds?.[rank.shortId];
         if (msgId) {
-          // Debes tener una función updateRankCardMessage(guild, channel, rankId, msgId)
-          await updateRankCardMessage(guild, channel, rank.shortId, msgId);
+          try {
+            // Debes tener una función updateRankCardMessage(guild, channel, rankId, msgId)
+            await updateRankCardMessage(guild, channel, rank.shortId, msgId);
+          } catch (err: any) {
+            if (err.code === 10008) {
+              console.warn(
+                `[updateRoleCountMessage] El mensaje del card de rango ${rank.shortId} no existe. Ejecuta el comando de setup para restaurar el panel.`
+              );
+            } else {
+              console.error(
+                `[updateRoleCountMessage] Error inesperado al actualizar el card de rango:`,
+                err
+              );
+            }
+          }
         }
       }
     }
-    // --- FIN NUEVO ---
+    // --- FIN cards por rango ---
   } catch (error) {
     console.error('Error al actualizar el mensaje de conteo de roles:', error);
   }

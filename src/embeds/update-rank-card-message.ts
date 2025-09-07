@@ -95,10 +95,17 @@ export async function updateRankCardMessage(
         guild.client
       ),
     });
-  } catch (err) {
-    console.error(
-      `[updateRankCardMessage] No se pudo editar el mensaje del card:`,
-      err
-    );
+  } catch (err: any) {
+    if (err.code === 10008) {
+      console.warn(
+        `[updateRankCardMessage] El mensaje del card de rango ${rankShortId} no existe. Ejecuta el comando de setup para restaurar el panel.`
+      );
+      return; // No recrea el mensaje, solo advierte
+    } else {
+      console.error(
+        `[updateRankCardMessage] Error inesperado al editar el mensaje del card:`,
+        err
+      );
+    }
   }
 }

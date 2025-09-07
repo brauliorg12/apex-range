@@ -9,6 +9,10 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
     hour12: true,
   });
 
+  // Obtén la versión desde package.json o variable de entorno
+  const version =
+    process.env.npm_package_version || process.env.BOT_VERSION || 'dev';
+
   return new EmbedBuilder()
     .setColor('#bdc3c7')
     .setTitle('ℹ️ Información de Apex Legends')
@@ -22,6 +26,6 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
       ].join('\n')
     )
     .setFooter({
-      text: 'by CubaNova Company - 2025',
+      text: `by CubaNova Company - 2025 - version: ${version}`,
     });
 }

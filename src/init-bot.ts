@@ -1,8 +1,8 @@
 import { Client, Guild, Events } from 'discord.js';
 import { readRolesState, readApexStatusState } from './utils/state-manager';
 import {
-  updateRoleCountMessage,
   updateApexInfoMessage,
+  updateRoleCountMessage,
 } from './utils/update-status-message';
 import { updateBotPresence } from './utils/presence-helper';
 import { getGlobalApiStatus } from './utils/global-api-status';
