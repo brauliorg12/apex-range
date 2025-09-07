@@ -430,6 +430,18 @@ Las cards muestran los últimos registrados y los jugadores online por rango, to
 
 ---
 
+## 🆕 Paginación efímera en paneles de jugadores por rango
+
+El bot ahora permite navegar entre páginas de jugadores online por rango usando botones interactivos:
+
+Botones "Siguiente" y "Anterior": Navega fácilmente entre páginas de jugadores en los paneles efímeros.
+Numeración automática: Los jugadores aparecen numerados solo en los paneles efímeros (cuando usas "Ver más" o paginas).
+Visualización clara: El panel principal sigue mostrando la lista sin numeración, manteniendo la interfaz limpia y ordenada.
+Experiencia mejorada: Puedes ver todos los jugadores de un rango, incluso si hay más de los que caben en una sola página.
+Esta funcionalidad facilita la gestión y visualización de grandes comunidades, permitiendo acceder a toda la información de manera ordenada y rápida.
+
+---
+
 ## 📦 Archivos de Datos
 
 - `db/players_<ID_SERVER>.json`: Lista de jugadores y fecha de asignación de rango por servidor.
