@@ -56,7 +56,7 @@ export async function buildOnlineEmbedForRank(
   if (onlineCount > 0) {
     description = `> ${rankEmoji} **${onlineCount}** ${jugadoresLabel} en línea ${totalLabel}`;
   } else {
-    description = `> ${rankEmoji} No hay jugadores en línea${totalLabel}`;
+    description = `> ${rankEmoji} No hay jugadores en línea ${totalLabel}`;
   }
 
   if (count > 0) {
