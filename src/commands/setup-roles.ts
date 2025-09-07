@@ -131,8 +131,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
 
   await interaction.editReply({
-    content: `¡Configuración completada en ${elapsed} segundos!, 
-    elimine los mensajes fijados si lo desea para que solo deje los de la App : ej: "Apex Range
-    ha fijado un mensaje en este canal. Mira todos los mensajes fijados".`,
+    content: `✅ **¡Configuración completada en ${elapsed} segundos!**
+  
+  📌 _Puedes eliminar los mensajes fijados que no sean de la App para mantener el canal ordenado._
+  
+  💡 Ejemplo:  
+  *"Apex Range ha fijado un mensaje en este canal. Mira todos los mensajes fijados."*
+  
+  🏆 ¡Listo para usar el panel de rangos!`,
   });
 }

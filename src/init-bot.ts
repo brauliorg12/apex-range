@@ -125,16 +125,31 @@ export async function initBot(client: Client) {
             throttler.requestUpdate(member.guild);
           });
 
-          client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
-            if (newPresence.guild) {
+          client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {            
+            if (!newPresence.guild) return;
+
+            const oldStatus = oldPresence?.status;
+            const newStatus = newPresence.status;
+
+            if (oldStatus !== newStatus) {
               logApp(
                 `PresenceUpdate: ${newPresence.user?.tag ?? ''} (${
                   newPresence.user?.id ?? ''
-                }) en guild ${newPresence.guild.name} (${newPresence.guild.id})`
+                }) cambió de ${oldStatus} a ${newStatus} en guild ${
+                  newPresence.guild.name
+                } (${newPresence.guild.id})`
               );
-              throttler.requestUpdate(newPresence.guild);
+              throttler.requestUpdate(newPresence.guild); // Esto llama a updateRoleCountMessage internamente
             }
           });
+
+          // Actualización periódica cada 60 segundos
+          setInterval(() => {
+            throttler.requestUpdate(guild);
+            logApp(
+              `Actualización periódica de roles y presencia en guild ${guild.name} (${guild.id})`
+            );
+          }, 60_000);
         }
       }
     } catch (error) {

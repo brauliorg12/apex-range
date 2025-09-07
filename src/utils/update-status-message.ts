@@ -8,13 +8,17 @@ import { getPlayerStats } from './player-stats';
 import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 import { createApexStatusEmbeds } from './apex-status-embed';
-import { MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
+import { APEX_RANKS, MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
+import { updateRankCardMessage } from '../embeds/update-rank-card-message';
 
 async function fetchChannel(guild: Guild, channelId: string) {
   return (await guild.channels.fetch(channelId)) as TextChannel;
 }
 
 export async function updateRoleCountMessage(guild: Guild) {
+  console.log(
+    `[updateRoleCountMessage] Ejecutando para guild ${guild.name} (${guild.id})`
+  );
   try {
     const rolesState = await readRolesState(guild.id);
     if (
@@ -84,6 +88,18 @@ export async function updateRoleCountMessage(guild: Guild) {
         );
       }
     }
+
+    // --- NUEVO: Actualizar los cards por rango ---
+    if (rolesState && rolesState.channelId) {
+      for (const rank of APEX_RANKS) {
+        const msgId = rolesState.rankCardMessageIds?.[rank.shortId];
+        if (msgId) {
+          // Debes tener una función updateRankCardMessage(guild, channel, rankId, msgId)
+          await updateRankCardMessage(guild, channel, rank.shortId, msgId);
+        }
+      }
+    }
+    // --- FIN NUEVO ---
   } catch (error) {
     console.error('Error al actualizar el mensaje de conteo de roles:', error);
   }
