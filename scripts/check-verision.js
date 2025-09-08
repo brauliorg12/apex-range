@@ -1,3 +1,4 @@
+// filepath: /e:/Proyectos/discord-apex/scripts/check-version.js
 const { execSync } = require('child_process');
 const fs = require('fs');
 
