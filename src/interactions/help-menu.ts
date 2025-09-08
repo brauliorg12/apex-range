@@ -1,6 +1,15 @@
 import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { createCloseButtonRow } from '../utils/button-helper';
 
+/**
+ * Maneja la interacción del botón "Ayuda" en Discord.
+ *
+ * - Muestra un embed con información sobre los comandos disponibles y los botones del bot.
+ * - El mensaje es efímero y solo visible para el usuario que solicitó la ayuda.
+ * - Registra en consola quién solicitó el menú de ayuda.
+ *
+ * @param interaction Interacción del botón recibida desde Discord.
+ */
 export async function handleHelpMenu(interaction: ButtonInteraction) {
   console.log(
     `[Interacción] ${interaction.user.tag} ha solicitado el menú de ayuda.`

@@ -14,6 +14,12 @@ import {
 } from '../utils/button-helper';
 import { sendOnlinePanel } from '../utils/send-online-panel';
 
+/**
+ * Definición del comando /setup-roles para Discord.
+ *
+ * Utiliza SlashCommandBuilder para registrar el comando que configura los paneles de selección de roles y estadísticas.
+ * El nombre y la descripción aparecerán en Discord al desplegar el comando.
+ */
 export const data = new SlashCommandBuilder()
   .setName('setup-roles')
   .setDescription(

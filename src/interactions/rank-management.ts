@@ -80,6 +80,14 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
   return { embeds: [embed], components: [row1, row2, createCloseButtonRow()] };
 }
 
+/**
+ * Construye los componentes principales del menú de interacción.
+ *
+ * - Incluye botones para gestionar el rango del usuario, ver todos los jugadores y acceder a la ayuda de comandos.
+ * - Devuelve una fila de botones para mostrar en los paneles principales del bot.
+ *
+ * @returns Array de ActionRowBuilder con los botones principales.
+ */
 export function buildMainMenuComponents() {
   const allPlayersButton = new ButtonBuilder()
     .setCustomId('show_all_players_menu')

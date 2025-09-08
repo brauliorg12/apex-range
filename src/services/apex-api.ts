@@ -1,6 +1,4 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
+import '../config/env';
 import fetch from 'node-fetch';
 
 const MOZA_API_KEY = process.env.MOZA_API_KEY;

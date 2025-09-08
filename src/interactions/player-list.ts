@@ -11,6 +11,15 @@ import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
 import { Player, PlayerRecord } from '../interfaces/player';
 
+/**
+ * Obtiene todos los jugadores del servidor que tienen algún rol de rango de Apex Legends.
+ *
+ * - Recorre todos los miembros del servidor y verifica si tienen un rol de rango definido en APEX_RANKS.
+ * - Devuelve un arreglo de objetos Player con el miembro y el nombre del rango.
+ *
+ * @param guild Servidor de Discord donde buscar los jugadores.
+ * @returns Lista de jugadores con su rango.
+ */
 async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
   await guild.members.fetch(); // Asegurarse de que todos los miembros están en caché
 

@@ -12,10 +12,29 @@ import {
 } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 
+/**
+ * Definición del comando contextual "Ver mi rango en Apex Range" para Discord.
+ *
+ * Utiliza ContextMenuCommandBuilder para registrar el comando que permite consultar el rango de Apex Legends
+ * de cualquier usuario al hacer clic derecho sobre él en Discord.
+ * El nombre y el tipo aparecerán en el menú contextual de usuario.
+ */
 export const data = new ContextMenuCommandBuilder()
   .setName('Ver mi rango en Apex Range')
   .setType(ApplicationCommandType.User);
 
+/**
+ * Ejecuta el comando contextual "Ver mi rango en Apex Range".
+ *
+ * - Busca el miembro objetivo en el servidor.
+ * - Si el usuario es un bot, muestra un mensaje especial.
+ * - Si el usuario tiene un rol de rango de Apex, muestra su rango y botones de gestión.
+ * - Si no tiene rango, muestra botones para seleccionar rango (solo si es el propio usuario).
+ * - El mensaje es efímero y solo visible para el usuario que ejecuta el comando.
+ * - Maneja errores mostrando mensajes claros al usuario.
+ *
+ * @param interaction Interacción del menú contextual de usuario recibida desde Discord.
+ */
 export async function execute(interaction: UserContextMenuCommandInteraction) {
   try {
     if (!interaction.guild || !interaction.guildId) return;

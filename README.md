@@ -324,13 +324,44 @@ Ejemplo de visualización:
 
 ## 🏗️ Estructura del Proyecto
 
-- `src/commands/`: Comandos slash y de contexto.
-- `src/utils/`: Helpers, renderers de cards, lógica de estadísticas.
-- `src/interactions/`: Handlers de botones y selects.
-- `src/index.ts`: Punto de entrada principal.
-- `src/deploy-commands.ts`: Script para desplegar comandos.
-- `assets/fonts/`: **Fuentes utilizadas para los cards visuales (ej: Montserrat-Bold.ttf)**
-- `db/`: Archivos de datos JSON.
+- `src/commands/`  
+  Comandos slash y de contexto (ej: `/setup-roles`, `/apex-status`, `/total-jugadores`, comandos de menú contextual).
+
+- `src/interactions/`  
+  Handlers para botones, selects y menús interactivos (ej: gestión de rangos, panel de ayuda, listado de jugadores).
+
+- `src/services/`  
+  Integraciones con APIs externas y lógica de negocio (ej: `apex-api.ts` para la API de Mozambique).
+
+- `src/utils/`  
+  Funciones auxiliares, helpers, renderizado de cards, lógica de estadísticas, banderas de países, etc.
+
+- `src/config/`  
+  Configuración global y carga de variables de entorno (`envs.ts`).
+
+- `src/index.ts`  
+  Punto de entrada principal del bot.
+
+- `src/deploy-commands.ts`  
+  Script para desplegar los comandos en Discord.
+
+- `assets/fonts/`  
+  Fuentes utilizadas para los cards visuales (ej: `Montserrat-Bold.ttf`).
+
+- `assets/`  
+  Imágenes, emojis y otros recursos estáticos.
+
+- `db/`  
+  Archivos de datos JSON (jugadores, estado del bot, migraciones).
+
+- `.env`  
+  Variables de entorno para configuración sensible.
+
+- `README.md`  
+  Documentación principal del proyecto.
+
+- `package.json`  
+  Dependencias, scripts y metadatos del proyecto.
 
 ---
 

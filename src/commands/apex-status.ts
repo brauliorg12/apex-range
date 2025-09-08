@@ -13,12 +13,32 @@ import { clearApiCache } from '../utils/apex-api-cache';
 import { APEX_LOGO_EMOJI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 
+/**
+ * Definición del comando /apex-status para Discord.
+ *
+ * Utiliza SlashCommandBuilder para registrar el comando que muestra el estado actual de Apex Legends,
+ * incluyendo la rotación de mapas y el RP de Predator.
+ * El nombre y la descripción aparecerán en Discord al desplegar el comando.
+ */
 export const data = new SlashCommandBuilder()
   .setName('apex-status')
   .setDescription(
     'Muestra el estado actual de Apex Legends (rotación de mapas y Predator RP)'
   );
 
+/**
+ * Ejecuta el comando /apex-status.
+ *
+ * - Limpia la caché de la API antes de consultar el estado actual de Apex Legends.
+ * - Obtiene y muestra los embeds con la rotación de mapas y el RP de Predator.
+ * - Añade botones para ver el perfil global de Apex y para mostrar información sobre los colores de estado.
+ * - Fija el mensaje principal en el canal (si tiene permisos).
+ * - Registra el mensaje para futuras actualizaciones automáticas.
+ * - Informa al usuario que el estado se actualizará cada 5 minutos.
+ * - Maneja errores mostrando mensajes claros al usuario.
+ *
+ * @param interaction Interacción del comando recibida desde Discord.
+ */
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   try {

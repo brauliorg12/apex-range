@@ -2,7 +2,15 @@
 
 1. **Haz tus cambios en el código.**
 
-2. **Actualiza la versión antes de hacer push:**
+2. **Agrega y commitea tus cambios:**
+
+   ```bash
+   git add .
+   git commit -m "feat: descripción breve del cambio"
+   ```
+
+3. **Actualiza la versión del proyecto:**
+
    - Usa el comando adecuado según el tipo de cambio:
      - Para correcciones menores:  
        `npm version patch`
@@ -12,16 +20,12 @@
        `npm version major`
    - Esto actualizará `package.json`, creará un commit y un tag de versión.
 
-3. **Agrega y commitea tus cambios restantes:**
-   ```bash
-   git add .
-   git commit -m "feat: descripción breve del cambio"
-   ```
-
 4. **Haz push al repositorio incluyendo los tags:**
+
    ```bash
    git push --follow-tags
    ```
+
    - El hook de Husky verificará que la versión fue actualizada antes de permitir el push.
 
 5. **(Opcional) Crea el release en GitHub usando el tag creado automáticamente.**
