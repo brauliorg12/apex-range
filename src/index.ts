@@ -1,4 +1,4 @@
-import '../config/env';
+import './config/env';
 import { Client, GatewayIntentBits } from 'discord.js';
 import { loadCommands } from './command-loader';
 import { registerInteractionHandler } from './interaction-handler';
