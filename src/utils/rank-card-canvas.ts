@@ -58,7 +58,7 @@ export async function renderRankCardCanvas(
   const pulseImg = await loadImage(pulseBuffer);
 
   // Texto
-  ctx.font = `bold 20px "Montserrat Bold"`;
+  ctx.font = `bold 25px "Montserrat Bold"`;
   const text = label.toUpperCase();
   const paddingLeft = 4;
   const logoX = paddingLeft;

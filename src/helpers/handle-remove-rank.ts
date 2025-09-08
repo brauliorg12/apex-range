@@ -10,7 +10,7 @@ import { createCloseButtonRow } from '../utils/button-helper';
 import { removePlayerRankDate } from '../utils/player-data-manager';
 import { removeCommonApexRoleIfNoRank } from '../utils/role-helper';
 import { readRolesState } from '../utils/state-manager';
-import { updateRankCardMessage } from '../embeds/update-rank-card-message';
+import { updateRankCardMessage } from './update-rank-card-message';
 
 /**
  * Elimina todos los roles de rango de Apex del usuario.

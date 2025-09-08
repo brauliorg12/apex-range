@@ -8,7 +8,7 @@ import { getPlayerStats } from './player-stats';
 import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 import { APEX_RANKS, MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
-import { updateRankCardMessage } from '../embeds/update-rank-card-message';
+import { updateRankCardMessage } from '../helpers/update-rank-card-message';
 import { createApexStatusEmbeds } from './apex-status-embed';
 
 async function fetchChannel(guild: Guild, channelId: string) {

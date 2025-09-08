@@ -32,17 +32,17 @@ async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
 }
 
 /**
- * Devuelve estadísticas de jugadores con rango en el servidor.
+ * Obtiene estadísticas de jugadores con algún rango de Apex en el servidor.
+ * Busca todos los miembros que tengan al menos un rol de rango definido en APEX_RANKS,
+ * y calcula cuántos están conectados actualmente (status 'online').
+ *
  * @param guild Servidor Discord.
- * @returns Objeto con total de jugadores con rango y cuántos están online.
+ * @returns Un objeto con el total de jugadores con rango y la cantidad de jugadores en línea.
  */
 export async function getPlayerStats(guild: Guild) {
   const rankedMembers = await getRankedMembers(guild);
   const onlineMembers = rankedMembers.filter(
-    (member) =>
-      member.presence?.status === 'online' ||
-      member.presence?.status === 'dnd' ||
-      member.presence?.status === 'idle'
+    (member) => member.presence?.status === 'online'
   );
 
   return {

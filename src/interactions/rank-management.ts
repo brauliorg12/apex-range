@@ -15,7 +15,7 @@ import { createCloseButtonRow } from '../utils/button-helper';
 import { updatePlayerRankDate } from '../utils/player-data-manager';
 import { ensureCommonApexRole } from '../utils/role-helper';
 import { readRolesState } from '../utils/state-manager';
-import { updateRankCardMessage } from '../embeds/update-rank-card-message';
+import { updateRankCardMessage } from '../helpers/update-rank-card-message';
 
 /**
  * Construye el payload (embed y botones) para el menú de gestión de rango privado de un usuario.

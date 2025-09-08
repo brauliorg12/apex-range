@@ -54,6 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       )
   );
 
+  // ...verificación de roles...
   if (missingRoles.length > 0) {
     const missingRoleNames = missingRoles
       .map((r) => `"${r.roleName}"`) // Note: This line has escaped quotes, which is correct within a template literal.
