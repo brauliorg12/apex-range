@@ -1,5 +1,18 @@
 import { EmbedBuilder } from 'discord.js';
 
+// Variable global para la versión
+let currentVersion =
+  process.env.npm_package_version || process.env.BOT_VERSION || 'dev';
+
+// Función para actualizar la versión cada cierto tiempo
+function updateVersion() {
+  currentVersion =
+    process.env.npm_package_version || process.env.BOT_VERSION || 'dev';
+}
+
+// Actualiza la versión cada 5 minutos (300000 ms)
+setInterval(updateVersion, 300000);
+
 export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
   const fecha = now.toLocaleDateString('es-ES');
   const hora = now.toLocaleTimeString('es-ES', {
@@ -8,10 +21,6 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
     second: '2-digit',
     hour12: true,
   });
-
-  // Obtén la versión desde package.json o variable de entorno
-  const version =
-    process.env.npm_package_version || process.env.BOT_VERSION || 'dev';
 
   return new EmbedBuilder()
     .setColor('#bdc3c7')
@@ -26,6 +35,6 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
       ].join('\n')
     )
     .setFooter({
-      text: `by CubaNova Company - 2025 - version: ${version}`,
+      text: `by CubaNova Company - 2025 - version: ${currentVersion}`,
     });
 }
