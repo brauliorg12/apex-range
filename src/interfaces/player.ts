@@ -8,6 +8,7 @@ export interface Player {
 export interface PlayerRecord {
   userId: string;
   assignedAt: string; // ISO 8601 date string
+  rank: string;
 }
 
 export type PlayerData = PlayerRecord[];

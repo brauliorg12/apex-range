@@ -20,7 +20,7 @@ import { Player, PlayerRecord } from '../interfaces/player';
  * @param guild Servidor de Discord donde buscar los jugadores.
  * @returns Lista de jugadores con su rango.
  */
-async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
+export async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
   await guild.members.fetch(); // Asegurarse de que todos los miembros están en caché
 
   const players: Player[] = [];

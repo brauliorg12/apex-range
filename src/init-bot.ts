@@ -1,5 +1,9 @@
 import { Client, Guild, Events } from 'discord.js';
-import { readRolesState, readApexStatusState } from './utils/state-manager';
+import {
+  readRolesState,
+  readApexStatusState,
+  writePlayers,
+} from './utils/state-manager';
 import {
   updateApexInfoMessage,
   updateRoleCountMessage,
@@ -9,6 +13,8 @@ import { getGlobalApiStatus } from './utils/global-api-status';
 import { checkApiHealth } from './utils/api-health-check';
 import { createUpdateThrottler } from './utils/update-throttler';
 import { logApp } from './utils/logger';
+import { getPlayerData } from './utils/player-data-manager';
+import { getAllRankedPlayers } from './interactions/player-list';
 
 function printBanner(client: Client, guild: Guild, channelInfo: string) {
   const now = new Date();
@@ -60,8 +66,48 @@ export async function initBot(client: Client) {
           const throttler = createUpdateThrottler(
             60_000,
             async (guild: Guild) => {
+              // --- SINCRONIZA EL JSON DE JUGADORES CON LOS ROLES ACTUALES ---
+              const players = await getAllRankedPlayers(guild);
+              const playerData = await getPlayerData(guild);
+
+              const playerIdsWithRank = new Set(
+                players.map((p) => p.member.id)
+              );
+              let updated = false;
+
+              // 1. Agrega jugadores con rol que no están en el JSON
+              for (const player of players) {
+                if (!playerData.some((p) => p.userId === player.member.id)) {
+                  playerData.push({
+                    userId: player.member.id,
+                    assignedAt: new Date().toISOString(),
+                    rank: player.rankName,
+                  });
+                  updated = true;
+                }
+              }
+
+              // 2. Elimina del JSON los jugadores que ya no tienen rol de rango
+              const originalLength = playerData.length;
+              const filteredPlayerData = playerData.filter((p) =>
+                playerIdsWithRank.has(p.userId)
+              );
+              if (filteredPlayerData.length !== originalLength) {
+                updated = true;
+              }
+
+              if (updated) {
+                await writePlayers(guild.id, filteredPlayerData);
+                logApp(
+                  `Sincronización de jugadores con roles ejecutada en guild ${guild.name} (${guild.id})`
+                );
+              }
+              // --- FIN DE SINCRONIZACIÓN ---
+
+              // Actualiza los mensajes y la presencia
               await updateRoleCountMessage(guild);
               await updateBotPresence(client, guild);
+
               logApp(
                 `Actualización de roles y presencia ejecutada en guild ${guild.name} (${guild.id})`
               );
@@ -125,7 +171,7 @@ export async function initBot(client: Client) {
             throttler.requestUpdate(member.guild);
           });
 
-          client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {            
+          client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
             if (!newPresence.guild) return;
 
             const oldStatus = oldPresence?.status;
