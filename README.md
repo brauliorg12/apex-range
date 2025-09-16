@@ -26,6 +26,61 @@ Un bot profesional para comunidades de Apex Legends que permite:
 - Mostrar estadísticas y cards visuales de jugadores.
 - Panel persistente y configurable.
 - Comandos slash y de contexto para gestión avanzada.
+- **Soporte completo para múltiples servidores** - funciona automáticamente en cualquier servidor donde se instale.
+
+---
+
+## 🆕 **Multi-Servidor Automático**
+
+El bot ahora soporta **múltiples servidores simultáneamente** sin configuración adicional:
+
+### Funcionalidades Multi-Servidor
+
+- **Configuración Independiente**: Cada servidor mantiene su propia configuración, roles y datos.
+- **Detección Automática**: Al unirse a un nuevo servidor, el bot envía automáticamente un mensaje de bienvenida invitando a ejecutar `/setup-roles`.
+- **Archivos Separados**: Se crean archivos JSON independientes por servidor:
+  - `.bot-state/{guildId}.json` - Estado del bot por servidor
+  - `db/players_{guildId}.json` - Jugadores por servidor
+- **Prevención de Conflictos**: Sistema de lock que impide ejecutar múltiples instancias del mismo bot.
+- **Presencia Global**: La presencia del bot muestra estadísticas combinadas de todos los servidores configurados.
+- **Monitoreo Mejorado**: Endpoint `/instance` para verificar el estado de la instancia actual.
+
+### Presencia Global
+
+La presencia del bot muestra estadísticas combinadas de todos los servidores:
+
+```
+🟢 25 en línea | 👥 150 registrados | 🌐 3 servidores
+```
+
+Esto incluye:
+
+- **Jugadores online** en total de todos los servidores
+- **Jugadores registrados** en total de todos los servidores
+- **Número de servidores** donde el bot está configurado
+
+### Presencia Global
+
+La presencia del bot muestra estadísticas combinadas de todos los servidores:
+
+```
+🟢 25 en línea | 👥 150 registrados | 🌐 3 servidores
+```
+
+Esto incluye:
+
+- **Jugadores online** en total de todos los servidores
+- **Jugadores registrados** en total de todos los servidores
+- **Número de servidores** donde el bot está configurado
+
+### Cómo Funciona
+
+1. **Instalación**: Invita el bot a tu servidor usando el enlace de arriba.
+2. **Configuración**: Un administrador ejecuta `/setup-roles` en el canal deseado.
+3. **Funcionamiento**: El bot opera independientemente en cada servidor.
+4. **Escalabilidad**: Puedes tener el bot en tantos servidores como quieras.
+
+> **Nota**: El bot detecta automáticamente nuevos servidores y se configura por separado en cada uno.
 
 ---
 
@@ -216,7 +271,7 @@ Para adaptarse a las limitaciones de la API de Mozambique y evitar bloqueos, el 
 | `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
 | `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                     | Todos         |
 | `/total-jugadores` | Muestra el número total de jugadores con rango                     | Todos         |
-| `/api-status`      | Muestra el estado actual de la API externa                         | Todos         |
+| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos               | Owner del Bot |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
 
@@ -319,6 +374,12 @@ Ejemplo de visualización:
 - Comandos slash y menú contextual profesional.
 - Migración automática de datos antiguos.
 - Logs claros y monitoreo de estado/API.
+- **Soporte completo para múltiples servidores**.
+- **Detección automática de nuevos servidores**.
+- **Sistema de lock para prevenir instancias duplicadas**.
+- **Archivos de datos separados por servidor**.
+- **Health server integrado con monitoreo avanzado**.
+- **Presencia global con estadísticas combinadas de todos los servidores**.
 
 ---
 
@@ -336,11 +397,14 @@ Ejemplo de visualización:
 - `src/utils/`  
   Funciones auxiliares, helpers, renderizado de cards, lógica de estadísticas, banderas de países, etc.
 
-- `src/config/`  
-  Configuración global y carga de variables de entorno (`envs.ts`).
-
 - `src/index.ts`  
-  Punto de entrada principal del bot.
+  Punto de entrada principal del bot con sistema de lock de instancias.
+
+- `src/init-bot.ts`  
+  Inicialización del bot y configuración multi-servidor.
+
+- `src/health-server.ts`  
+  Servidor de salud con endpoints de monitoreo.
 
 - `src/deploy-commands.ts`  
   Script para desplegar los comandos en Discord.
@@ -352,7 +416,13 @@ Ejemplo de visualización:
   Imágenes, emojis y otros recursos estáticos.
 
 - `db/`  
-  Archivos de datos JSON (jugadores, estado del bot, migraciones).
+  Archivos de datos JSON de jugadores por servidor (`players_{guildId}.json`).
+
+- `.bot-state/`  
+  Archivos de estado del bot por servidor (`{guildId}.json`).
+
+- `.bot-lock`  
+  Archivo temporal para prevenir múltiples instancias.
 
 - `.env`  
   Variables de entorno para configuración sensible.
@@ -382,26 +452,41 @@ npm install
 
 ### 3. Configura el archivo `.env`
 
-Crea un archivo `.env` en la raíz con:
+Crea un archivo `.env` en la raíz con las siguientes variables:
 
-```
+```env
+# Variables Obligatorias
 DISCORD_TOKEN=TU_TOKEN_DEL_BOT
 CLIENT_ID=TU_CLIENT_ID
-```
 
-### Variables de entorno adicionales
+# Variables Internas (Opcionales)
+API_URL=http://localhost:3001/health
+HEALTH_PORT=3001
 
-Para ocultar ciertos roles (por ejemplo, Admin, Apex, Server Booster, etc.) en los listados de jugadores, puedes usar la variable `EXCLUDED_ROLES` en tu archivo `.env`:
+# APIs Externas
+TRACKER_API=TU_API_KEY_DE_APEX_TRACKER
+MOZA_API_KEY=TU_API_KEY_DE_MOZAMBIQUE
+MOZA_URL=https://api.mozambiquehe.re
 
-```
+# Configuración Global
 EXCLUDED_ROLES=Admin,Apex,Server Booster,Moderador,Embajador,Illuminati
 ```
 
-- Separa los nombres de los roles por comas.
-- Los roles listados aquí **no aparecerán** junto a los usuarios en los paneles ni listados del bot.
-- El filtro también excluye automáticamente los roles de rango y `@everyone`.
+### Variables de Entorno Detalladas
 
-Recuerda reiniciar el bot después de modificar el `.env` para que los cambios tengan efecto.
+| Variable         | Descripción                  | Requerida | Ejemplo                        |
+| ---------------- | ---------------------------- | --------- | ------------------------------ |
+| `DISCORD_TOKEN`  | Token del bot de Discord     | ✅        | `XXXXXXXXX`                    |
+| `CLIENT_ID`      | ID de la aplicación Discord  | ✅        | `XXXXXXXXX`                    |
+| `API_URL`        | URL del health check interno | ❌        | `http://localhost:3001/health` |
+| `HEALTH_PORT`    | Puerto del servidor de salud | ❌        | `3001`                         |
+| `TRACKER_API`    | API Key de Apex Tracker      | ❌        | `XXXXXXXXX`                    |
+| `MOZA_API_KEY`   | API Key de Mozambique        | ❌        | `XXXXXXXXX`                    |
+| `MOZA_URL`       | URL de la API de Mozambique  | ❌        | `https://api.mozambiquehe.re`  |
+| `EXCLUDED_ROLES` | Roles a excluir en listados  | ❌        | `Admin,Apex,Server Booster`    |
+| `BOT_OWNER_ID`   | ID del owner del bot         | ❌        | `123456789012345678`           |
+
+> **Nota**: Las variables específicas de servidor (como IDs de canales) ya no son necesarias ya que el bot las guarda automáticamente por servidor.
 
 ### 4. Compila el proyecto
 
@@ -454,6 +539,34 @@ Sube los emojis de rango y asígnales los nombres correctos, por ejemplo:
 
 ---
 
+## 🩺 Health Server y Monitoreo
+
+El bot incluye un servidor de salud integrado para monitoreo:
+
+### Endpoints Disponibles
+
+- `GET /health` - Verificación básica de salud
+- `GET /api-status` - Estado de la API externa
+- `GET /instance` - Información de la instancia actual (PID, uptime, versión)
+
+### Ejemplo de Respuesta `/instance`
+
+```json
+{
+  "pid": 12345,
+  "uptime": 3600.5,
+  "version": "1.10.6",
+  "timestamp": "2025-09-16T..."
+}
+```
+
+### Uso
+
+- El health server se inicia automáticamente en el puerto 3001 (configurable).
+- Útil para monitoreo con herramientas como UptimeRobot o para verificar el estado del bot.
+
+---
+
 ## 🖼️ Cards y Estadísticas Visuales
 
 El bot genera imágenes dinámicas con los avatares y rangos de los jugadores usando [@napi-rs/canvas](https://www.npmjs.com/package/@napi-rs/canvas).  
@@ -475,13 +588,84 @@ Esta funcionalidad facilita la gestión y visualización de grandes comunidades,
 
 ## 📦 Archivos de Datos
 
-- `db/players_<ID_SERVER>.json`: Lista de jugadores y fecha de asignación de rango por servidor.
-- `db/bot-state.json`: Estado principal del bot (canal, mensajes, etc).
+El bot crea automáticamente archivos JSON separados para cada servidor:
 
-> **Todos los archivos de datos JSON se almacenan en la carpeta `/db` ubicada en la raíz del proyecto.**  
-> Si no existe, el bot la creará automáticamente al ejecutarse.
+- `db/players_{guildId}.json`: Lista de jugadores y fecha de asignación de rango por servidor.
+- `.bot-state/{guildId}.json`: Estado del bot por servidor (canal, mensajes, configuración).
 
-Migración automática de formatos antiguos incluida.
+> **Todos los archivos de datos JSON se almacenan en las carpetas `/db` y `/.bot-state` ubicadas en la raíz del proyecto.**  
+> Si no existen, el bot las creará automáticamente al ejecutarse.
+
+### 💾 Conservación de Datos
+
+**Los archivos JSON se conservan automáticamente** cuando:
+
+- ✅ El bot es removido de un servidor
+- ✅ Un servidor se vuelve inaccesible
+- ✅ El bot se reinicia
+
+Esto permite:
+
+- **Recuperación rápida**: Si el bot vuelve a un servidor, puede restaurar la configuración anterior
+- **Datos históricos**: Mantener registro de actividad pasada
+- **Backup automático**: Los archivos sirven como backup de la configuración
+
+### 🌍 Presencia Global vs. Estadísticas Locales
+
+- **Presencia Global**: Muestra estadísticas combinadas de TODOS los servidores (visible en todos lados)
+- **Embeds Locales**: Muestran estadísticas específicas del servidor donde están ubicados
+
+**Ejemplo:**
+
+- **Servidor A**: Embed local muestra "15 online | 50 registrados" + Presencia global "25 online | 150 registrados | 3 servidores"
+- **Servidor B**: Embed local muestra "10 online | 100 registrados" + Presencia global igual
+
+### 🧹 Limpieza Opcional
+
+Si deseas limpiar archivos antiguos, puedes:
+
+1. **Manual**: Eliminar archivos específicos de `.bot-state/` y `db/`
+2. **Automática**: Descomentar el código en `src/init-bot.ts` para limpieza automática
+3. **Comando**: Usar `/cleanup-data confirm:true` (solo para el owner del bot)
+
+### Comando `/cleanup-data`
+
+Comando administrativo para limpiar archivos JSON de servidores donde el bot ya no está presente.  
+**Solo puede ser usado por el owner del bot** (configurado en `BOT_OWNER_ID`).
+
+**Uso:**
+
+```
+/cleanup-data confirm:true
+```
+
+**Qué hace:**
+
+- Escanea todos los archivos JSON existentes
+- Identifica archivos de servidores donde el bot ya no está presente
+- Elimina los archivos obsoletos
+- Muestra un resumen de la operación
+
+**Nota:** Este comando es opcional y solo debe usarse si realmente quieres eliminar datos históricos.
+
+### Sistema de Lock de Instancias
+
+Para prevenir conflictos al ejecutar múltiples instancias:
+
+- `.bot-lock`: Archivo temporal que previene ejecutar el bot simultáneamente.
+- Se crea automáticamente al iniciar y se elimina al cerrar.
+- Si intentas ejecutar otra instancia, el bot se detendrá con un mensaje de error.
+
+### 🔄 Recuperación de Datos
+
+Cuando el bot vuelve a un servidor donde ya existían archivos:
+
+1. **Configuración automática**: El bot detecta y restaura la configuración anterior
+2. **Mensajes existentes**: Los IDs de mensajes se verifican y reutilizan si son válidos
+3. **Jugadores registrados**: La lista de jugadores se mantiene intacta
+4. **Re-setup opcional**: Puedes ejecutar `/setup-roles` nuevamente si necesitas cambiar la configuración
+
+> **Nota**: Si los mensajes originales fueron eliminados, el bot creará nuevos paneles automáticamente.
 
 ---
 
@@ -510,9 +694,32 @@ Asegúrate de pasar las variables de entorno necesarias (`DISCORD_TOKEN`, `CLIEN
 
 ## ❓ Solución de Problemas
 
-- Si los comandos no aparecen, ejecuta `npm run deploy-commands` y espera unos minutos.
-- Si el bot no responde, revisa el token, permisos y configuración.
-- El comando de contexto puede tardar en aparecer por caché de Discord.
+### Problemas Comunes
+
+- **Comandos no aparecen**: Ejecuta `npm run deploy-commands` y espera unos minutos.
+- **Bot no responde**: Revisa el token, permisos y configuración.
+- **Comando de contexto tarda en aparecer**: Puede ser caché de Discord (espera hasta 1 hora).
+- **Error de instancia duplicada**: Si ves "Ya hay una instancia del bot corriendo", detén la otra instancia primero.
+- **Nuevo servidor no funciona**: Asegúrate de que un administrador ejecute `/setup-roles` en el nuevo servidor.
+
+### Verificación de Estado
+
+- **Health Check**: Visita `http://localhost:3001/health` para verificar que el bot esté corriendo.
+- **Estado de API**: Usa `http://localhost:3001/api-status` para ver el estado de las APIs externas.
+- **Info de Instancia**: `http://localhost:3001/instance` muestra detalles de la instancia actual.
+
+### Multi-Servidor
+
+- **Configuración por servidor**: Cada servidor necesita su propio `/setup-roles`.
+- **Datos independientes**: Los archivos JSON son separados por servidor.
+- **Permisos**: El bot necesita los mismos permisos en cada servidor.
+- **Presencia global**: La presencia del bot combina estadísticas de todos los servidores.
+
+### Logs y Debug
+
+- Los logs del bot se muestran en la consola donde se ejecuta.
+- Revisa los logs para mensajes de error específicos.
+- Para debug avanzado, ejecuta con `npm run dev` para ver logs detallados.
 
 ---
 

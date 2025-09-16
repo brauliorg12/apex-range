@@ -16,6 +16,7 @@ import { data as totalJugadoresCommand } from './commands/total-players';
 import { data as showMyRankCommand } from './commands/show-my-rank';
 import { data as apiStatusCommand } from './commands/api-status';
 import { data as apexStatusCommand } from './commands/apex-status';
+import { data as cleanupDataCommand } from './commands/cleanup-data';
 
 const commands = [
   setupRolesCommand.toJSON(),
@@ -23,6 +24,7 @@ const commands = [
   showMyRankCommand.toJSON(),
   apiStatusCommand.toJSON(),
   apexStatusCommand.toJSON(),
+  cleanupDataCommand.toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(token);

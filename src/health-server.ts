@@ -16,6 +16,15 @@ export function startHealthServer() {
     });
   });
 
+  app.get('/instance', (req, res) => {
+    res.json({
+      pid: process.pid,
+      uptime: process.uptime(),
+      version: process.env.npm_package_version || 'unknown',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   const port = process.env.HEALTH_PORT || 3001;
   app.listen(port, () => {
     console.log(`[HealthServer] Escuchando en el puerto ${port}`);

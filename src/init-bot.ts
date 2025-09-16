@@ -1,4 +1,6 @@
 import { Client, Guild, Events } from 'discord.js';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import {
   readRolesState,
   readApexStatusState,
@@ -34,12 +36,82 @@ function printBanner(client: Client, guild: Guild, channelInfo: string) {
   );
 }
 
+/**
+ * Función opcional para limpiar archivos de servidores donde el bot ya no está presente.
+ * Útil para mantenimiento, pero deshabilitada por defecto para preservar datos históricos.
+ */
+async function cleanupOldServerFiles(client: Client): Promise<void> {
+  try {
+    const stateDir = path.join(__dirname, '../../.bot-state');
+    const dbDir = path.join(__dirname, '../../db');
+
+    // Obtener lista de archivos existentes
+    const [stateFiles, dbFiles] = await Promise.all([
+      fs.readdir(stateDir).catch(() => []),
+      fs.readdir(dbDir).catch(() => []),
+    ]);
+
+    // Extraer guildIds de los archivos
+    const existingGuildIds = new Set<string>();
+
+    // De archivos de estado
+    for (const file of stateFiles) {
+      if (file.endsWith('.json')) {
+        const guildId = file.replace('.json', '');
+        existingGuildIds.add(guildId);
+      }
+    }
+
+    // De archivos de players
+    for (const file of dbFiles) {
+      if (file.startsWith('players_') && file.endsWith('.json')) {
+        const guildId = file.replace('players_', '').replace('.json', '');
+        existingGuildIds.add(guildId);
+      }
+    }
+
+    // Verificar cuáles guilds ya no están accesibles
+    const currentGuildIds = new Set(client.guilds.cache.map((g) => g.id));
+    const obsoleteGuildIds = [...existingGuildIds].filter(
+      (id) => !currentGuildIds.has(id)
+    );
+
+    if (obsoleteGuildIds.length > 0) {
+      console.log(
+        `[Cleanup] Encontrados ${obsoleteGuildIds.length} archivos de servidores obsoletos`
+      );
+
+      // Limpiar archivos (deshabilitado por defecto)
+      // Descomenta las líneas siguientes si quieres activar la limpieza automática:
+      /*
+      for (const guildId of obsoleteGuildIds) {
+        const stateFile = path.join(stateDir, `${guildId}.json`);
+        const playersFile = path.join(dbDir, `players_${guildId}.json`);
+        
+        await fs.unlink(stateFile).catch(() => {});
+        await fs.unlink(playersFile).catch(() => {});
+        
+        logApp(`Archivo limpiado para servidor obsoleto: ${guildId}`);
+      }
+      
+      console.log(`[Cleanup] ${obsoleteGuildIds.length} archivos limpiados`);
+      */
+    }
+  } catch (error) {
+    logApp(`Error en cleanup de archivos antiguos: ${error}`);
+  }
+}
+
 export async function initBot(client: Client) {
   client.once(Events.ClientReady, async (readyClient) => {
     try {
+      // Limpiar archivos antiguos (opcional, deshabilitado por defecto)
+      await cleanupOldServerFiles(readyClient);
+
       for (const [guildId] of readyClient.guilds.cache) {
         const rolesState = await readRolesState(guildId);
         if (rolesState?.guildId) {
+          // Código existente para guilds con estado
           const guild = await readyClient.guilds.fetch(rolesState.guildId);
           let channelInfo = '';
           if (rolesState.channelId) {
@@ -106,7 +178,7 @@ export async function initBot(client: Client) {
 
               // Actualiza los mensajes y la presencia
               await updateRoleCountMessage(guild);
-              await updateBotPresence(client, guild);
+              await updateBotPresence(client);
 
               logApp(
                 `Actualización de roles y presencia ejecutada en guild ${guild.name} (${guild.id})`
@@ -150,45 +222,6 @@ export async function initBot(client: Client) {
           console.log(`  Última vez chequeado: ${lastChecked}`);
           console.log('------------------------------------------');
 
-          // Eventos que disparan actualización coalescida
-          client.on(Events.GuildMemberAdd, (member) => {
-            logApp(
-              `Nuevo miembro: ${member.user.tag} (${member.id}) en guild ${member.guild.name} (${member.guild.id})`
-            );
-            console.log(
-              `[Evento] Nuevo miembro: ${member.user.tag} (${member.id})`
-            );
-            throttler.requestUpdate(member.guild);
-          });
-
-          client.on(Events.GuildMemberRemove, (member) => {
-            logApp(
-              `Miembro salió: ${member.user.tag} (${member.id}) en guild ${member.guild.name} (${member.guild.id})`
-            );
-            console.log(
-              `[Evento] Miembro salió: ${member.user.tag} (${member.id})`
-            );
-            throttler.requestUpdate(member.guild);
-          });
-
-          client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
-            if (!newPresence.guild) return;
-
-            const oldStatus = oldPresence?.status;
-            const newStatus = newPresence.status;
-
-            if (oldStatus !== newStatus) {
-              logApp(
-                `PresenceUpdate: ${newPresence.user?.tag ?? ''} (${
-                  newPresence.user?.id ?? ''
-                }) cambió de ${oldStatus} a ${newStatus} en guild ${
-                  newPresence.guild.name
-                } (${newPresence.guild.id})`
-              );
-              throttler.requestUpdate(newPresence.guild); // Esto llama a updateRoleCountMessage internamente
-            }
-          });
-
           // Actualización periódica cada 60 segundos
           setInterval(() => {
             throttler.requestUpdate(guild);
@@ -196,11 +229,111 @@ export async function initBot(client: Client) {
               `Actualización periódica de roles y presencia en guild ${guild.name} (${guild.id})`
             );
           }, 60_000);
+        } else {
+          // Nuevo guild sin configuración
+          const guild = await readyClient.guilds.fetch(guildId);
+          logApp(
+            `Nuevo servidor detectado: ${guild.name} (${guild.id}). Esperando configuración con /setup-roles.`
+          );
         }
       }
     } catch (error) {
       logApp(`ERROR durante la inicialización del bot: ${error}`);
       console.error('Error durante la inicialización del bot:', error);
     }
+  });
+
+  // Eventos globales que disparan actualización coalescida
+  client.on(Events.GuildMemberAdd, async (member) => {
+    const rolesState = await readRolesState(member.guild.id);
+    if (rolesState) {
+      const throttler = createUpdateThrottler(60_000, async (guild: Guild) => {
+        await updateRoleCountMessage(guild);
+        await updateBotPresence(client);
+      });
+      throttler.requestUpdate(member.guild);
+      logApp(
+        `Nuevo miembro: ${member.user.tag} (${member.id}) en guild ${member.guild.name} (${member.guild.id})`
+      );
+      console.log(`[Evento] Nuevo miembro: ${member.user.tag} (${member.id})`);
+    }
+  });
+
+  client.on(Events.GuildMemberRemove, async (member) => {
+    const rolesState = await readRolesState(member.guild.id);
+    if (rolesState) {
+      const throttler = createUpdateThrottler(60_000, async (guild: Guild) => {
+        await updateRoleCountMessage(guild);
+        await updateBotPresence(client);
+      });
+      throttler.requestUpdate(member.guild);
+      logApp(
+        `Miembro salió: ${member.user.tag} (${member.id}) en guild ${member.guild.name} (${member.guild.id})`
+      );
+      console.log(`[Evento] Miembro salió: ${member.user.tag} (${member.id})`);
+    }
+  });
+
+  client.on(Events.PresenceUpdate, async (oldPresence, newPresence) => {
+    if (!newPresence.guild) return;
+    const rolesState = await readRolesState(newPresence.guild.id);
+    if (rolesState) {
+      const throttler = createUpdateThrottler(60_000, async (guild: Guild) => {
+        await updateRoleCountMessage(guild);
+        await updateBotPresence(client);
+      });
+      const oldStatus = oldPresence?.status;
+      const newStatus = newPresence.status;
+      if (oldStatus !== newStatus) {
+        throttler.requestUpdate(newPresence.guild);
+        logApp(
+          `PresenceUpdate: ${newPresence.user?.tag ?? ''} (${
+            newPresence.user?.id ?? ''
+          }) cambió de ${oldStatus} a ${newStatus} en guild ${
+            newPresence.guild.name
+          } (${newPresence.guild.id})`
+        );
+      }
+    }
+  });
+
+  // Evento para cuando el bot se une a un nuevo servidor
+  client.on(Events.GuildCreate, async (guild) => {
+    logApp(`Bot añadido a nuevo servidor: ${guild.name} (${guild.id})`);
+    try {
+      const channel =
+        guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0); // 0 es TEXT
+      if (channel && 'send' in channel) {
+        await channel.send({
+          content: `¡Hola! Soy Apex Range Bot. Para configurar el panel de rangos, un administrador debe ejecutar el comando \`/setup-roles\` en este canal. ¡Gracias por añadirme!`,
+        });
+      }
+    } catch (error) {
+      logApp(
+        `Error enviando mensaje de bienvenida en guild ${guild.name}: ${error}`
+      );
+    }
+  });
+
+  // Evento para cuando el bot es removido de un servidor
+  client.on(Events.GuildDelete, async (guild) => {
+    logApp(`Bot removido de servidor: ${guild.name} (${guild.id})`);
+    // Los archivos JSON se conservan para preservar datos históricos
+    // Si deseas limpiar automáticamente, descomenta las líneas siguientes:
+    /*
+    try {
+      const fs = require('fs/promises');
+      const path = require('path');
+      const stateFile = path.join(__dirname, '../../.bot-state', `${guild.id}.json`);
+      const playersFile = path.join(__dirname, '../../db', `players_${guild.id}.json`);
+      
+      await fs.unlink(stateFile).catch(() => {});
+      await fs.unlink(playersFile).catch(() => {});
+      
+      logApp(`Archivos limpiados para servidor removido: ${guild.name} (${guild.id})`);
+    } catch (error) {
+      logApp(`Error limpiando archivos para servidor removido ${guild.id}: ${error}`);
+    }
+    */
   });
 }
