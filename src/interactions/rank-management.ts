@@ -220,12 +220,34 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     }
   } catch (error) {
     console.error('Error al asignar el rol:', error);
+
+    // Determinar el tipo de error específico
+    let errorMessage =
+      'Hubo un error al intentar asignar tu rol. Asegúrate de que tengo los permisos necesarios.';
+    let errorTitle = '❌ Error';
+
+    if (error instanceof Error) {
+      if (
+        error.message.includes('Missing Permissions') ||
+        error.message.includes('50013')
+      ) {
+        errorMessage =
+          '❌ **Permiso faltante:** No tengo permisos para gestionar roles en este servidor.\n\n**Solución:** Un administrador debe activar "Gestionar Roles" para el rol del bot.';
+        errorTitle = '❌ Permiso Insuficiente';
+      } else if (
+        error.message.includes('Missing Access') ||
+        error.message.includes('50001')
+      ) {
+        errorMessage =
+          '❌ **Acceso denegado:** No puedo acceder a los roles en este servidor.\n\n**Solución:** Verifica que el rol del bot esté por encima de los roles de Apex en la jerarquía.';
+        errorTitle = '❌ Acceso Denegado';
+      }
+    }
+
     const errorEmbed = new EmbedBuilder()
       .setColor('#e74c3c')
-      .setTitle('❌ Error')
-      .setDescription(
-        'Hubo un error al intentar asignar tu rol. Asegúrate de que tengo los permisos necesarios.'
-      );
+      .setTitle(errorTitle)
+      .setDescription(errorMessage);
     await interaction.editReply({
       embeds: [errorEmbed],
       components: [createCloseButtonRow()],

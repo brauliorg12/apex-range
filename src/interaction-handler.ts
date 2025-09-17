@@ -5,6 +5,12 @@ import {
 } from './button-interactions';
 import { handleModalInteraction } from './modal-interactions';
 import { handleServerStatusInfo } from './commands/apex-status';
+import {
+  handleCreateMissingRoles,
+  handleShowManualInstructions,
+  handleContinueSetup,
+  handleCancelSetup,
+} from './configs/setup-roles-handlers';
 import { logInteraction } from './utils/logger';
 import { getRankPageEmbed } from './utils/online-embed-helper';
 import { MAX_PLAYERS_PER_CARD } from './models/constants';
@@ -112,6 +118,27 @@ export function registerInteractionHandler(client: Client) {
 
       if (interaction.customId === 'server_status_info') {
         await handleServerStatusInfo(interaction);
+        return;
+      }
+
+      // Handlers para setup-roles
+      if (interaction.customId === 'create_missing_roles') {
+        await handleCreateMissingRoles(interaction);
+        return;
+      }
+
+      if (interaction.customId === 'show_manual_instructions') {
+        await handleShowManualInstructions(interaction);
+        return;
+      }
+
+      if (interaction.customId === 'continue_setup') {
+        await handleContinueSetup(interaction);
+        return;
+      }
+
+      if (interaction.customId === 'cancel_setup') {
+        await handleCancelSetup(interaction);
         return;
       }
 

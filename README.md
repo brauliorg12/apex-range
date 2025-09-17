@@ -38,6 +38,7 @@ El bot ahora soporta **múltiples servidores simultáneamente** sin configuraci�
 
 - **Configuración Independiente**: Cada servidor mantiene su propia configuración, roles y datos.
 - **Detección Automática**: Al unirse a un nuevo servidor, el bot envía automáticamente un mensaje de bienvenida invitando a ejecutar `/setup-roles`.
+- **Recuperación Automática**: Si el bot vuelve a un servidor donde ya estaba configurado, automáticamente restaura todas las funciones y actualiza la presencia global.
 - **Archivos Separados**: Se crean archivos JSON independientes por servidor:
   - `.bot-state/{guildId}.json` - Estado del bot por servidor
   - `db/players_{guildId}.json` - Jugadores por servidor
@@ -59,19 +60,15 @@ Esto incluye:
 - **Jugadores registrados** en total de todos los servidores
 - **Número de servidores** donde el bot está configurado
 
-### Presencia Global
+### Recuperación Automática de Servidores
 
-La presencia del bot muestra estadísticas combinadas de todos los servidores:
+Cuando el bot se une a un servidor donde ya existía configuración previa:
 
-```
-🟢 25 en línea | 👥 150 registrados | 🌐 3 servidores
-```
-
-Esto incluye:
-
-- **Jugadores online** en total de todos los servidores
-- **Jugadores registrados** en total de todos los servidores
-- **Número de servidores** donde el bot está configurado
+1. **Detección Inteligente**: El bot verifica automáticamente si ya hay archivos de configuración para ese servidor.
+2. **Restauración Completa**: Restaura todos los paneles, mensajes y configuraciones anteriores.
+3. **Actualización de Presencia**: Inmediatamente actualiza la presencia global con las estadísticas del servidor recuperado.
+4. **Sincronización de Datos**: Sincroniza la lista de jugadores con los roles actuales del servidor.
+5. **Mensaje de Confirmación**: Envía un mensaje confirmando que el bot ha sido reconectado exitosamente.
 
 ### Cómo Funciona
 
@@ -79,8 +76,9 @@ Esto incluye:
 2. **Configuración**: Un administrador ejecuta `/setup-roles` en el canal deseado.
 3. **Funcionamiento**: El bot opera independientemente en cada servidor.
 4. **Escalabilidad**: Puedes tener el bot en tantos servidores como quieras.
+5. **Recuperación**: Si el bot sale y vuelve, automáticamente restaura la configuración.
 
-> **Nota**: El bot detecta automáticamente nuevos servidores y se configura por separado en cada uno.
+> **Nota**: El bot detecta automáticamente nuevos servidores y se configura por separado en cada uno. Si vuelve a un servidor ya configurado, restaura automáticamente todas las funciones.
 
 ---
 
@@ -266,14 +264,23 @@ Para adaptarse a las limitaciones de la API de Mozambique y evitar bloqueos, el 
 
 ## 🟢 Comandos Disponibles
 
-| Comando / Acción   | Descripción                                                        | Permisos      |
-| ------------------ | ------------------------------------------------------------------ | ------------- |
-| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas | Administrador |
-| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                     | Todos         |
-| `/total-jugadores` | Muestra el número total de jugadores con rango                     | Todos         |
-| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos               | Owner del Bot |
+| Comando / Acción   | Descripción                                                                                                              | Permisos      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo para crear roles automáticamente | Administrador |
+| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                           | Todos         |
+| `/total-jugadores` | Muestra el número total de jugadores con rango                                                                           | Todos         |
+| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                     | Owner del Bot |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
+
+### Menú Interactivo de Configuración
+
+Al ejecutar `/setup-roles`, el bot:
+
+1. **Detecta roles faltantes automáticamente** y muestra un menú interactivo con opciones.
+2. **Ofrece crear roles automáticamente** si el bot tiene permisos, o proporciona instrucciones manuales.
+3. **Guía paso a paso** con botones para continuar o cancelar la configuración.
+4. **Integración completa**: Incluye el botón "Ver perfil Apex Global" en el panel generado.
 
 ## Menú Contextual
 
@@ -376,6 +383,7 @@ Ejemplo de visualización:
 - Logs claros y monitoreo de estado/API.
 - **Soporte completo para múltiples servidores**.
 - **Detección automática de nuevos servidores**.
+- **Recuperación automática de configuración previa**.
 - **Sistema de lock para prevenir instancias duplicadas**.
 - **Archivos de datos separados por servidor**.
 - **Health server integrado con monitoreo avanzado**.
@@ -383,10 +391,93 @@ Ejemplo de visualización:
 
 ---
 
+## 📊 Sistema de Logging Avanzado
+
+El bot implementa un sistema de logging profesional y granular:
+
+- **Logs separados por servidor**: Cada servidor tiene su propio archivo de log (`logs/guild_{guildId}_{guildName}.log`) para facilitar el debugging y monitoreo.
+- **Detección mejorada de eventos**: Logs detallados para conexiones, errores, interacciones y cambios de estado.
+- **Monitoreo en tiempo real**: Información clara sobre permisos, roles y configuraciones por servidor.
+- **Separación de concerns**: Logs globales (`logs/global.log`) para eventos del sistema y logs específicos para eventos por servidor.
+
+> **Nota**: Los logs se rotan automáticamente y se almacenan en la carpeta `logs/` para análisis posterior.
+
+---
+
+## 🖼️ Carga Dinámica de Imágenes
+
+El bot implementa un sistema avanzado de **carga dinámica de imágenes** que permite actualizar las imágenes del embed de selección de rango sin necesidad de reiniciar el bot o redeployar comandos.
+
+### Funcionalidades
+
+- **Actualización automática cada 5 minutos**: Las imágenes se refrescan automáticamente sin intervención manual
+- **Configuración centralizada**: Todas las imágenes se configuran en un solo archivo TypeScript
+- **Hot reload**: Cambia la URL en el archivo de configuración y el embed se actualizará automáticamente
+- **Múltiples servidores**: Cada servidor puede tener su propia imagen independiente
+- **Fallback automático**: Si hay errores en la carga, el sistema mantiene la última imagen válida
+
+### Archivo de Configuración
+
+Las imágenes se configuran en el archivo `src/configs/images.ts`:
+
+```typescript
+// Configuración de imágenes para el bot
+export const imagesConfig = {
+  initRoleSelectionImage:
+    'https://apex-range.cubanova.com/assets/imgs/init.png',
+};
+```
+
+### Cómo Funciona
+
+1. **Configuración inicial**: Al ejecutar `/setup-roles`, el bot carga la imagen desde `images.ts`
+2. **Actualización automática**: Cada 5 minutos, el bot vuelve a leer el archivo TypeScript y actualiza el embed si la URL cambió
+3. **Detección de cambios**: El sistema compara la nueva URL con la anterior para evitar actualizaciones innecesarias
+4. **Manejo de errores**: Si la nueva URL es inválida, se mantiene la imagen anterior
+
+### Beneficios
+
+- ✅ **Actualizaciones instantáneas**: Cambia la imagen sin tocar código
+- ✅ **Sin downtime**: Las actualizaciones ocurren en background
+- ✅ **Configuración simple**: Solo necesitas editar un archivo TypeScript
+- ✅ **Escalabilidad**: Funciona igual en 1 o 100 servidores
+- ✅ **Robustez**: Sistema de validación y fallback integrado
+
+### Uso Práctico
+
+Para cambiar la imagen del embed de selección de rango:
+
+1. Edita `src/configs/images.ts`
+2. Cambia la URL en `initRoleSelectionImage`
+3. Guarda el archivo
+4. Espera máximo 5 minutos o reinicia el bot para ver los cambios inmediatamente
+
+**Ejemplo de cambio:**
+
+```typescript
+// Antes
+export const imagesConfig = {
+  initRoleSelectionImage:
+    'https://apex-range.cubanova.com/assets/imgs/init.png',
+};
+
+// Después
+export const imagesConfig = {
+  initRoleSelectionImage: 'https://tu-servidor.com/nueva-imagen.png',
+};
+```
+
+El embed se actualizará automáticamente en todos los servidores donde esté configurado el bot.
+
+---
+
 ## 🏗️ Estructura del Proyecto
 
 - `src/commands/`  
   Comandos slash y de contexto (ej: `/setup-roles`, `/apex-status`, `/total-jugadores`, comandos de menú contextual).
+
+- `src/configs/`  
+  Configuraciones y handlers específicos por funcionalidad (ej: `setup-roles-handlers.ts` para gestión de roles).
 
 - `src/interactions/`  
   Handlers para botones, selects y menús interactivos (ej: gestión de rangos, panel de ayuda, listado de jugadores).
@@ -530,6 +621,14 @@ Sube los emojis de rango y asígnales los nombres correctos, por ejemplo:
 - ... (uno por cada rango)
 
 ### Permisos del bot
+
+El bot incluye **detección automática mejorada de permisos faltantes** con mensajes detallados:
+
+- **Verificación granular**: Comprueba permisos por servidor y canal por separado.
+- **Mensajes de error específicos**: Indica exactamente qué permiso falta y cómo solucionarlo.
+- **Guía integrada**: Proporciona instrucciones directas para activar permisos faltantes.
+
+**Permisos requeridos:**
 
 - Gestionar roles
 - Enviar mensajes

@@ -1,6 +1,4 @@
 import { Client, Guild, Events } from 'discord.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import {
   readRolesState,
   readApexStatusState,
@@ -17,90 +15,9 @@ import { createUpdateThrottler } from './utils/update-throttler';
 import { logApp } from './utils/logger';
 import { getPlayerData } from './utils/player-data-manager';
 import { getAllRankedPlayers } from './interactions/player-list';
-
-function printBanner(client: Client, guild: Guild, channelInfo: string) {
-  const now = new Date();
-  const fechaLocal = now.toLocaleString();
-  const fechaUTC = now.toISOString();
-  console.log('\x1b[36m');
-  console.log('   🛡️  Apex Discord Bot - Panel de Jugadores 🛡️');
-  console.log('   by Burlon23 - CubaNova');
-  console.log('\x1b[0m');
-  console.log('\x1b[32m%s\x1b[0m', '🟢 Bot conectado');
-  console.log(`[App] Usuario Discord: ${client.user?.tag}`);
-  console.log(`[App] Inicio: ${fechaLocal} (local) | ${fechaUTC} (UTC)`);
-  console.log(`[App] Servidor: ${guild.name} (${guild.id})`);
-  console.log(`[App] ${channelInfo}`);
-  logApp(
-    `Bot conectado como ${client.user?.tag} en guild ${guild.name} (${guild.id}). ${channelInfo}`
-  );
-}
-
-/**
- * Función opcional para limpiar archivos de servidores donde el bot ya no está presente.
- * Útil para mantenimiento, pero deshabilitada por defecto para preservar datos históricos.
- */
-async function cleanupOldServerFiles(client: Client): Promise<void> {
-  try {
-    const stateDir = path.join(__dirname, '../../.bot-state');
-    const dbDir = path.join(__dirname, '../../db');
-
-    // Obtener lista de archivos existentes
-    const [stateFiles, dbFiles] = await Promise.all([
-      fs.readdir(stateDir).catch(() => []),
-      fs.readdir(dbDir).catch(() => []),
-    ]);
-
-    // Extraer guildIds de los archivos
-    const existingGuildIds = new Set<string>();
-
-    // De archivos de estado
-    for (const file of stateFiles) {
-      if (file.endsWith('.json')) {
-        const guildId = file.replace('.json', '');
-        existingGuildIds.add(guildId);
-      }
-    }
-
-    // De archivos de players
-    for (const file of dbFiles) {
-      if (file.startsWith('players_') && file.endsWith('.json')) {
-        const guildId = file.replace('players_', '').replace('.json', '');
-        existingGuildIds.add(guildId);
-      }
-    }
-
-    // Verificar cuáles guilds ya no están accesibles
-    const currentGuildIds = new Set(client.guilds.cache.map((g) => g.id));
-    const obsoleteGuildIds = [...existingGuildIds].filter(
-      (id) => !currentGuildIds.has(id)
-    );
-
-    if (obsoleteGuildIds.length > 0) {
-      console.log(
-        `[Cleanup] Encontrados ${obsoleteGuildIds.length} archivos de servidores obsoletos`
-      );
-
-      // Limpiar archivos (deshabilitado por defecto)
-      // Descomenta las líneas siguientes si quieres activar la limpieza automática:
-      /*
-      for (const guildId of obsoleteGuildIds) {
-        const stateFile = path.join(stateDir, `${guildId}.json`);
-        const playersFile = path.join(dbDir, `players_${guildId}.json`);
-        
-        await fs.unlink(stateFile).catch(() => {});
-        await fs.unlink(playersFile).catch(() => {});
-        
-        logApp(`Archivo limpiado para servidor obsoleto: ${guildId}`);
-      }
-      
-      console.log(`[Cleanup] ${obsoleteGuildIds.length} archivos limpiados`);
-      */
-    }
-  } catch (error) {
-    logApp(`Error en cleanup de archivos antiguos: ${error}`);
-  }
-}
+import { printBanner } from './helpers/print-banner';
+import { cleanupOldServerFiles } from './helpers/cleanup-old-server-files';
+import { updateInitRoleSelectionImage } from './helpers/update-role-selection-image';
 
 export async function initBot(client: Client) {
   client.once(Events.ClientReady, async (readyClient) => {
@@ -229,6 +146,14 @@ export async function initBot(client: Client) {
               `Actualización periódica de roles y presencia en guild ${guild.name} (${guild.id})`
             );
           }, 60_000);
+
+          // Actualización automática de la imagen del embed de selección de rango cada 5 minutos
+          setInterval(async () => {
+            await updateInitRoleSelectionImage(guild.id, client);
+            logApp(
+              `Actualización automática de imagen de selección de rango en guild ${guild.name} (${guild.id})`
+            );
+          }, 5 * 60 * 1000);
         } else {
           // Nuevo guild sin configuración
           const guild = await readyClient.guilds.fetch(guildId);
@@ -300,17 +225,120 @@ export async function initBot(client: Client) {
   // Evento para cuando el bot se une a un nuevo servidor
   client.on(Events.GuildCreate, async (guild) => {
     logApp(`Bot añadido a nuevo servidor: ${guild.name} (${guild.id})`);
+
     try {
-      const channel =
-        guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0); // 0 es TEXT
-      if (channel && 'send' in channel) {
-        await channel.send({
-          content: `¡Hola! Soy Apex Range Bot. Para configurar el panel de rangos, un administrador debe ejecutar el comando \`/setup-roles\` en este canal. ¡Gracias por añadirme!`,
-        });
+      // Verificar si el servidor ya tiene configuración previa
+      const rolesState = await readRolesState(guild.id);
+      if (rolesState?.guildId) {
+        // Servidor ya configurado - inicializar actualizaciones
+        logApp(
+          `Servidor ya configurado detectado: ${guild.name} (${guild.id}). Inicializando actualizaciones.`
+        );
+
+        const throttler = createUpdateThrottler(
+          60_000,
+          async (guild: Guild) => {
+            // --- SINCRONIZA EL JSON DE JUGADORES CON LOS ROLES ACTUALES ---
+            const players = await getAllRankedPlayers(guild);
+            const playerData = await getPlayerData(guild);
+
+            const playerIdsWithRank = new Set(players.map((p) => p.member.id));
+            let updated = false;
+
+            // 1. Agrega jugadores con rol que no están en el JSON
+            for (const player of players) {
+              if (!playerData.some((p) => p.userId === player.member.id)) {
+                playerData.push({
+                  userId: player.member.id,
+                  assignedAt: new Date().toISOString(),
+                  rank: player.rankName,
+                });
+                updated = true;
+              }
+            }
+
+            // 2. Elimina del JSON los jugadores que ya no tienen rol de rango
+            const originalLength = playerData.length;
+            const filteredPlayerData = playerData.filter((p) =>
+              playerIdsWithRank.has(p.userId)
+            );
+            if (filteredPlayerData.length !== originalLength) {
+              updated = true;
+            }
+
+            if (updated) {
+              await writePlayers(guild.id, filteredPlayerData);
+              logApp(
+                `Sincronización de jugadores con roles ejecutada en guild ${guild.name} (${guild.id})`
+              );
+            }
+            // --- FIN DE SINCRONIZACIÓN ---
+
+            // Actualiza los mensajes y la presencia
+            await updateRoleCountMessage(guild);
+            await updateBotPresence(client);
+
+            logApp(
+              `Actualización de roles y presencia ejecutada en guild ${guild.name} (${guild.id})`
+            );
+          }
+        );
+
+        throttler.requestUpdate(guild);
+
+        // Actualizar mensaje de /apex-status si existe
+        const apexStatusState = await readApexStatusState(guild.id);
+        if (apexStatusState?.apexInfoMessageId && apexStatusState.channelId) {
+          await updateApexInfoMessage(guild);
+        }
+
+        // Update Apex Info message every 5 minutes
+        setInterval(() => {
+          updateApexInfoMessage(guild);
+          logApp(
+            `Actualización periódica de mensaje Apex Info en guild ${guild.name} (${guild.id})`
+          );
+        }, 5 * 60 * 1000);
+
+        // Actualización periódica cada 60 segundos
+        setInterval(() => {
+          throttler.requestUpdate(guild);
+          logApp(
+            `Actualización periódica de roles y presencia en guild ${guild.name} (${guild.id})`
+          );
+        }, 60_000);
+
+        // Actualización automática de la imagen del embed de selección de rango cada 5 minutos
+        setInterval(async () => {
+          await updateInitRoleSelectionImage(guild.id, client);
+          logApp(
+            `Actualización automática de imagen de selección de rango en guild ${guild.name} (${guild.id})`
+          );
+        }, 5 * 60 * 1000);
+
+        // Enviar mensaje de confirmación
+        const channel =
+          guild.systemChannel ||
+          guild.channels.cache.find((ch) => ch.type === 0);
+        if (channel && 'send' in channel) {
+          await channel.send({
+            content: `✅ **¡Bot reconectado exitosamente!**\n\nEl panel de rangos ya estaba configurado. Todas las funciones están activas y la presencia global se ha actualizado.`,
+          });
+        }
+      } else {
+        // Nuevo servidor sin configuración
+        const channel =
+          guild.systemChannel ||
+          guild.channels.cache.find((ch) => ch.type === 0);
+        if (channel && 'send' in channel) {
+          await channel.send({
+            content: `¡Hola! Soy Apex Range Bot. Para configurar el panel de rangos, un administrador debe ejecutar el comando \`/setup-roles\` en este canal. ¡Gracias por añadirme!`,
+          });
+        }
       }
     } catch (error) {
       logApp(
-        `Error enviando mensaje de bienvenida en guild ${guild.name}: ${error}`
+        `Error procesando nuevo servidor ${guild.name} (${guild.id}): ${error}`
       );
     }
   });
