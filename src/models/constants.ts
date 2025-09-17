@@ -7,7 +7,7 @@ export const COMMON_AURA_SIZE = 40;
 export const MAX_PLAYERS_PER_CARD = 5;
 
 // Límite máximo de archivos adjuntos por mensaje (Discord y Canvas)
-export const MAX_ATTACHMENTS_PER_MESSAGE = 10; 
+export const MAX_ATTACHMENTS_PER_MESSAGE = 10;
 
 // Nombre común del rol de Apex Legends
 export const COMMON_APEX_ROLE_NAME = 'Apex';
@@ -17,6 +17,15 @@ export const APEX_LOGO_EMOJI = '<:apex_logo:1412989316426367086>';
 
 // Lista de rangos de Apex Legends
 export const APEX_RANKS: ApexRank[] = [
+  {
+    id: '<:Ranked_Tier0_Rookie:1417884499554996244>',
+    shortId: 'rookie',
+    label: 'Rookie',
+    roleName: 'Rookie',
+    icon: '🐣',
+    color: '#eaccae',
+    apiName: 'Rookie',
+  },
   {
     id: '<:Ranked_Tier1_Bronze:1406723914633052296>',
     shortId: 'bronze',

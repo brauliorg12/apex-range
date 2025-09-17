@@ -7,7 +7,7 @@ import {
   PermissionsBitField,
   Role,
 } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Maneja la verificación y creación de roles faltantes para el setup del bot.
@@ -23,7 +23,8 @@ export async function handleMissingRoles(
   interaction: ChatInputCommandInteraction
 ): Promise<boolean> {
   // Verificar que los roles de rango existen
-  const missingRoles = APEX_RANKS.filter(
+  const ranks = getApexRanksForGuild(interaction.guild!.id, interaction.guild!);
+  const missingRoles = ranks.filter(
     (rank) =>
       !interaction.guild!.roles.cache.some(
         (role: Role) => role.name === rank.roleName

@@ -7,10 +7,11 @@ import {
   GuildMember,
   Role,
 } from 'discord.js';
-import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
+import { MAX_PLAYERS_PER_CARD } from '../models/constants';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { buildOnlineEmbedForRank } from './build-online-embed-rank';
 import { createSeeMoreButtonRow } from './online-embed-helper';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Ordena los miembros por prioridad para mostrar en los paneles:
@@ -70,7 +71,8 @@ export async function buildAllOnlineEmbeds(
   const { getPlayerData } = await import('./player-data-manager');
   const playerData = await getPlayerData(guild);
 
-  for (const rank of APEX_RANKS) {
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  for (const rank of ranks) {
     const role: Role | undefined = guild.roles.cache.find(
       (r): r is Role => r.name === rank.roleName
     );
@@ -133,9 +135,9 @@ export async function buildAllOnlineEmbeds(
   }
 
   // Log para detectar duplicados
-  if (embeds.length !== APEX_RANKS.length) {
+  if (embeds.length !== ranks.length) {
     console.warn(
-      `[DUPLICADOS] Se generaron ${embeds.length} cards, pero hay ${APEX_RANKS.length} rangos.`
+      `[DUPLICADOS] Se generaron ${embeds.length} cards, pero hay ${ranks.length} rangos.`
     );
   }
 

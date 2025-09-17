@@ -82,6 +82,99 @@ Cuando el bot se une a un servidor donde ya existía configuración previa:
 
 ---
 
+## 🆕 Sistema de Roles Personalizados por Servidor
+
+El bot ahora soporta **nombres de roles personalizados por servidor**, permitiendo que cada comunidad use sus propios nombres de rangos sin afectar a otros servidores.
+
+### Funcionalidades del Sistema
+
+- **Configuración Independiente**: Cada servidor puede tener sus propios nombres de roles (ej. "Bronce" → "Cobre", "Apex Predator" → "Leyenda Suprema").
+- **Detección Automática**: Al ejecutar `/setup-roles`, el bot detecta roles existentes en el servidor y sugiere mapeos automáticamente usando similitud de nombres.
+- **Almacenamiento JSON**: Los mapeos se guardan en `db/server-config-{guildId}.json` por servidor.
+- **Validación en Tiempo Real**: El bot verifica que los roles mapeados existan en Discord; si se eliminan, usa automáticamente los nombres por defecto.
+- **Fallback Seguro**: Si un rol personalizado no existe, el sistema usa el nombre por defecto de APEX_RANKS sin errores.
+- **Setup Interactivo**: Menú con botones para confirmar mapeos sugeridos o crear roles faltantes.
+
+### Cómo Funciona
+
+1. **Detección Inteligente**: El bot compara los nombres de roles existentes con los rangos por defecto usando normalización (minúsculas, sin acentos) y similitud de strings.
+2. **Sugerencias Automáticas**: Muestra una lista de mapeos sugeridos con botones "Confirmar" o "Saltar".
+3. **Confirmación del Usuario**: El administrador confirma los mapeos, que se guardan en JSON.
+4. **Validación Continua**: En todas las operaciones, `getApexRanksForGuild()` valida que los roles existan; si no, usa defaults.
+5. **Actualización Dinámica**: Los cambios en roles se reflejan automáticamente sin reconfiguración.
+
+### Ejemplo de Mapeo
+
+**Servidor Español:**
+
+- Rookie → Novato
+- Bronze → Bronce
+- Apex Predator → Depredador Apex
+
+**Servidor Inglés (por defecto):**
+
+- Rookie → Rookie
+- Bronze → Bronze
+- Apex Predator → Apex Predator
+
+### Archivo de Configuración
+
+Cada servidor tiene su propio JSON en `db/server-config-{guildId}.json`:
+
+```json
+{
+  "rookie": "Novato",
+  "bronze": "Bronce",
+  "silver": "Plata",
+  "gold": "Oro",
+  "platinum": "Platino",
+  "diamond": "Diamante",
+  "master": "Maestro",
+  "predator": "Depredador Apex"
+}
+```
+
+### Beneficios
+
+- ✅ **Flexibilidad Total**: Cada servidor puede usar sus propios nombres culturales/idiomáticos.
+- ✅ **Sin Conflictos**: Un servidor puede tener "Oro" mientras otro tiene "Gold".
+- ✅ **Detección Automática**: Reduce configuración manual al sugerir mapeos existentes.
+- ✅ **Robustez**: Maneja eliminaciones de roles sin romper el bot.
+- ✅ **Escalabilidad**: Funciona igual en 1 o 1000 servidores.
+
+### Configuración Paso a Paso
+
+1. **Ejecuta `/setup-roles`** en tu servidor como administrador.
+2. **El bot detecta roles existentes** y muestra sugerencias de mapeo.
+3. **Confirma los mapeos** usando los botones interactivos.
+4. **Si faltan roles**, el bot ofrece crearlos automáticamente (si tiene permisos) o proporciona instrucciones manuales.
+5. **Los mapeos se guardan** y se usan automáticamente en todas las funciones del bot.
+
+### Validación y Seguridad
+
+- **Chequeo de Existencia**: Antes de usar un nombre personalizado, el bot verifica `guild.roles.cache.some((r: any) => r.name === mappedName)`.
+- **Fallback Automático**: Si el rol no existe, usa el nombre por defecto de APEX_RANKS.
+- **Sin Errores**: El sistema nunca falla por configuración corrupta; siempre hay un nombre válido.
+- **Actualización en Tiempo Real**: Los cambios en roles de Discord se detectan inmediatamente.
+
+### Detalles Técnicos
+
+- **Función Principal**: `getApexRanksForGuild(guildId, guild?)` en `src/models/constants.ts`.
+- **Almacenamiento**: `loadServerConfig(guildId)` y `saveServerConfig(guildId, config)` en `src/utils/server-config.ts`.
+- **Setup Handlers**: `src/configs/setup-roles-handlers.ts` maneja la detección y confirmación.
+- **Validación Global**: Todas las funciones del bot pasan `guild` a `getApexRanksForGuild` para activar validación.
+
+### Solución de Problemas
+
+- **Roles no se mapean**: Asegúrate de que los nombres sean similares a los por defecto para la detección automática.
+- **Errores después de eliminar roles**: El bot automáticamente usa defaults; no requiere acción manual.
+- **Configuración perdida**: Los JSON se conservan; ejecuta `/setup-roles` nuevamente si necesitas cambiar mapeos.
+- **Múltiples servidores**: Cada servidor mantiene su configuración independiente.
+
+Este sistema hace que el bot sea completamente adaptable a cualquier comunidad, manteniendo simplicidad y robustez.
+
+---
+
 ## 🔗 Integración con la API de Mozambique (Perfil Apex)
 
 El bot ahora permite consultar el perfil de cualquier jugador de Apex Legends usando la [API de Mozambique](https://apexlegendsapi.com/).

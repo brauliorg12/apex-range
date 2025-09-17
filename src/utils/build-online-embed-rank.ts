@@ -72,7 +72,7 @@ export async function buildOnlineEmbedForRank(
           const mention = member.id ? `<@${member.id}>` : 'Usuario';
           // Filtra roles permitidos y muestra banderas o nombres
           const allowedRoles = member.roles?.cache
-            ? filterAllowedRoles(member.roles.cache.map((role: any) => role))
+            ? filterAllowedRoles(member.roles.cache.map((role: any) => role), guild)
             : [];
           const rolesDisplay = allowedRoles.length
             ? ` (${allowedRoles

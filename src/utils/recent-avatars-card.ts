@@ -1,11 +1,12 @@
 import { AttachmentBuilder, EmbedBuilder, Guild, Role } from 'discord.js';
 import { loadImage } from '@napi-rs/canvas';
 import { getPlayerData } from './player-data-manager';
-import { APEX_RANKS, COMMON_AURA_SIZE } from '../models/constants';
+import { COMMON_AURA_SIZE } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { performance } from 'node:perf_hooks';
 import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
 import { logCanvas } from './logger';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Genera un card visual mostrando los avatares y rangos de los últimos 5 usuarios registrados.
@@ -18,6 +19,8 @@ import { logCanvas } from './logger';
 export async function buildRecentAvatarsCard(guild: Guild) {
   const tStart = performance.now();
   logCanvas('Iniciando generación de card (últimos 5 registrados)');
+
+  const ranks = getApexRanksForGuild(guild.id, guild);
 
   // Obtiene los datos de jugadores registrados en el servidor
   const playerData = await getPlayerData(guild);
@@ -116,12 +119,12 @@ export async function buildRecentAvatarsCard(guild: Guild) {
           avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
           displayName = member.displayName || user.username;
           // Detecta rango por rol y obtiene solo el emoji
-          const rankRoleNames = new Set(APEX_RANKS.map((rk) => rk.roleName));
+          const rankRoleNames = new Set(ranks.map((rk) => rk.roleName));
           const rankRole = member.roles.cache.find((role: Role) =>
             rankRoleNames.has(role.name)
           );
           if (rankRole) {
-            const rank = APEX_RANKS.find((rk) => rk.roleName === rankRole.name);
+            const rank = ranks.find((rk) => rk.roleName === rankRole.name);
             if (rank) {
               emoji = getRankEmoji(guild.client, rank) || rank.icon;
             }
@@ -177,12 +180,12 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       let badgeColor: string | undefined = undefined;
 
       if (emoji && member && member.roles?.cache) {
-        const rankRoleNames = new Set(APEX_RANKS.map((rk) => rk.roleName));
+        const rankRoleNames = new Set(ranks.map((rk) => rk.roleName));
         const rankRole = member.roles.cache.find((role: Role) =>
           rankRoleNames.has(role.name)
         );
         if (rankRole) {
-          const rank = APEX_RANKS.find((rk) => rk.roleName === rankRole.name);
+          const rank = ranks.find((rk) => rk.roleName === rankRole.name);
           badgeColor = rank?.color || '#2ecc71';
         }
         const cdn = emojiToCdnPng(emoji);

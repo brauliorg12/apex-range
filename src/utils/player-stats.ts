@@ -1,5 +1,5 @@
 import { Guild, Role, GuildMember } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Obtiene todos los miembros del servidor que tienen algún rol de rango de Apex.
@@ -7,7 +7,8 @@ import { APEX_RANKS } from '../models/constants';
  * @returns Array de GuildMember con algún rol de rango.
  */
 async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
-  const rankRoleNames = new Set(APEX_RANKS.map((rank) => rank.roleName));
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  const rankRoleNames = new Set(ranks.map((rank) => rank.roleName));
   const rankRoles = guild.roles.cache.filter((role) =>
     rankRoleNames.has(role.name)
   );
