@@ -1,7 +1,13 @@
 import { EmbedBuilder } from 'discord.js';
 import { APEX_LOGO_EMOJI } from '../models/constants';
 
-// Genera el embed de realtime
+/**
+ * Construye un embed de Discord con el estado en tiempo real de un jugador de Apex Legends.
+ *
+ * @param realtime - Objeto con datos de tiempo real del jugador, incluyendo campos como isOnline, isInGame, lobbyState, partyFull y selectedLegend.
+ * @param playerName - Nombre del jugador para mostrar en el título del embed.
+ * @returns Un objeto EmbedBuilder configurado con el estado, leyenda y posibilidad de unirse.
+ */
 export function buildRealtimeEmbed(
   realtime: Record<string, any>,
   playerName: string
@@ -14,7 +20,8 @@ export function buildRealtimeEmbed(
 
   const isOnline = realtime.isOnline === 1;
   const isInGame = realtime.isInGame === 1;
-  const canJoin = realtime.canJoin === 1;
+  // Ajuste: Basar canJoin en lobbyState en lugar de solo realtime.canJoin
+  const canJoin = realtime.lobbyState === 'open';
   const partyFull = realtime.partyFull === 1;
   const legend = realtime.selectedLegend || 'Desconocida';
 

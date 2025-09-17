@@ -1,5 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
 
+/**
+ * Formatea la antigüedad de los datos en cache en minutos.
+ *
+ * @param ts - Timestamp en milisegundos (opcional).
+ * @returns Cadena indicando hace cuánto tiempo se cargaron los datos, o cadena vacía si no hay timestamp.
+ */
 function formatCacheAge(ts?: number) {
   if (!ts) return '';
   const mins = Math.floor((Date.now() - ts) / 60000);
@@ -8,6 +14,14 @@ function formatCacheAge(ts?: number) {
   return `hace ${mins} minutos`;
 }
 
+/**
+ * Construye un embed de Discord con el RP necesario para Predator (Top global) en Apex Legends.
+ *
+ * @param predatorRank - Objeto con datos del rango Predator, incluyendo RP por plataforma.
+ * @param cacheInfo - Objeto con indicadores booleanos sobre si los datos están en cache (e.g., predatorRank).
+ * @param cacheTimestamps - Objeto opcional con timestamps de cuando se cargaron los datos en cache, para calcular la antigüedad.
+ * @returns Un objeto EmbedBuilder configurado con el RP requerido por plataforma y footer con info de cache.
+ */
 export function buildPredatorEmbed(
   predatorRank: any,
   cacheInfo: Record<string, boolean>,

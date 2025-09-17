@@ -1,8 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
 
 /**
- * Convierte un string de tiempo restante (hh:mm:ss) en formato legible.
- * Ejemplo: "01:23:45" → "1 hrs 23 mins 45 segs"
+ * Formatea el tiempo restante en horas, minutos y segundos.
+ *
+ * @param remaining - Cadena de tiempo en formato "HH:MM:SS" (opcional).
+ * @returns Cadena formateada como "X hrs Y mins Z segs" o "N/A" si no hay datos.
+ *  Ejemplo: "01:23:45" → "1 hrs 23 mins 45 segs"
  */
 function formatTimeLeft(remaining?: string) {
   if (!remaining) return 'N/A';
@@ -15,7 +18,11 @@ function formatTimeLeft(remaining?: string) {
 }
 
 /**
- * Formatea la información del próximo mapa y fecha en texto legible.
+ * Formatea la información del próximo mapa, incluyendo fecha.
+ *
+ * @param map - Nombre del mapa (opcional).
+ * @param dateStr - Cadena de fecha en formato legible (opcional).
+ * @returns Cadena formateada con el mapa y fecha/hora, o "No disponible" si faltan datos.
  * Ejemplo: "Próximo mapa: World's Edge • hoy a las 08:00 p. m."
  */
 function formatNextMap(map?: string, dateStr?: string) {
@@ -40,8 +47,10 @@ function formatNextMap(map?: string, dateStr?: string) {
 }
 
 /**
- * Calcula cuántos minutos han pasado desde un timestamp y lo describe.
- * Ejemplo: "hace 3 minutos"
+ * Formatea la antigüedad de los datos en cache en minutos.
+ *
+ * @param ts - Timestamp en milisegundos (opcional).
+ * @returns Cadena indicando hace cuánto tiempo se cargaron los datos, o cadena vacía si no hay timestamp.
  */
 function formatCacheAge(ts?: number) {
   if (!ts) return '';
@@ -52,15 +61,12 @@ function formatCacheAge(ts?: number) {
 }
 
 /**
- * Construye el embed visual para la rotación de mapas Ranked.
- * - Muestra el mapa actual, tiempo restante y próximo mapa.
- * - Incluye descripción de split y fin de temporada si aplica.
- * - Agrega aviso de cache si los datos son cacheados.
- * - Usa color y emoji personalizado en el título.
- * @param ranked Datos de rotación de mapas Ranked.
- * @param cacheInfo Estado de la cache por endpoint.
- * @param cacheTimestamps Timestamps de última actualización de cache.
- * @returns EmbedBuilder listo para enviar.
+ * Construye un embed de Discord con información de Battle Royale Ranked de Apex Legends.
+ *
+ * @param ranked - Objeto con datos de rotación de mapas Ranked, incluyendo mapas actuales y próximos, tiempos restantes y eventos de temporada.
+ * @param cacheInfo - Objeto con indicadores booleanos sobre si los datos están en cache (e.g., mapRotation).
+ * @param cacheTimestamps - Objeto opcional con timestamps de cuando se cargaron los datos en cache, para calcular la antigüedad.
+ * @returns Un objeto EmbedBuilder configurado con el mapa actual, tiempo restante, próximo mapa y info de temporada/cache.
  */
 export function buildRankedEmbed(
   ranked: any,

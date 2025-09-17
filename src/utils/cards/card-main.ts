@@ -5,7 +5,10 @@ import { join } from 'path';
 // Variable global para la versión
 let currentVersion = 'dev';
 
-// Función para actualizar la versión leyendo package.json
+/**
+ * Actualiza la versión global leyendo el archivo package.json.
+ * Si falla la lectura, establece la versión como 'dev'.
+ */
 function updateVersion() {
   try {
     const pkgPath = join(__dirname, '../../../package.json');
@@ -20,6 +23,13 @@ function updateVersion() {
 updateVersion();
 setInterval(updateVersion, 300000);
 
+/**
+ * Construye un embed de Discord con información general de Apex Legends.
+ *
+ * @param now - Objeto Date con la fecha y hora actual.
+ * @param cacheInfo - Objeto con indicadores booleanos sobre si los datos están en cache (no usado en esta función, pero incluido por consistencia).
+ * @returns Un objeto EmbedBuilder configurado con título, descripción y footer con versión.
+ */
 export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
   const fecha = now.toLocaleDateString('es-ES');
   const hora = now.toLocaleTimeString('es-ES', {

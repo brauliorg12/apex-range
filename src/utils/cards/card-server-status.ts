@@ -1,5 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
 
+/**
+ * Formatea la antigüedad de los datos en cache en minutos.
+ *
+ * @param ts - Timestamp en milisegundos (opcional).
+ * @returns Cadena indicando hace cuánto tiempo se cargaron los datos, o cadena vacía si no hay timestamp.
+ */
 function formatCacheAge(ts?: number) {
   if (!ts) return '';
   const mins = Math.floor((Date.now() - ts) / 60000);
@@ -8,6 +14,14 @@ function formatCacheAge(ts?: number) {
   return `hace ${mins} minutos`;
 }
 
+/**
+ * Construye un embed de Discord con el estado de los servidores de Apex Legends.
+ *
+ * @param serverStatus - Objeto con datos del estado de los servidores, incluyendo login, crossplay y otras plataformas.
+ * @param cacheInfo - Objeto con indicadores booleanos sobre si los datos están en cache (e.g., serverStatus).
+ * @param cacheTimestamps - Objeto opcional con timestamps de cuando se cargaron los datos en cache, para calcular la antigüedad.
+ * @returns Un objeto EmbedBuilder configurado con el estado de los servidores por región y plataforma, y footer con info de cache.
+ */
 export function buildServerStatusEmbed(
   serverStatus: any,
   cacheInfo: Record<string, boolean>,

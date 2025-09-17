@@ -6,12 +6,15 @@ import { buildArenasEmbed } from './arenas-embed';
 import { buildRealtimeEmbed } from './realtime-embed';
 
 /**
- * Genera un embed profesional para mostrar el perfil de Apex Legends.
- * Si el jugador es Predator, retorna también el badge visual.
- * @param profile Perfil obtenido de la API externa.
- * @param playerName Nombre del jugador consultado.
- * @param platform Plataforma del jugador (PC, PS4, X1).
- * @returns { embed, files? }
+ * Construye un embed profesional para mostrar el perfil de Apex Legends de un jugador.
+ * Incluye datos como nivel, RP, kills, leyenda actual y plataforma. Si el jugador es Predator,
+ * genera un badge visual personalizado y lo incluye como archivo adjunto.
+ * También agrega embeds adicionales para Arenas y estado en tiempo real si están disponibles.
+ *
+ * @param profile - Objeto con datos del perfil obtenidos de la API de Mozambique, incluyendo global, legends y realtime.
+ * @param playerName - Nombre del jugador para mostrar en el título del embed.
+ * @param platform - Plataforma del jugador (e.g., PC, PS4, X1) para mostrar en el embed.
+ * @returns Promise que resuelve en un objeto con embeds (principal, arenas y opcional realtime) y opcionalmente files (badge de Predator).
  */
 export async function buildApexProfileEmbed(
   profile: Record<string, any>,
