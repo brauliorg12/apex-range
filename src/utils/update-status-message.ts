@@ -10,7 +10,7 @@ import { buildRecentAvatarsCard } from './recent-avatars-card';
 import { APEX_RANKS, MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
 import { updateRankCardMessage } from '../helpers/update-rank-card-message';
 import { createApexStatusEmbeds } from './apex-status-embed';
-import { notifyApexUpdateError } from './error-notifier';
+import { notifyApexUpdateError, notifySetupRolesError } from './error-notifier';
 import { getServerLogger } from './server-logger';
 
 async function fetchChannel(guild: Guild, channelId: string) {
@@ -36,6 +36,9 @@ export async function updateRoleCountMessage(guild: Guild) {
 
     const stats = await getPlayerStats(guild);
 
+    let roleSelectionFound = true;
+    let statsMessageFound = true;
+
     // Actualizar mensaje de selección de roles
     try {
       const roleSelectionMessage = await channel.messages.fetch(
@@ -48,6 +51,7 @@ export async function updateRoleCountMessage(guild: Guild) {
         serverLogger.warn(
           'El mensaje de selección de roles no fue encontrado. Ejecuta el comando de setup para restaurar el panel.'
         );
+        roleSelectionFound = false;
       }
     }
 
@@ -87,7 +91,17 @@ export async function updateRoleCountMessage(guild: Guild) {
         serverLogger.warn(
           'El mensaje de estadísticas no fue encontrado. Ejecuta el comando de setup para restaurar el panel.'
         );
+        statsMessageFound = false;
       }
+    }
+
+    // Notificar según qué mensajes faltan
+    if (!roleSelectionFound && !statsMessageFound) {
+      await notifySetupRolesError(guild, channel, 'both_deleted');
+    } else if (!roleSelectionFound) {
+      await notifySetupRolesError(guild, channel, 'role_selection_deleted');
+    } else if (!statsMessageFound) {
+      await notifySetupRolesError(guild, channel, 'stats_message_deleted');
     }
 
     // --- Actualizar los cards por rango ---

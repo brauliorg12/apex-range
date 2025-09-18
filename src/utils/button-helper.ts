@@ -76,7 +76,7 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')
-      .setLabel('Ayuda de Comandos')
+      .setLabel('Ayuda')
       .setEmoji('❓')
       .setStyle(ButtonStyle.Secondary)
   );

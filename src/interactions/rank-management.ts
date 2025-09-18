@@ -81,40 +81,6 @@ async function buildManageRankPayload(guild: Guild, member: GuildMember) {
 }
 
 /**
- * Construye los componentes principales del menú de interacción.
- *
- * - Incluye botones para gestionar el rango del usuario, ver todos los jugadores y acceder a la ayuda de comandos.
- * - Devuelve una fila de botones para mostrar en los paneles principales del bot.
- *
- * @returns Array de ActionRowBuilder con los botones principales.
- */
-export function buildMainMenuComponents() {
-  const allPlayersButton = new ButtonBuilder()
-    .setCustomId('show_all_players_menu')
-    .setLabel('Ver todos los jugadores')
-    .setStyle(ButtonStyle.Secondary);
-
-  const manageRankButton = new ButtonBuilder()
-    .setCustomId('manage_rank_menu')
-    .setLabel('Gestionar mi rango')
-    .setStyle(ButtonStyle.Primary);
-
-  const helpButton = new ButtonBuilder()
-    .setCustomId('show_help_menu')
-    .setLabel('Ayuda de Comandos')
-    .setEmoji('❓')
-    .setStyle(ButtonStyle.Secondary);
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    manageRankButton,
-    allPlayersButton,
-    helpButton
-  );
-
-  return [row];
-}
-
-/**
  * Muestra al usuario el menú privado de gestión de rango.
  * Permite visualizar el rango actual, cambiarlo o eliminarlo, y presenta los botones de selección y cierre.
  * @param interaction Interacción del botón recibida desde Discord.

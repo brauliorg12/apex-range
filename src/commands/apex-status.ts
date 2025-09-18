@@ -62,8 +62,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const moreInfoButton = new ButtonBuilder()
       .setCustomId('server_status_info')
-      .setLabel('¿Qué significan los colores?')
-      .setEmoji('🛰️')
+      .setLabel('Ayuda')
+      .setEmoji('❓')
       .setStyle(ButtonStyle.Secondary);
 
     const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -118,16 +118,43 @@ export async function handleServerStatusInfo(interaction: Interaction) {
     return;
 
   const embed = new EmbedBuilder()
-    .setTitle('¿Qué significan los colores de estado de servidor?')
+    .setTitle('❓ Guía Completa - Estado de Apex Legends')
     .setDescription(
-      `Los colores representan el estado actual de los servidores de Apex Legends según la región o plataforma:\n\n` +
-        `🟢 **UP:** El servidor está operativo y funcionando correctamente.\n` +
-        `🟡 **SLOW:** El servidor presenta lentitud o intermitencias.\n` +
-        `🔴 **DOWN:** El servidor está caído y no disponible.\n` +
-        `⚪ **Desconocido:** No se pudo determinar el estado del servidor.\n\n` +
-        `Consulta este panel para saber si puedes jugar sin problemas o si hay incidencias en tu región.`
+      `**Información detallada sobre el estado actual de Apex Legends**\n\n` +
+        `📍 **¿Qué significa cada sección del panel?**\n\n` +
+        `🎯 **Rotación de Mapas**\n` +
+        `• **Battle Royale**: Mapa principal donde se juega el modo estándar\n` +
+        `• **Ranked**: Mapa competitivo con matchmaking por habilidad\n` +
+        `• **LTM (Limited Time Mode)**: Modos especiales temporales con reglas únicas\n` +
+        `• Los mapas cambian aproximadamente cada 2 horas\n\n` +
+        `🏆 **Sistema de Rangos**\n` +
+        `• **Bronce → Plata → Oro → Platino → Diamante → Maestro → Apex Predator**\n` +
+        `• Cada rango tiene subdivisiones (I, II, III, IV)\n` +
+        `• El RP necesario para Predator varía por plataforma:\n` +
+        `  ▫️ **PC**: Generalmente más alto\n` +
+        `  ▫️ **PlayStation**: Nivel medio\n` +
+        `  ▫️ **Xbox**: Similar a PlayStation\n\n` +
+        `🛰️ **Estado de Servidores**\n` +
+        `• **🟢 Verde (UP)**: Servidor operativo y funcionando correctamente\n` +
+        `• **🟡 Amarillo (SLOW)**: Lentitud o intermitencias temporales\n` +
+        `• **🔴 Rojo (DOWN)**: Servidor caído y no disponible\n` +
+        `• **⚪ Blanco (Desconocido)**: Estado no determinado\n\n` +
+        `📊 **Información por Región**\n` +
+        `• **PC**: Servidores globales con baja latencia\n` +
+        `• **PlayStation**: Red PlayStation Network\n` +
+        `• **Xbox**: Red Xbox Live\n` +
+        `• **Otras**: Regiones específicas como Asia-Pacífico\n\n` +
+        `⚡ **Consejos para Jugadores**\n` +
+        `• Consulta este panel antes de jugar para evitar sorpresas\n` +
+        `• Si un servidor está lento, considera cambiar de región\n` +
+        `• Los mapas cambian cada 2 horas, ¡mantente informado!\n` +
+        `• El RP Predator se actualiza semanalmente`
     )
-    .setColor(0x5865f2);
+    .setColor(0x5865f2)
+    .setFooter({
+      text: 'Información actualizada cada 5 minutos • Apex Legends Status',
+      iconURL: 'https://cdn.discordapp.com/emojis/1410729026410119269.webp',
+    });
 
   await interaction.reply({
     embeds: [embed],
