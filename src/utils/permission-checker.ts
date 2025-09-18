@@ -75,9 +75,21 @@ export async function checkBotPermissions(
       .setColor('#ff6b6b')
       .setTitle('❌ Permisos Faltantes')
       .setDescription(
-        `El bot necesita los siguientes permisos para funcionar:\n\n${missingPermissions
-          .map((perm) => `• **${perm}**`)
-          .join('\n')}\n\n${additionalInfo}\n\n**🔧 Solución:**
+        `El bot necesita los siguientes permisos para funcionar correctamente:\n\n${missingPermissions
+          .map((perm) => {
+            // Encontrar el permiso completo para mostrar detalles
+            const permDetails = REQUIRED_PERMISSIONS.find(
+              (p) =>
+                `${p.description} (${
+                  p.scope === 'guild' ? 'servidor' : 'canal'
+                })` === perm
+            );
+            return `• **${perm}**\n  ${
+              permDetails?.details ||
+              'Permiso requerido para el funcionamiento del bot'
+            }`;
+          })
+          .join('\n\n')}\n\n${additionalInfo}\n\n**🔧 Solución:**
 1. Ve a **Configuración del servidor** → **Roles**
 2. Busca el rol **"Apex Range"** (o el rol del bot)
 3. **Activa** los permisos faltantes
