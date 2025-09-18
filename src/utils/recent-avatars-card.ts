@@ -105,9 +105,8 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     recent.map(async (r, i) => {
       const ts = Math.floor(new Date(r.assignedAt).getTime() / 1000);
       let avatarUrl: string | null = null;
-      const mention = `<@${r.userId}>`;
+      let displayName = 'Usuario'; // Valor por defecto
       let emoji = '';
-      let displayName = '';
       let member: any = null; // <-- Declaración aquí
 
       try {
@@ -142,6 +141,9 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       } catch {
         // Ignorar errores por usuario no disponible
       }
+
+      // Actualizar el enlace con el displayName correcto
+      const mention = `<@${r.userId}>`;
 
       // Solo ícono de rango (si existe)
       const parts = [`${i + 1}. ${mention}`];

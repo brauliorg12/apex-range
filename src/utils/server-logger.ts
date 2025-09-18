@@ -29,8 +29,20 @@ export class ServerLogger {
     ...args: any[]
   ): string {
     const timestamp = new Date().toISOString();
-    const formattedArgs = args.length > 0 ? ` ${JSON.stringify(args)}` : '';
-    return `[${timestamp}] [${level}] [Guild:${this.guildId}] ${message}${formattedArgs}\n`;
+    let executionTimeMs: number | undefined;
+    let formattedArgs = '';
+
+    if (args.length > 0 && typeof args[args.length - 1] === 'number') {
+      executionTimeMs = args.pop();
+    }
+
+    if (args.length > 0) {
+      formattedArgs = ` ${JSON.stringify(args)}`;
+    }
+
+    const timeInfo =
+      executionTimeMs !== undefined ? ` [${executionTimeMs}ms]` : '';
+    return `[${timestamp}] [${level}] [Guild:${this.guildId}]${timeInfo} ${message}${formattedArgs}\n`;
   }
 
   private writeToFile(content: string): void {
@@ -91,8 +103,20 @@ export function getServerLogger(
 export const globalLogger = {
   info: (message: string, ...args: any[]) => {
     const timestamp = new Date().toISOString();
-    const formattedArgs = args.length > 0 ? ` ${JSON.stringify(args)}` : '';
-    const logMessage = `[${timestamp}] [GLOBAL] ${message}${formattedArgs}\n`;
+    let executionTimeMs: number | undefined;
+    let formattedArgs = '';
+
+    if (args.length > 0 && typeof args[args.length - 1] === 'number') {
+      executionTimeMs = args.pop();
+    }
+
+    if (args.length > 0) {
+      formattedArgs = ` ${JSON.stringify(args)}`;
+    }
+
+    const timeInfo =
+      executionTimeMs !== undefined ? ` [${executionTimeMs}ms]` : '';
+    const logMessage = `[${timestamp}] [GLOBAL]${timeInfo} ${message}${formattedArgs}\n`;
     console.log(logMessage.trim());
 
     // También escribir a un archivo global
@@ -106,8 +130,20 @@ export const globalLogger = {
 
   error: (message: string, ...args: any[]) => {
     const timestamp = new Date().toISOString();
-    const formattedArgs = args.length > 0 ? ` ${JSON.stringify(args)}` : '';
-    const logMessage = `[${timestamp}] [GLOBAL-ERROR] ${message}${formattedArgs}\n`;
+    let executionTimeMs: number | undefined;
+    let formattedArgs = '';
+
+    if (args.length > 0 && typeof args[args.length - 1] === 'number') {
+      executionTimeMs = args.pop();
+    }
+
+    if (args.length > 0) {
+      formattedArgs = ` ${JSON.stringify(args)}`;
+    }
+
+    const timeInfo =
+      executionTimeMs !== undefined ? ` [${executionTimeMs}ms]` : '';
+    const logMessage = `[${timestamp}] [GLOBAL-ERROR]${timeInfo} ${message}${formattedArgs}\n`;
     console.error(logMessage.trim());
 
     const globalLogFile = path.join(LOGS_DIR, 'global.log');

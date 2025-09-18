@@ -17,13 +17,16 @@ async function checkDuplicateInstance(): Promise<boolean> {
   try {
     const data = await fs.readFile(LOCK_FILE, 'utf8');
     const { pid, timestamp } = JSON.parse(data);
-    
+
     // Verificar si el proceso está vivo
     try {
       process.kill(pid, 0); // Signal 0 solo verifica si existe
       const age = Date.now() - timestamp;
-      if (age < 300000) { // 5 minutos
-        console.error(`[ERROR] Ya hay una instancia del bot corriendo (PID: ${pid}). Saliendo...`);
+      if (age < 300000) {
+        // 5 minutos
+        console.error(
+          `[ERROR] Ya hay una instancia del bot corriendo (PID: ${pid}). Saliendo...`
+        );
         return true;
       }
     } catch {
@@ -43,7 +46,7 @@ async function createLockFile(): Promise<void> {
   const lockData = {
     pid: process.pid,
     timestamp: Date.now(),
-    version: process.env.npm_package_version || 'unknown'
+    version: process.env.npm_package_version || 'unknown',
   };
   await fs.writeFile(LOCK_FILE, JSON.stringify(lockData, null, 2));
 }
@@ -105,6 +108,9 @@ const client = new Client({
 
   await loadCommands(client); // Carga y registra los comandos
   registerInteractionHandler(client); // Registra los handlers de interacciones
-  await initBot(client); // Inicializa el bot y panel
+
+  // Inicializar el bot con todos los módulos
+  await initBot(client);
+
   client.login(process.env.DISCORD_TOKEN); // Inicia sesión
 })();

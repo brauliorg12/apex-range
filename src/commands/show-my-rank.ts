@@ -62,7 +62,6 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       const emoji = getRankEmoji(interaction.client, userRank);
       const isSelf = interaction.user.id === interaction.targetId;
       const displayName = member.displayName || member.user.username;
-      const mention = `<@${member.id}>`;
 
       const embed = new EmbedBuilder()
         .setColor((userRank.color as any) || '#95a5a6')
@@ -72,7 +71,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
         .setDescription(
           isSelf
             ? `Actualmente tienes el rango: ${emoji} **${userRank.label}**`
-            : `El rango de ${mention} es: ${emoji} **${userRank.label}**`
+            : `El rango de <@${member.id}> es: ${emoji} **${userRank.label}**`
         );
 
       await interaction.reply({
@@ -83,7 +82,6 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
     } else {
       // Si no tiene rango, muestra los botones para seleccionar rango
       const isSelf = interaction.user.id === interaction.targetId;
-      const mention = `<@${member.id}>`;
 
       const embed = new EmbedBuilder()
         .setColor('#95a5a6')
@@ -91,7 +89,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
         .setDescription(
           isSelf
             ? 'Selecciona tu rango actual en Apex Legends:'
-            : `${mention} aún no tiene rango asignado.`
+            : `<@${member.id}> aún no tiene rango asignado.`
         );
 
       await interaction.reply({

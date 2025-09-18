@@ -66,7 +66,7 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_more_options')
-      .setLabel('Filtrar')
+      .setLabel('Filtrar jugadores en línea')
       .setEmoji('🔎')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
@@ -92,20 +92,6 @@ export function createCloseButtonRow(): ActionRowBuilder<ButtonBuilder> {
     new ButtonBuilder()
       .setCustomId('close_help_menu')
       .setLabel('Cerrar')
-      .setStyle(ButtonStyle.Secondary)
-  );
-}
-
-/**
- * Crea una fila con un solo botón para mostrar opciones de filtrado.
- * @returns ActionRowBuilder<ButtonBuilder> con el botón de filtrar.
- */
-export function createMoreOptionsButtonRow(): ActionRowBuilder<ButtonBuilder> {
-  return new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId('show_more_options')
-      .setLabel('Filtrar')
-      .setEmoji('🔎')
       .setStyle(ButtonStyle.Secondary)
   );
 }

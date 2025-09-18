@@ -91,8 +91,8 @@ export async function handleShowAllPlayersMenu(
       .setColor('#3498db')
       .setTitle(
         onlyOnline
-          ? '🟢 Jugadores en línea por rango'
-          : '👥 Todos los Jugadores Registrados'
+          ? 'Filtra los jugadores 🟢 en línea por rango'
+          : '👥 Jugadores Registrados por Rango'
       )
       .setTimestamp();
 
@@ -113,7 +113,9 @@ export async function handleShowAllPlayersMenu(
           })
           .join('\n');
       } else {
-        description += `_...No hay usuarios en línea en este rango._`;
+        description += onlyOnline
+          ? `_...No hay jugadores registrados en línea en este rango._`
+          : `_...No hay jugadores registrados en este rango._`;
       }
       description += '\n';
     }
@@ -121,7 +123,9 @@ export async function handleShowAllPlayersMenu(
     embed.setDescription(
       description.trim().length > 0
         ? description
-        : 'No se encontraron jugadores en línea con rango.'
+        : onlyOnline
+        ? 'No se encontraron jugadores registrados en línea.'
+        : 'No se encontraron jugadores registrados.'
     );
 
     await interaction.editReply({

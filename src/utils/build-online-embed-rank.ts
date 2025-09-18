@@ -12,8 +12,22 @@ import { filterAllowedRoles } from './role-filter';
 import { getCountryFlag } from './country-flag';
 
 /**
- * Construye un embed visual para mostrar los jugadores de un rango.
- * Incluye ícono de estado delante de cada jugador.
+ * Construye un embed visual para mostrar la lista de jugadores de un rango específico en Apex Legends.
+ *
+ * Esta función genera un embed de Discord que incluye información sobre los jugadores en línea de un rango determinado,
+ * con íconos de estado de presencia, menciones clickeables, roles/banderas de países y paginación opcional.
+ * Se utiliza principalmente en los paneles interactivos de rangos para mostrar listas de jugadores por rango.
+ *
+ * @param guild - El servidor de Discord (Guild) donde se mostrarán los jugadores.
+ * @param rank - El objeto de rango de APEX_RANKS que define el rango a mostrar (incluye color, emoji, etc.).
+ * @param members - Array de miembros (GuildMember[]) del rango que se mostrarán en esta página o vista.
+ * @param cardUrl - (Opcional) URL de la imagen a adjuntar al embed (por ejemplo, un gráfico de estadísticas).
+ * @param totalCount - (Opcional) Número total de jugadores en el rango (usado para footers de paginación).
+ * @param pageNum - (Opcional) Número de página actual para la paginación (empieza en 1).
+ * @param maxPerCard - (Opcional) Máximo número de jugadores por página (usado para calcular índices).
+ * @param showNumbers - (Opcional) Si es true, numera los jugadores en la lista (ej: 1., 2.).
+ * @param allRankMembers - (Opcional) Array completo de todos los miembros del rango (usado para contar en línea totales).
+ * @returns Un objeto EmbedBuilder listo para enviar en Discord, con descripción, color y posibles imagen/footer.
  */
 export async function buildOnlineEmbedForRank(
   guild: Guild,
@@ -69,10 +83,12 @@ export async function buildOnlineEmbedForRank(
           const status: PresenceStatus =
             (member.presence?.status as PresenceStatus) || 'offline';
           const icon = getStatusIcon(status);
-          const mention = member.id ? `<@${member.id}>` : 'Usuario';
           // Filtra roles permitidos y muestra banderas o nombres
           const allowedRoles = member.roles?.cache
-            ? filterAllowedRoles(member.roles.cache.map((role: any) => role), guild)
+            ? filterAllowedRoles(
+                member.roles.cache.map((role: any) => role),
+                guild
+              )
             : [];
           const rolesDisplay = allowedRoles.length
             ? ` (${allowedRoles
@@ -89,8 +105,8 @@ export async function buildOnlineEmbedForRank(
             : '';
           // Solo numerar si showNumbers es true
           return showNumbers
-            ? `${numero}. ${icon} ${mention}${rolesDisplay}`
-            : `${icon} ${mention}${rolesDisplay}`;
+            ? `${numero}. ${icon} <@${member.id}>${rolesDisplay}`
+            : `${icon} <@${member.id}>${rolesDisplay}`;
         })
         .join('\n');
   }
