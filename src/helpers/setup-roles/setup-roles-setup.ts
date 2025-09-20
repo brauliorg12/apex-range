@@ -93,10 +93,18 @@ export async function finalizeSetup(
     statsUpdated = true;
     logger.info('Estadísticas actualizadas correctamente');
   } catch (error) {
-    logger.error('Error actualizando estadísticas', error);
+    logger.error('Error actualizando estadísticas:', error);
+    logger.error('Detalles del error:', {
+      message: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      code: (error as any)?.code,
+    });
     try {
       await roleCountMessage.edit({
-        content: '❌ Error al generar estadísticas. Revisa los logs del bot.',
+        content: `❌ Error al generar estadísticas: ${
+          error instanceof Error ? error.message : 'Error desconocido'
+        }. Revisa los logs del bot.`,
         components: [...createManagementButtons()],
       });
       logger.info('Mensaje de error de estadísticas actualizado');

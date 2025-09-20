@@ -1,5 +1,5 @@
 import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
-import { readRolesState } from './state-manager';
+import { readRolesState, writeRolesState } from './state-manager';
 import { getPlayerStats } from './player-stats';
 import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
@@ -61,15 +61,41 @@ async function performUpdate(guild: Guild) {
       !rolesState.roleCountMessageId ||
       !rolesState.roleSelectionMessageId
     ) {
+      serverLogger.warn('Estado de roles incompleto:', {
+        hasChannelId: !!rolesState?.channelId,
+        hasRoleCountMessageId: !!rolesState?.roleCountMessageId,
+        hasRoleSelectionMessageId: !!rolesState?.roleSelectionMessageId,
+      });
       return;
     }
 
     serverLogger.debug('Obteniendo canal...');
-    const channel = await fetchChannel(guild, rolesState.channelId);
-    if (!channel) return;
+    let channel: TextChannel;
+    try {
+      channel = await fetchChannel(guild, rolesState.channelId);
+    } catch (error: any) {
+      if (error.code === 10003) {
+        serverLogger.warn(
+          'El canal configurado ya no existe. Limpiando estado de roles para forzar re-setup.'
+        );
+        // Limpiar el estado de roles ya que el canal no existe
+        await writeRolesState({
+          guildId: guild.id,
+          channelId: undefined,
+          roleCountMessageId: undefined,
+          roleSelectionMessageId: undefined,
+          rankCardMessageIds: undefined,
+        });
+        return;
+      } else {
+        serverLogger.error('Error al obtener el canal:', error);
+        return;
+      }
+    }
 
     serverLogger.debug('Obteniendo estadísticas de jugadores...');
     const stats = await getPlayerStats(guild);
+    serverLogger.debug('Estadísticas obtenidas:', stats);
 
     let roleSelectionFound = true;
     let statsMessageFound = true;

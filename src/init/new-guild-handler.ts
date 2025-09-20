@@ -114,7 +114,7 @@ async function sendReconnectionMessage(guild: Guild): Promise<void> {
     guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0);
   if (channel && 'send' in channel) {
     await channel.send({
-      content: `✅ **¡Bot reconectado exitosamente!**\n\nEl panel de rangos ya estaba configurado. Todas las funciones están activas y la presencia global se ha actualizado.`,
+      content: `✅ **¡Bot reconectado exitosamente!**\n\nEl panel de rangos ya estaba configurado. Todas las funciones están activas y la presencia global se ha actualizado.\n\n💡 **¿Necesitas resetear la configuración?** Un administrador puede ejecutar \`/setup-roles\` para recrear el panel desde cero.`,
     });
   }
 }

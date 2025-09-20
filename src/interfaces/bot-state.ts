@@ -11,3 +11,8 @@ export interface ApexStatusState {
   channelId?: string;
   guildId?: string;
 }
+
+export interface BotControlState {
+  controlChannelId?: string;
+  guildId?: string;
+}

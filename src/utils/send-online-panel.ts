@@ -9,7 +9,7 @@ import { createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './build-all-online-embed';
 
 /**
- * Envía el panel de rangos con un header y cards con botón "Ver más", fijando todos los mensajes.
+ * Envía el panel de rangos con un header y cards con botón "Ver más".
  */
 export async function sendOnlinePanel(channel: any, guild: Guild) {
   // Header embed arriba
@@ -65,13 +65,6 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
     components: managementRow,
   })) as Message;
   sentMessages.push(managementMsg);
-
-  // --- Fijar todos los mensajes al final ---
-  for (const msg of sentMessages) {
-    try {
-      await msg.pin();
-    } catch (err) {}
-  }
 
   // Actualiza el estado con los IDs de los cards por rango
   let rolesState = await readRolesState(guild.id);

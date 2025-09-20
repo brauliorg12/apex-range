@@ -7,29 +7,35 @@ import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
  * @returns Array de GuildMember con algún rol de rango.
  */
 async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
-  const ranks = getApexRanksForGuild(guild.id, guild);
-  const rankRoleNames = new Set(ranks.map((rank) => rank.roleName));
-  const rankRoles = guild.roles.cache.filter((role) =>
-    rankRoleNames.has(role.name)
-  );
+  try {
+    const ranks = getApexRanksForGuild(guild.id, guild);
 
-  if (rankRoles.size === 0) {
-    return [];
-  }
+    const rankRoleNames = new Set(ranks.map((rank) => rank.roleName));
+    const rankRoles = guild.roles.cache.filter((role) =>
+      rankRoleNames.has(role.name)
+    );
 
-  // Fetch all members in paralelo
-  await guild.members.fetch();
+    if (rankRoles.size === 0) {
+      return [];
+    }
 
-  const uniqueMembers = new Map<string, GuildMember>();
-  rankRoles.forEach((role) => {
-    role.members.forEach((member) => {
-      if (!uniqueMembers.has(member.id)) {
-        uniqueMembers.set(member.id, member);
-      }
+    // Fetch all members in paralelo
+    await guild.members.fetch();
+
+    const uniqueMembers = new Map<string, GuildMember>();
+    rankRoles.forEach((role) => {
+      role.members.forEach((member) => {
+        if (!uniqueMembers.has(member.id)) {
+          uniqueMembers.set(member.id, member);
+        }
+      });
     });
-  });
 
-  return Array.from(uniqueMembers.values());
+    return Array.from(uniqueMembers.values());
+  } catch (error) {
+    console.error('Error en getRankedMembers:', error);
+    throw error;
+  }
 }
 
 /**
@@ -41,15 +47,20 @@ async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
  * @returns Un objeto con el total de jugadores con rango y la cantidad de jugadores en línea.
  */
 export async function getPlayerStats(guild: Guild) {
-  const rankedMembers = await getRankedMembers(guild);
-  const onlineMembers = rankedMembers.filter(
-    (member) => member.presence?.status === 'online'
-  );
+  try {
+    const rankedMembers = await getRankedMembers(guild);
+    const onlineMembers = rankedMembers.filter(
+      (member) => member.presence?.status === 'online'
+    );
 
-  return {
-    total: rankedMembers.length,
-    online: onlineMembers.length,
-  };
+    return {
+      total: rankedMembers.length,
+      online: onlineMembers.length,
+    };
+  } catch (error) {
+    console.error('Error en getPlayerStats:', error);
+    throw error;
+  }
 }
 
 /**
