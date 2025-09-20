@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import { APEX_LOGO_EMOJI } from '../models/constants';
+import { APEX_LOGO_EMOJI, PLAYING_EMOGI } from '../models/constants';
 
 /**
  * Construye un embed de Discord con el estado en tiempo real de un jugador de Apex Legends.
@@ -16,7 +16,7 @@ export function buildRealtimeEmbed(
   const ONLINE_EMOJI = '🟢';
   const OFFLINE_EMOJI = '🔴';
   const LOBBY_EMOJI = '💬';
-  const GAME_EMOJI = '🎮';
+  const GAME_EMOJI = PLAYING_EMOGI;
 
   const isOnline = realtime.isOnline === 1;
   const isInGame = realtime.isInGame === 1;
@@ -31,7 +31,7 @@ export function buildRealtimeEmbed(
   } else if (isInGame) {
     stateText = `${GAME_EMOJI} En partida`;
   } else if (realtime.lobbyState === 'invite') {
-    stateText = `${LOBBY_EMOJI} En lobby (invite only)`;
+    stateText = `${LOBBY_EMOJI} En lobby (solo por invitación)`;
   } else {
     stateText = `${ONLINE_EMOJI} Online`;
   }

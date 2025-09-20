@@ -6,7 +6,7 @@ import { getGlobalApiStatus } from '../utils/global-api-status';
 import { checkApiHealth } from '../utils/api-health-check';
 import { createUpdateThrottler } from '../utils/update-throttler';
 import { logApp } from '../utils/logger';
-import { getPlayerData } from '../utils/player-data-manager';
+import { getPlayerData, getPlayerPlatform } from '../utils/player-data-manager';
 import { getAllRankedPlayers } from '../interactions/player-list';
 import { printBanner } from '../helpers/print-banner';
 import { cleanupOldServerFiles } from '../helpers/cleanup-old-server-files';
@@ -93,6 +93,7 @@ function logApiStatus(): void {
       apiStatus.ok ? 'Conectado' : 'Desconectado'
     } | Última vez chequeado: ${lastChecked}`
   );
+
   console.log('------------------------------------------');
   console.log('  SERVIDOR/API Apex Range ');
   console.log(
@@ -100,6 +101,12 @@ function logApiStatus(): void {
   );
   console.log(`  Última vez chequeado: ${lastChecked}`);
   console.log('------------------------------------------');
+
+  logApp('------------------------------------------');
+  logApp('  SERVIDOR/API Apex Range ');
+  logApp(`  Estado: ${color} ${apiStatus.ok ? 'Conectado' : 'Desconectado'}`);
+  logApp(`  Última vez chequeado: ${lastChecked}`);
+  logApp('------------------------------------------');
 }
 
 /**
@@ -122,6 +129,7 @@ async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
         userId: player.member.id,
         assignedAt: new Date().toISOString(),
         rank: player.rankName,
+        platform: (await getPlayerPlatform(guild.id, player.member.id)) || 'PC',
       });
       updated = true;
     }

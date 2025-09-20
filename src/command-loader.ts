@@ -1,6 +1,7 @@
 import { Collection, Client } from 'discord.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { logApp } from './utils/logger';
 
 /**
  * Asynchronously loads slash commands from the 'commands' directory and attaches them to the client.
@@ -25,12 +26,12 @@ export async function loadCommands(client: Client) {
         if ('data' in command && 'execute' in command) {
           commands.set(command.data.name, command);
         } else {
-          console.log(
+          logApp(
             `[ADVERTENCIA] Al comando en ${filePath} le falta una propiedad "data" o "execute" requerida.`
           );
         }
       } catch (error) {
-        console.error(`Error al cargar el comando en ${filePath}:`, error);
+        logApp(`Error al cargar el comando en ${filePath}: ${error}`);
       }
     }
   }

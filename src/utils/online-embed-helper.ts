@@ -28,7 +28,7 @@ export function createSeeMoreButtonRow(
   client: Client
 ) {
   if (totalCount > maxPerCard) {
-    const rankEmoji = getRankEmoji(client, rank);
+    const rankEmoji = getRankEmoji(client, rank) || '🎯';
     return [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()

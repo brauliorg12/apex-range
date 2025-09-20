@@ -26,7 +26,7 @@ export function getRankEmoji(client: Client, rank: ApexRank): string {
 
   // Si no es un emoji personalizado, devolver el icono de respaldo.
   if (!match || !match[1]) {
-    return rank.icon;
+    return rank.icon || '🎯'; // Fallback adicional
   }
 
   const emojiId = match[1];
@@ -42,5 +42,5 @@ export function getRankEmoji(client: Client, rank: ApexRank): string {
 
   // 2. Como fallback, si no está en caché, devolver el ID completo del emoji.
   //    Esto puede funcionar si la caché está desactualizada.
-  return rank.id;
+  return rank.id || '🎯'; // Fallback adicional
 }

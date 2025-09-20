@@ -1,5 +1,5 @@
 import { UserContextMenuCommandInteraction, Client } from 'discord.js';
-import { logInteraction } from '../../utils/logger';
+import { logInteraction, logApp } from '../../utils/logger';
 
 /**
  * Maneja interacciones de comandos de contexto de usuario
@@ -24,7 +24,7 @@ export async function handleUserContextMenuCommand(
 
   const command = commands.get(interaction.commandName);
   if (!command) {
-    console.warn(
+    await logApp(
       `[Advertencia] Comando de contexto desconocido: ${interaction.commandName}`
     );
     return;
@@ -32,13 +32,12 @@ export async function handleUserContextMenuCommand(
 
   try {
     await command.execute(interaction);
-    console.log(
+    await logApp(
       `[Interacción] Comando de contexto '${interaction.commandName}' ejecutado por ${interaction.user.tag}.`
     );
   } catch (error) {
-    console.error(
-      `[ERROR] Error al ejecutar el comando de contexto '${interaction.commandName}':`,
-      error
+    await logApp(
+      `[ERROR] Error al ejecutar el comando de contexto '${interaction.commandName}': ${error}`
     );
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({

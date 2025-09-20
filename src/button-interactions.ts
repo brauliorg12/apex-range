@@ -2,20 +2,19 @@ import {
   ButtonInteraction,
   ActionRowBuilder,
   StringSelectMenuBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  StringSelectMenuInteraction,
 } from 'discord.js';
 import { APEX_RANKS } from './models/constants';
 import { createCloseButtonRow } from './utils/button-helper';
 import {
   handleManageRankMenu,
   handleRoleAssignment,
+  handleManagePlatform,
+  handleSetPlatform,
 } from './interactions/rank-management';
 import { handleShowAllPlayersMenu } from './interactions/player-list';
 import { handleHelpMenu, handleCloseHelpMenu } from './interactions/help-menu';
 import { handleRemoveRank } from './helpers/handle-remove-rank';
+import { logInteraction } from './utils/logger';
 
 /**
  * Asynchronously handles button interactions initiated by users.
@@ -31,7 +30,14 @@ import { handleRemoveRank } from './helpers/handle-remove-rank';
  */
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
   try {
-    console.log('[DEBUG] handleButtonInteraction', interaction.customId);
+    await logInteraction({
+      type: 'Button',
+      userTag: interaction.user.tag,
+      userId: interaction.user.id,
+      guildName: interaction.guild?.name,
+      guildId: interaction.guild?.id,
+      customId: interaction.customId,
+    });
 
     const { customId } = interaction;
 
@@ -39,6 +45,10 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleManageRankMenu(interaction);
     } else if (APEX_RANKS.some((rank) => rank.shortId === customId)) {
       await handleRoleAssignment(interaction);
+    } else if (customId === 'manage_platform') {
+      await handleManagePlatform(interaction);
+    } else if (customId.startsWith('set_platform_')) {
+      await handleSetPlatform(interaction);
     } else if (customId === 'remove_apex_rank') {
       await handleRemoveRank(interaction);
     } else if (customId === 'show_all_players_menu') {
@@ -99,64 +109,6 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: 'Ocurrió un error al procesar el botón.',
-        ephemeral: true,
-      });
-    }
-  }
-}
-
-/**
- * Asynchronously handles select menu interactions initiated by users.
- *
- * This function is responsible for processing user selections from string select menus.
- * It uses the `customId` of the interaction to identify the specific menu being used.
- * Current implementations include handling platform selection for Apex Legends profiles,
- * which then triggers a modal for username input, and filtering online players by their rank.
- * It includes error handling to ensure a smooth user experience.
- *
- * @param {StringSelectMenuInteraction} interaction The select menu interaction object from discord.js.
- */
-export async function handleSelectMenuInteraction(
-  interaction: StringSelectMenuInteraction
-) {
-  try {
-    console.log('[DEBUG] handleSelectMenuInteraction', interaction.customId);
-
-    const { customId } = interaction;
-
-    if (customId === 'apex_platform_select') {
-      const selectedPlatform = interaction.values[0];
-      const modal = new ModalBuilder()
-        .setCustomId(`apex_profile_modal_${selectedPlatform}`)
-        .setTitle('Consulta tu perfil de Apex Legends');
-
-      const nameInput = new TextInputBuilder()
-        .setCustomId('apex_name')
-        .setLabel('Nombre de usuario de Apex Legends')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Ejemplo: Burlon23')
-        .setRequired(true);
-
-      modal.addComponents(
-        new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput)
-      );
-
-      await interaction.showModal(modal);
-      return;
-    }
-    // --- RESTAURA EL BLOQUE PARA FILTRO DE RANGO ---
-    else if (customId === 'RANK_FILTER') {
-      const selectedRankShortId = interaction.values[0];
-      // Solo mostrar los jugadores en línea para el filtro
-      await handleShowAllPlayersMenu(interaction, selectedRankShortId, true);
-      return;
-    }
-    // ------------------------------------------------
-  } catch (error) {
-    console.error('Error en handleSelectMenuInteraction:', error);
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: 'Ocurrió un error al procesar el menú.',
         ephemeral: true,
       });
     }

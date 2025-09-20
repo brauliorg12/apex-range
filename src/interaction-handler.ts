@@ -20,7 +20,7 @@ export function registerInteractionHandler(client: Client) {
     } else if (interaction.isUserContextMenuCommand()) {
       await handleUserContextMenuCommand(interaction, client);
     } else if (interaction.isButton()) {
-      await handleButton(interaction, client);
+      await handleButton(interaction);
     } else if (interaction.isStringSelectMenu()) {
       await handleStringSelectMenu(interaction);
     } else if (interaction.isModalSubmit()) {

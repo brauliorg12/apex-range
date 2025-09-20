@@ -5,7 +5,7 @@ import {
   Guild,
   GuildMember,
 } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
+import { ALL_PLAYERS_EMOGI, APEX_RANKS } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
@@ -92,7 +92,7 @@ export async function handleShowAllPlayersMenu(
       .setTitle(
         onlyOnline
           ? 'Filtra los jugadores 🟢 en línea por rango'
-          : '👥 Jugadores Registrados por Rango'
+          : ALL_PLAYERS_EMOGI + ' Jugadores Registrados por Rango'
       )
       .setTimestamp();
 

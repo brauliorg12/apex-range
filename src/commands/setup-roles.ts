@@ -5,11 +5,11 @@ import {
 } from 'discord.js';
 import { getServerLogger } from '../utils/server-logger';
 import { cleanupExistingMessages } from '../helpers/cleanup-existing-messages';
+import { cleanupInvalidMessageReferences } from '../utils/message-cleanup';
 import {
   verifyAdminPermissions,
   verifyRolesExist,
   verifyChannelAccess,
-  handleSetupError,
   verifyBotPermissions,
   createRoleSelectionMessage,
   createStatsMessage,
@@ -28,11 +28,23 @@ export const data = new SlashCommandBuilder()
   );
 /**
  * Ejecuta el comando setup-roles.
- * Este comando es solo para administradores y realiza las siguientes acciones:
- * 1. Verifica que todos los roles de rango de Apex existan en el servidor.
- * 2. Envía un mensaje para que los usuarios seleccionen su rango.
- * 3. Envía un mensaje de estadísticas que se mantendrá actualizado.
- * 4. Guarda los IDs de los mensajes en el estado del bot.
+ * Este comando configura completamente el bot de Apex Legends en el servidor.
+ *
+ * Pasos de configuración:
+ * 1. Verificar permisos de administrador
+ * 2. Deferir respuesta para evitar timeout
+ * 3. Limpiar referencias inválidas a mensajes
+ * 4. Verificar existencia de roles de rango
+ * 5. Identificar y validar canal
+ * 6. Verificar acceso al canal
+ * 7. Verificar permisos del bot
+ * 8. Limpiar mensajes existentes
+ * 9. Crear mensajes de selección de rango y estadísticas
+ * 10. Fijar mensajes en el canal
+ * 11. Guardar estado de configuración
+ * 12. Finalizar setup con actualizaciones
+ * 13. Enviar respuesta final al usuario
+ *
  * @param interaction La interacción del comando.
  */
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -40,6 +52,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Crear logger específico para este servidor
   const logger = getServerLogger(interaction.guild.id, interaction.guild.name);
+
+  // PASO 1: Verificar permisos de administrador
+  if (!(await verifyAdminPermissions(interaction, logger))) return;
+
+  // PASO 2: Deferir respuesta inmediatamente para evitar timeout
+  await interaction.deferReply({ ephemeral: true });
+  logger.info('Respuesta diferida correctamente');
 
   // Log detallado para debugging
   logger.info('=== INICIANDO SETUP-ROLES ===');
@@ -52,12 +71,25 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
   logger.info(`Usuario: ${interaction.user.tag} (${interaction.user.id})`);
 
-  // 1. Verificar permisos de administrador con validación detallada
-  if (!(await verifyAdminPermissions(interaction, logger))) return;
+  // PASO 3: Limpiar referencias inválidas a mensajes antes de configurar
+  try {
+    await cleanupInvalidMessageReferences(
+      interaction.guild.id,
+      interaction.client
+    );
+    logger.info('Referencias inválidas limpiadas correctamente');
+  } catch (error) {
+    logger.warn('Error limpiando referencias inválidas:', error);
+  }
 
-  // 2. Verificar que los roles de rango existen usando el handler dedicado
-  if (!(await verifyRolesExist(interaction, logger))) return;
+  // PASO 4: Verificar que los roles de rango existen
+  if (!(await verifyRolesExist(interaction, logger))) {
+    logger.info('Roles faltantes, esperando interacción del usuario');
+    return;
+  }
+  logger.info('Verificación de roles completada correctamente');
 
+  // PASO 5: Identificar y validar canal
   const channel = interaction.channel as TextChannel;
   if (!channel) {
     logger.error('No se pudo identificar el canal actual');
@@ -69,60 +101,69 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   logger.info(`Canal identificado: #${channel.name} (${channel.id})`);
 
-  await interaction.deferReply({ ephemeral: true });
-  logger.info('Respuesta diferida correctamente');
+  // PASO 6: Verificar acceso al canal
+  if (!(await verifyChannelAccess(interaction, channel, logger))) {
+    logger.info('Falta acceso al canal');
+    return;
+  }
+  logger.info('Acceso al canal verificado');
 
-  try {
-    // 3. Verificar acceso al canal con manejo detallado de errores
-    if (!(await verifyChannelAccess(interaction, channel, logger))) return;
+  // PASO 7: Verificar permisos del bot
+  if (!(await verifyBotPermissions(interaction, channel, logger))) {
+    logger.info('Faltan permisos del bot');
+    return;
+  }
+  logger.info('Permisos del bot verificados');
 
-    // 4. Verificar permisos del bot usando el módulo dedicado
-    if (!(await verifyBotPermissions(interaction, channel, logger))) return;
+  // PASO 8: Limpiar mensajes existentes
+  await cleanupExistingMessages(channel, logger);
+  logger.info('Mensajes existentes limpiados');
 
-    // 5. Limpiar mensajes existentes antes de crear nuevos
-    await cleanupExistingMessages(channel, logger);
+  // PASO 9: Crear mensajes de selección de rango y estadísticas
+  const roleSelectionMessage = await createRoleSelectionMessage(
+    channel,
+    logger
+  );
+  const roleCountMessage = await createStatsMessage(channel, logger);
+  logger.info('Mensajes de selección y estadísticas creados');
 
-    // 6. Crear mensajes de selección de rango y estadísticas
-    const roleSelectionMessage = await createRoleSelectionMessage(
-      channel,
-      logger
-    );
-    const roleCountMessage = await createStatsMessage(channel, logger);
+  // PASO 10: Fijar ambos mensajes
+  await pinSetupMessages(
+    roleSelectionMessage,
+    roleCountMessage,
+    channel,
+    interaction,
+    logger
+  );
+  logger.info('Mensajes fijados');
 
-    // 7. Fijar ambos mensajes
-    await pinSetupMessages(
-      roleSelectionMessage,
-      roleCountMessage,
-      channel,
-      interaction,
-      logger
-    );
+  // PASO 11: Guardar estado de la configuración
+  await saveSetupState(
+    roleCountMessage,
+    roleSelectionMessage,
+    channel,
+    interaction.guild.id,
+    logger
+  );
+  logger.info('Estado guardado');
 
-    // 8. Guardar estado de la configuración
-    await saveSetupState(
-      roleCountMessage,
-      roleSelectionMessage,
-      channel,
-      interaction.guild.id,
-      logger
-    );
+  // PASO 12: Finalizar configuración con actualización de presencia y estadísticas
+  const { statsUpdated, elapsed } = await finalizeSetup(
+    channel,
+    interaction.guild,
+    interaction.client,
+    roleCountMessage,
+    logger
+  );
+  logger.info('Setup finalizado');
 
-    // 9. Finalizar configuración con actualización de presencia y estadísticas
-    const { statsUpdated, elapsed } = await finalizeSetup(
-      channel,
-      interaction.guild,
-      interaction.client,
-      roleCountMessage,
-      logger
-    );
-
-    // 10. Respuesta final detallada
-    await interaction.editReply({
-      content: `✅ **¡Configuración completada en ${elapsed} segundos!**
+  // PASO 13: Respuesta final detallada
+  await interaction.editReply({
+    content: `✅ **¡Configuración completada en ${elapsed} segundos!**
 
 📊 **Estadísticas:** ${
-        statsUpdated ? '✅ Actualizadas' : '⚠️ Error - revisa logs'
-      }
+      statsUpdated ? '✅ Actualizadas' : '⚠️ Error - revisa logs'
+    }
 🔄 **Presencia global actualizada**
 
 📌 _Puedes eliminar los mensajes fijados que no sean de la App para mantener el canal ordenado._
@@ -131,8 +172,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 *"Apex Range ha fijado un mensaje en este canal. Mira todos los mensajes fijados."*
 
 🏆 ¡Listo para usar el panel de rangos!`,
-    });
-  } catch (error) {
-    await handleSetupError(error, interaction, channel, logger);
-  }
+  });
+  logger.info('Respuesta final enviada');
 }

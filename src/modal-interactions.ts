@@ -2,6 +2,7 @@ import { ModalSubmitInteraction } from 'discord.js';
 import { createCloseButtonRow } from './utils/button-helper';
 import { getApexProfileByName } from './services/apex-api';
 import { buildApexProfileEmbed } from './utils/apex-profile-embed'; // Nuevo import
+import { logApp } from './utils/logger';
 
 /**
  * Handler principal para interacciones de modal de perfil de Apex.
@@ -33,7 +34,7 @@ export async function handleModalInteraction(
 
       // Si hay error en la respuesta, muestra mensaje de error
       if (!profile || profile.Error) {
-        console.log('[API][Perfil] status: ERROR');
+        await logApp(`[API][Perfil] status: ERROR`);
         await interaction.editReply({
           embeds: [
             {
@@ -46,7 +47,7 @@ export async function handleModalInteraction(
         });
         return;
       } else {
-        console.log('[API][Perfil] status: OK');
+        await logApp(`[API][Perfil] status: OK`);
       }
 
       // Genera el embed profesional usando función separada

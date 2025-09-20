@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { logApp } from './logger';
 
 const CACHE_DIR = path.join(__dirname, '../../.apex-cache');
 
@@ -31,13 +32,13 @@ export async function writeApiCache(
   const file = getCacheFile(key, guildId, channelId);
   try {
     await fs.writeFile(file, JSON.stringify({ data, ts: Date.now() }));
-    console.log(
-      `[ApexCache] Escribiendo cache: ${file} (${key})${
+    await logApp(
+      `Escribiendo cache: ${file} (${key})${
         guildId ? ` guildId=${guildId}` : ''
       }${channelId ? ` channelId=${channelId}` : ''}`
     );
   } catch (err) {
-    console.error(`[ApexCache] Error al escribir cache: ${file}`, err);
+    await logApp(`Error al escribir cache: ${file} - ${err}`);
   }
 }
 
@@ -50,14 +51,14 @@ export async function readApiCache(
   const file = getCacheFile(key, guildId, channelId);
   try {
     const raw = await fs.readFile(file, 'utf8');
-    console.log(
-      `[ApexCache] Leyendo cache: ${file} (${key})${
-        guildId ? ` guildId=${guildId}` : ''
-      }${channelId ? ` channelId=${channelId}` : ''}`
+    await logApp(
+      `Leyendo cache: ${file} (${key})${guildId ? ` guildId=${guildId}` : ''}${
+        channelId ? ` channelId=${channelId}` : ''
+      }`
     );
     return JSON.parse(raw);
   } catch (err) {
-    console.warn(`[ApexCache] No se encontró cache: ${file}`);
+    await logApp(`No se encontró cache: ${file}`);
     return null;
   }
 }
@@ -69,7 +70,7 @@ export async function clearApiCache(guildId?: string, channelId?: string) {
     const file = getCacheFile(key, guildId, channelId);
     try {
       await fs.unlink(file);
-      console.log(`[ApexCache] Cache eliminada: ${file}`);
+      await logApp(`Cache eliminada: ${file}`);
     } catch {
       // No existe, no pasa nada
     }

@@ -1,4 +1,4 @@
-import { ButtonInteraction, Client } from 'discord.js';
+import { ButtonInteraction } from 'discord.js';
 import { handleServerStatusInfo } from '../../commands/apex-status';
 import {
   handleCreateMissingRoles,
@@ -9,21 +9,18 @@ import {
   handleSkipMappings,
   handleProceedCreateRoles,
 } from '../../configs/setup-roles-handlers';
-import { logInteraction } from '../../utils/logger';
+import { logInteraction, logApp } from '../../utils/logger';
 import { getRankPageEmbed } from '../../utils/online-embed-helper';
 import { MAX_PLAYERS_PER_CARD } from '../../models/constants';
 import { handleButtonInteraction } from '../../button-interactions';
+import { handlePlatformAssignment } from '../rank-management';
 
 /**
  * Maneja interacciones de botones
  * @param interaction La interacción del botón
- * @param client El cliente de Discord
  * @returns Promise<void>
  */
-export async function handleButton(
-  interaction: ButtonInteraction,
-  client: Client
-) {
+export async function handleButton(interaction: ButtonInteraction) {
   await logInteraction({
     type: 'Button',
     userTag: interaction.user.tag,
@@ -71,6 +68,12 @@ export async function handleButton(
 
   if (interaction.customId === 'proceed_create_roles') {
     await handleProceedCreateRoles(interaction);
+    return;
+  }
+
+  // Handler para selección de plataforma
+  if (interaction.customId.startsWith('platform_')) {
+    await handlePlatformAssignment(interaction);
     return;
   }
 
@@ -142,13 +145,12 @@ export async function handleButton(
 
   try {
     await handleButtonInteraction(interaction);
-    console.log(
+    await logApp(
       `[Interacción] Botón '${interaction.customId}' procesado exitosamente por ${interaction.user.tag}.`
     );
   } catch (error) {
-    console.error(
-      `[ERROR] Error al manejar el botón '${interaction.customId}':`,
-      error
+    await logApp(
+      `[ERROR] Error al manejar el botón '${interaction.customId}': ${error}`
     );
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({

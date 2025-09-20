@@ -4,16 +4,14 @@ import {
   readApexStatusState,
   writePlayers,
 } from '../utils/state-manager';
-import {
-  updateApexInfoMessage,
-  updateRoleCountMessage,
-} from '../utils/update-status-message';
+import { updateRoleCountMessage } from '../utils/update-status-message';
 import { updateBotPresence } from '../utils/presence-helper';
 import { logApp } from '../utils/logger';
-import { getPlayerData } from '../utils/player-data-manager';
+import { getPlayerData, getPlayerPlatform } from '../utils/player-data-manager';
 import { getAllRankedPlayers } from '../interactions/player-list';
 import { registerGuildPeriodicTasks } from '../utils/global-scheduler';
 import { enqueueGuildUpdate } from '../utils/guild-update-queue';
+import { updateApexInfoMessage } from '../helpers/update-apex-info-message';
 
 /**
  * Configura el evento para cuando el bot se une a un nuevo servidor.
@@ -131,6 +129,7 @@ async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
         userId: player.member.id,
         assignedAt: new Date().toISOString(),
         rank: player.rankName,
+        platform: (await getPlayerPlatform(guild.id, player.member.id)) || 'PC',
       });
       updated = true;
     }

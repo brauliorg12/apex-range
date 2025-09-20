@@ -5,11 +5,16 @@ import {
   GuildMember,
   PresenceStatus,
 } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
+import {
+  APEX_RANKS,
+  APEX_PLATFORMS,
+  PC_ONLY_EMOGI,
+} from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { getStatusIcon } from '../interfaces/status-icon';
 import { filterAllowedRoles } from './role-filter';
 import { getCountryFlag } from './country-flag';
+import { getPlayerPlatform } from './player-data-manager';
 
 /**
  * Construye un embed visual para mostrar la lista de jugadores de un rango específico en Apex Legends.
@@ -74,41 +79,49 @@ export async function buildOnlineEmbedForRank(
   }
 
   if (count > 0) {
-    // Genera la lista de jugadores con numeración, estado y roles/banderas
-    description +=
-      '\n\n' +
-      members
-        .map((member: any, idx: number) => {
-          const numero = startIdx + idx;
-          const status: PresenceStatus =
-            (member.presence?.status as PresenceStatus) || 'offline';
-          const icon = getStatusIcon(status);
-          // Filtra roles permitidos y muestra banderas o nombres
-          const allowedRoles = member.roles?.cache
-            ? filterAllowedRoles(
-                member.roles.cache.map((role: any) => role),
-                guild
-              )
-            : [];
-          const rolesDisplay = allowedRoles.length
-            ? ` (${allowedRoles
-                .map((role) => {
-                  const flag = getCountryFlag(role.name);
-                  const capitalized =
-                    role.name.charAt(0).toUpperCase() +
-                    role.name.slice(1).toLowerCase();
-                  return flag !== role.name
-                    ? `${flag} _${capitalized}_`
-                    : `_${capitalized}_`;
-                })
-                .join(', ')})`
-            : '';
-          // Solo numerar si showNumbers es true
-          return showNumbers
-            ? `${numero}. ${icon} <@${member.id}>${rolesDisplay}`
-            : `${icon} <@${member.id}>${rolesDisplay}`;
-        })
-        .join('\n');
+    // Genera la lista de jugadores con numeración, estado, plataforma y roles/banderas
+    const memberLines = await Promise.all(
+      members.map(async (member: any, idx: number) => {
+        const numero = startIdx + idx;
+        const status: PresenceStatus =
+          (member.presence?.status as PresenceStatus) || 'offline';
+        const icon = getStatusIcon(status);
+
+        // Obtener ícono de plataforma
+        const platform = await getPlayerPlatform(guild.id, member.id);
+        const platformInfo = APEX_PLATFORMS.find((p) => p.apiName === platform);
+        // Siendo id el icono en la constante // TODO mejorar
+        const platformIcon = platformInfo?.id || PC_ONLY_EMOGI;
+
+        // Filtrar roles permitidos y mostrar banderas o nombres
+        const allowedRoles = member.roles?.cache
+          ? filterAllowedRoles(
+              member.roles.cache.map((role: any) => role),
+              guild
+            )
+          : [];
+        const rolesDisplay = allowedRoles.length
+          ? ` (${allowedRoles
+              .map((role) => {
+                const flag = getCountryFlag(role.name);
+                const capitalized =
+                  role.name.charAt(0).toUpperCase() +
+                  role.name.slice(1).toLowerCase();
+                return flag !== role.name
+                  ? `${flag} _${capitalized}_`
+                  : `_${capitalized}_`;
+              })
+              .join(', ')})`
+          : '';
+
+        // Solo numerar si showNumbers es true
+        return showNumbers
+          ? `${numero}. ${icon} ${platformIcon} <@${member.id}>${rolesDisplay}`
+          : `${icon} ${platformIcon} <@${member.id}>${rolesDisplay}`;
+      })
+    );
+
+    description += '\n\n' + memberLines.join('\n');
   }
 
   // Crea el embed visual con color y descripción

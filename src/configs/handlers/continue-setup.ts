@@ -9,14 +9,15 @@ export async function handleContinueSetup(interaction: ButtonInteraction) {
   if (!interaction.isButton() || interaction.customId !== 'continue_setup')
     return;
 
-  // Re-ejecutar el comando setup-roles
+  // TODO revisar
+  // Limpiar el mensaje y mostrar instrucciones
   await interaction.update({
     content: '🔄 Continuando con la configuración...',
     embeds: [],
     components: [],
   });
 
-  // En lugar de simular la interacción, responder con instrucciones
+  // Responder con instrucciones
   await interaction.followUp({
     content:
       '✅ **¡Los roles han sido creados exitosamente!**\n\n' +

@@ -17,6 +17,7 @@ import { data as showMyRankCommand } from './commands/show-my-rank';
 import { data as apiStatusCommand } from './commands/api-status';
 import { data as apexStatusCommand } from './commands/apex-status';
 import { data as cleanupDataCommand } from './commands/cleanup-data';
+import { logApp } from './utils/logger';
 
 const commands = [
   setupRolesCommand.toJSON(),
@@ -31,13 +32,13 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
   try {
-    console.log('Empezando a registrar los comandos de aplicación (/).');
+    logApp('Empezando a registrar los comandos de aplicación (/).');
 
     // El método put se usa para refrescar todos los comandos en el servidor con el set actual
     await rest.put(Routes.applicationCommands(clientId), { body: commands });
 
-    console.log('¡Comandos de aplicación (/) registrados exitosamente!.');
+    logApp('¡Comandos de aplicación (/) registrados exitosamente!.');
   } catch (error) {
-    console.error(error);
+    logApp(`Error al registrar comandos: ${error}`);
   }
 })();

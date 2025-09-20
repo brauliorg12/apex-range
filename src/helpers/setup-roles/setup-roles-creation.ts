@@ -11,6 +11,7 @@ import {
   createManagementButtons,
   createRankButtons,
 } from '../../utils/button-helper';
+import { SELECT_EMOGI } from '../../models/constants';
 
 /**
  * Crea el mensaje de selección de rango con botones interactivos.
@@ -31,7 +32,7 @@ export async function createRoleSelectionMessage(
 
   const roleSelectionEmbed = new EmbedBuilder()
     .setColor('#f1c40f')
-    .setTitle('🎯 SELECCIONA TU RANGO')
+    .setTitle(SELECT_EMOGI + ' SELECCIONA TU RANGO DE APEX LEGENDS')
     .setDescription(ROLE_SELECTION_EMBED_TEXT)
     .setImage(imagesConfig.initRoleSelectionImage);
 
@@ -72,11 +73,14 @@ export async function createStatsMessage(
   logger.info('Creando mensaje de estadísticas...');
 
   try {
+    const components = createManagementButtons();
+    logger.info(`Componentes creados: ${components.length} filas`);
+
     const message = await sendMessageWithTimeout(
       channel,
       {
         content: 'Generando estadísticas...',
-        components: [...createManagementButtons()],
+        components: components,
       },
       15000
     );
@@ -84,6 +88,11 @@ export async function createStatsMessage(
     return message;
   } catch (error) {
     logger.error('Error enviando mensaje de estadísticas:', error);
+    logger.error('Detalles del error:', {
+      message: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
     throw new Error(
       'No se pudo enviar el mensaje de estadísticas. Verifica los permisos del bot.'
     );

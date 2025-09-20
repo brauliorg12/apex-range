@@ -4,7 +4,15 @@ import {
   ButtonStyle,
   Client,
 } from 'discord.js';
-import { APEX_LOGO_EMOJI, APEX_RANKS } from '../models/constants';
+import {
+  ALL_PLAYERS_EMOGI,
+  APEX_LOGO_EMOJI,
+  APEX_RANKS,
+  GAME_PLATFORMS_EMOGI,
+  HELP_EMOGI,
+  LOGO_APP_EMOGI,
+  SEARCH_EMOGI,
+} from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 
 /**
@@ -39,21 +47,27 @@ export function createRankButtons(
 }
 
 /**
- * Crea una fila de botones para gestión y navegación en el panel principal del bot.
+ * Crea filas de botones para gestión y navegación en el panel principal del bot.
  *
- * Esta función genera una fila de botones interactivos que permiten al usuario acceder a diversas funcionalidades:
+ * Esta función genera dos filas de botones interactivos que permiten al usuario acceder a diversas funcionalidades:
+ *
+ * Primera fila:
  * - Ver rango Apex Global: Muestra el perfil de rango global del usuario en Apex Legends.
  * - Ver todos los jugadores: Lista todos los jugadores registrados en el servidor.
  * - Filtrar: Abre opciones para filtrar la lista de jugadores por criterios específicos.
  * - Gestionar mi Rango: Permite al usuario actualizar o gestionar su propio rango.
+ *
+ * Segunda fila:
+ * - Gestionar Plataforma (Acceso Rápido): Permite al usuario cambiar su plataforma de juego directamente desde el panel principal.
  * - Ayuda de Comandos: Muestra información sobre los comandos disponibles del bot.
  *
- * Los botones se organizan en una sola fila, optimizada para la interfaz de Discord.
+ * Los botones se organizan en dos filas, optimizada para la interfaz de Discord.
+ * NOTA: También existe un botón "Gestionar Plataforma" en el menú de gestión de rango con funcionalidad similar.
  *
- * @returns Array con una sola ActionRowBuilder<ButtonBuilder> que contiene los botones de gestión.
+ * @returns Array con dos ActionRowBuilder<ButtonBuilder> que contienen los botones de gestión.
  */
 export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId('show_apex_profile_modal')
       .setLabel('Ver perfil Apex Global')
@@ -62,25 +76,34 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
     new ButtonBuilder()
       .setCustomId('show_all_players_menu')
       .setLabel('Ver todos los jugadores')
-      .setEmoji('👥')
+      .setEmoji(ALL_PLAYERS_EMOGI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_more_options')
       .setLabel('Filtrar jugadores en línea')
-      .setEmoji('🔎')
+      .setEmoji(SEARCH_EMOGI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('manage_rank_menu')
       .setLabel('Gestionar mi Rango')
-      .setEmoji('⚙️')
+      .setEmoji(LOGO_APP_EMOGI)
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('manage_platform')
+      .setLabel('Gestionar mi Plataforma')
+      .setEmoji(GAME_PLATFORMS_EMOGI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')
       .setLabel('Ayuda')
-      .setEmoji('❓')
+      .setEmoji(HELP_EMOGI)
       .setStyle(ButtonStyle.Secondary)
   );
-  return [row];
+
+  return [row1, row2];
 }
 
 /**

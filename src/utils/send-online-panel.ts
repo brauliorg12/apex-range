@@ -1,5 +1,9 @@
 import { Guild, EmbedBuilder, Message } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
+import {
+  APEX_LOGO_EMOJI,
+  APEX_RANKS,
+  SETTINGS_ALL_EMOGI,
+} from '../models/constants';
 import { readRolesState, writeRolesState } from './state-manager';
 import { createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './build-all-online-embed';
@@ -12,8 +16,8 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
   const headerEmbed = new EmbedBuilder()
     .setColor('#bdc3c7')
     .setDescription(
-      '🛡️ **Jugadores en línea por Rango**\n' +
-        '> Puede clickear sobre los jugadores para interactuar'
+      `${APEX_LOGO_EMOJI} **División de Jugadores por Rango Apex**\n` +
+        '> Haz clic en los nombres para interactuar con perfiles'
     );
 
   const { embeds, files, componentsList } = await buildAllOnlineEmbeds(guild);
@@ -43,7 +47,21 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
 
   // Envía los botones de gestión como último mensaje
   const managementRow = createManagementButtons();
+  const managementEmbed = new EmbedBuilder()
+    .setColor('#34495e')
+    .setDescription(
+      SETTINGS_ALL_EMOGI +
+        '** Panel de Gestión**\n' +
+        '> Consulta estadísticas globales\n' +
+        '> Lista de todos los registrados\n' +
+        '> Asigna o cambia tu rango de Apex Legends\n' +
+        '> Configura tu plataforma (PC, PlayStation, Xbox)\n' +
+        '> Busca jugadores conectados por rango\n' +
+        '> Información y comandos disponibles'
+    );
+
   const managementMsg = (await channel.send({
+    embeds: [managementEmbed],
     components: managementRow,
   })) as Message;
   sentMessages.push(managementMsg);

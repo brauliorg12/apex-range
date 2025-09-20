@@ -1,6 +1,7 @@
 import { EmbedBuilder, TextChannel, Client } from 'discord.js';
 import { logApp } from '../utils/logger';
 import { imagesConfig } from '../configs/images';
+import { SELECT_EMOGI } from '../models/constants';
 
 // Constante para el texto del embed de selección de rango (centralizada para evitar duplicación)
 export const ROLE_SELECTION_EMBED_TEXT = [
@@ -29,7 +30,7 @@ export async function updateInitRoleSelectionImage(
       !rolesState.roleSelectionMessageId ||
       !rolesState.channelId
     ) {
-      console.log(`No hay estado guardado para guild ${guildId}`);
+      logApp(`No hay estado guardado para guild ${guildId}`);
       return;
     }
 
@@ -53,7 +54,7 @@ export async function updateInitRoleSelectionImage(
     // Crear el embed actualizado con la nueva imagen y texto centralizado
     const updatedEmbed = new EmbedBuilder()
       .setColor('#f1c40f')
-      .setTitle('🎯 SELECCIONA TU RANGO')
+      .setTitle(SELECT_EMOGI + ' SELECCIONA TU RANGO DE APEX LEGENDS')
       .setDescription(ROLE_SELECTION_EMBED_TEXT)
       .setImage(currentImage); // Usar la imagen leída del JSON
 
@@ -62,13 +63,12 @@ export async function updateInitRoleSelectionImage(
       components: message.components, // Mantener los botones existentes
     });
 
-    console.log(
+    logApp(
       `Imagen del embed de selección de rango actualizada para guild ${guildId}`
     );
   } catch (error) {
-    console.error(
-      `Error actualizando imagen del embed para guild ${guildId}:`,
-      error
+    logApp(
+      `Error actualizando imagen del embed para guild ${guildId}: ${error}`
     );
   }
 }

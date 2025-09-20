@@ -1,6 +1,6 @@
 import { StringSelectMenuInteraction } from 'discord.js';
 import { logInteraction } from '../../utils/logger';
-import { handleSelectMenuInteraction } from '../../button-interactions';
+import { handleSelectMenuInteraction } from './select-menu-interaction';
 
 /**
  * Maneja interacciones de menús select de cadena

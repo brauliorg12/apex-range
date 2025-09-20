@@ -1,4 +1,5 @@
 import { setGlobalApiStatus } from './global-api-status';
+import { logApp } from './logger';
 
 /**
  * Realiza un chequeo de salud a la API especificada.
@@ -30,12 +31,12 @@ export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
       // Si la respuesta es exitosa, marca la API como UP y retorna true
       const now = new Date();
       setGlobalApiStatus(true, now);
-      console.log(`[API] La API está UP (${now.toLocaleString()})`);
+      await logApp(`La API está UP (${now.toLocaleString()})`);
       return true;
     } else {
       // Si la respuesta no es exitosa, marca la API como caída y retorna false
       setGlobalApiStatus(false);
-      console.warn(`[API] La API respondió con status: ${res.status}`);
+      await logApp(`La API respondió con status: ${res.status}`);
       return false;
     }
   } catch (error) {
@@ -43,9 +44,9 @@ export async function checkApiHealth(apiUrl?: string): Promise<boolean> {
     setGlobalApiStatus(false);
     // Maneja específicamente el error de timeout
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error('[API] Timeout al chequear la API.');
+      await logApp('Timeout al chequear la API.');
     } else {
-      console.error('[API] Error al chequear la API:', error);
+      await logApp(`Error al chequear la API: ${error}`);
     }
     return false;
   }

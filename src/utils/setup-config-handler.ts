@@ -8,6 +8,8 @@ import {
   Role,
 } from 'discord.js';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
+import { logApp } from '../utils/logger';
 
 /**
  * Maneja la verificación y creación de roles faltantes para el setup del bot.
@@ -22,48 +24,54 @@ import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 export async function handleMissingRoles(
   interaction: ChatInputCommandInteraction
 ): Promise<boolean> {
-  // Verificar que los roles de rango existen
+  // Verificar que los roles de rango y plataformas existen
   const ranks = getApexRanksForGuild(interaction.guild!.id, interaction.guild!);
-  const missingRoles = ranks.filter(
+  const platforms = getApexPlatformsForGuild(
+    interaction.guild!.id,
+    interaction.guild!
+  );
+
+  const missingRankRoles = ranks.filter(
     (rank) =>
       !interaction.guild!.roles.cache.some(
         (role: Role) => role.name === rank.roleName
       )
   );
 
+  const missingPlatformRoles = platforms.filter(
+    (platform) =>
+      !interaction.guild!.roles.cache.some(
+        (role: Role) => role.name === platform.roleName
+      )
+  );
+
+  const missingRoles = [...missingRankRoles, ...missingPlatformRoles];
+
   // Si no faltan roles, continuar normalmente
   if (missingRoles.length === 0) {
     return true;
   }
 
-  console.log(
-    `[Setup-Config] Roles faltantes detectados: ${missingRoles
+  await logApp(
+    `Roles faltantes detectados: ${missingRoles
       .map((r) => r.roleName)
       .join(', ')}`
   );
 
   // Verificar si el bot tiene permisos para crear roles
-  const botMember = await interaction.guild!.members.fetch(
-    interaction.client.user!.id
-  );
-  const canCreateRoles = botMember.permissions.has(
-    PermissionsBitField.Flags.ManageRoles
-  );
-
-  // Crear embed informativo sobre roles faltantes
-  const embed = new EmbedBuilder()
-    .setColor('#ff6b6b')
-    .setTitle('⚠️ Roles Faltantes Detectados')
-    .setDescription(
-      `Para configurar Apex Range Bot, necesito los siguientes roles:\n\n${missingRoles
-        .map((r) => `• **${r.roleName}**`)
-        .join('\n')}\n\n¿Quieres que los cree automáticamente?`
-    )
-    .setFooter({
-      text: canCreateRoles
-        ? 'Haz click en "Crear Roles" para continuar'
-        : 'Necesito permisos de "Gestionar Roles" para crearlos automáticamente',
-    });
+  let canCreateRoles = false;
+  try {
+    const botMember = await interaction.guild!.members.fetch(
+      interaction.client.user!.id
+    );
+    canCreateRoles = botMember.permissions.has(
+      PermissionsBitField.Flags.ManageRoles
+    );
+  } catch (error) {
+    await logApp(`Error obteniendo permisos del bot: ${error}`);
+    // Asumir que no puede crear roles si no puede fetch el member
+    canCreateRoles = false;
+  }
 
   const components = [];
 
@@ -100,12 +108,29 @@ export async function handleMissingRoles(
     );
   }
 
-  // Responder con el embed y botones
-  await interaction.reply({
-    embeds: [embed],
-    components,
-    ephemeral: true,
-  });
+  // Responder con un mensaje y botones
+  const roleList = missingRoles.map((r) => `• **${r.roleName}**`).join('\n');
+  const instructions = canCreateRoles
+    ? `Haz clic en "Crear Roles" para que el bot los cree automáticamente.`
+    : `Crea estos roles manualmente en la configuración del servidor (Server Settings > Roles), luego ejecuta /setup-roles nuevamente.`;
 
-  return false; // Detener la ejecución, esperar interacción del usuario
+  try {
+    await interaction.editReply({
+      content: `⚠️ **Roles Faltantes Detectados**\n\nPara configurar Apex Range Bot, necesitas los siguientes roles:\n${roleList}\n\n${instructions}`,
+      components: components,
+    });
+  } catch (error) {
+    await logApp(`Error respondiendo con mensaje de roles faltantes: ${error}`);
+    // Si falla, intentar un followUp
+    try {
+      await interaction.followUp({
+        content: `❌ Error al mostrar roles faltantes. Revisa los permisos del bot.`,
+        ephemeral: true,
+      });
+    } catch (followUpError) {
+      await logApp(`Error en followUp: ${followUpError}`);
+    }
+  }
+
+  return false; // Detener la ejecución, esperar que el usuario cree los roles
 }

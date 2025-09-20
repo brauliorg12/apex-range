@@ -1,6 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { REFRESH_EMOGI, TIMER_EMOGI } from '../../models/constants';
 
 // Variable global para la versión
 let currentVersion = 'dev';
@@ -41,17 +42,17 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
 
   return new EmbedBuilder()
     .setColor('#bdc3c7')
-    .setTitle('ℹ️ Información de Apex Legends')
+    .setTitle('> Información de Apex Legends')
     .setDescription(
       [
-        '🔄 Se actualiza cada 5 minutos.',
-        '🕒 Última actualización:',
+        '> ' + REFRESH_EMOGI + ' Se actualiza cada 5 minutos.',
+        '> ' + TIMER_EMOGI + ' Última actualización:',
         `\`\`\`${fecha} ${hora}\`\`\``,
         '🌐 Datos desde la API de Mozambique',
         '[Más info](https://apexlegendsapi.com/)',
       ].join('\n')
     )
     .setFooter({
-      text: `by CubaNova Company - 2025 - version: ${currentVersion}`,
+      text: `by Burlon23 - CubaNova - version: ${currentVersion}`,
     });
 }

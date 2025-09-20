@@ -1,11 +1,9 @@
 import { Client, Guild } from 'discord.js';
-import {
-  updateApexInfoMessage,
-  updateRoleCountMessage,
-} from './update-status-message';
+import { updateRoleCountMessage } from './update-status-message';
 import { updateBotPresence } from './presence-helper';
 import { updateInitRoleSelectionImage } from '../helpers/update-role-selection-image';
 import { logApp } from './logger';
+import { updateApexInfoMessage } from '../helpers/update-apex-info-message';
 
 type ScheduledTask = {
   guildId: string;

@@ -6,6 +6,8 @@ import {
   ButtonStyle,
 } from 'discord.js';
 import { getApexRanksForGuild } from '../../helpers/get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-guild';
+import { GAME_PLATFORMS_EMOGI } from '../../models/constants';
 
 /**
  * Handler para proceder con la creación de roles faltantes después de confirmar mapeos
@@ -26,14 +28,28 @@ export async function handleProceedCreateRoles(interaction: ButtonInteraction) {
       interaction.guild!.id,
       interaction.guild!
     );
+    const platforms = getApexPlatformsForGuild(
+      interaction.guild!.id,
+      interaction.guild!
+    );
 
-    // Verificar roles faltantes usando los nombres mapeados/validados
-    const missingRoles = ranks.filter(
+    // Verificar roles faltantes de rangos
+    const missingRankRoles = ranks.filter(
       (rank) =>
         !interaction.guild!.roles.cache.some(
           (role: any) => role.name === rank.roleName
         )
     );
+
+    // Verificar roles faltantes de plataformas
+    const missingPlatformRoles = platforms.filter(
+      (platform) =>
+        !interaction.guild!.roles.cache.some(
+          (role: any) => role.name === platform.roleName
+        )
+    );
+
+    const missingRoles = [...missingRankRoles, ...missingPlatformRoles];
 
     if (missingRoles.length === 0) {
       await interaction.editReply({
@@ -47,18 +63,22 @@ export async function handleProceedCreateRoles(interaction: ButtonInteraction) {
     const createdRoles = [];
     const failedRoles = [];
 
-    for (const rank of missingRoles) {
+    for (const roleData of missingRoles) {
       try {
+        // Determinar si es un rango o plataforma para usar el color apropiado
+        const isRank = 'apiName' in roleData; // Los rangos tienen apiName, las plataformas no
+        const color = isRank ? (roleData as any).color : '#7289da'; // Color por defecto para plataformas
+
         const role = await interaction.guild!.roles.create({
-          name: rank.roleName,
-          color: rank.color as any,
+          name: roleData.roleName,
+          color: color as any,
           mentionable: true,
           reason: 'Creado automáticamente por Apex Range Bot setup',
         });
         createdRoles.push(role.name);
       } catch (error) {
-        console.error(`Error creando rol ${rank.roleName}:`, error);
-        failedRoles.push(rank.roleName);
+        console.error(`Error creando rol ${roleData.roleName}:`, error);
+        failedRoles.push(roleData.roleName);
       }
     }
 
@@ -75,6 +95,14 @@ export async function handleProceedCreateRoles(interaction: ButtonInteraction) {
         '🎉 **¡Perfecto! Ahora puedes continuar con la configuración.**\n\n';
       description +=
         '*Ejecuta nuevamente `/setup-roles` para completar la configuración.*';
+    }
+
+    // Información adicional sobre plataformas
+    if (missingPlatformRoles.length > 0) {
+      description +=
+        '\n\n' +
+        GAME_PLATFORMS_EMOGI +
+        ' **Nota:** Se crearon roles para plataformas (PC, PlayStation, Xbox, Nintendo Switch) además de los rangos.';
     }
 
     const embed = new EmbedBuilder()

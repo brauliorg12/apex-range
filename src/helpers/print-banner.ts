@@ -25,6 +25,16 @@ export function printBanner(client: Client, guild: Guild, channelInfo: string) {
   console.log(`[App] Servidor: ${guild.name} (${guild.id})`);
   console.log(`[App] ${channelInfo}`);
 
+  logApp('\x1b[36m');
+  logApp('   🛡️  Apex Discord Bot - Panel de Jugadores 🛡️');
+  logApp('   by Burlon23 - CubaNova');
+  logApp('\x1b[0m');
+  logApp('\x1b[32m%s\x1b[0m', '🟢 Bot conectado');
+  logApp(`[App] Usuario Discord: ${client.user?.tag}`);
+  logApp(`[App] Inicio: ${fechaLocal} (local) | ${fechaUTC} (UTC)`);
+  logApp(`[App] Servidor: ${guild.name} (${guild.id})`);
+  logApp(`[App] ${channelInfo}`);
+
   // Registrar el evento en el log del sistema
   logApp(
     `Bot conectado como ${client.user?.tag} en guild ${guild.name} (${guild.id}). ${channelInfo}`

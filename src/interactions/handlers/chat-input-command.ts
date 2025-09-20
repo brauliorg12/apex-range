@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, Client } from 'discord.js';
-import { logInteraction } from '../../utils/logger';
+import { logInteraction, logApp } from '../../utils/logger';
 
 /**
  * Maneja interacciones de comandos de chat input
@@ -25,20 +25,19 @@ export async function handleChatInputCommand(
 
   const command = commands.get(interaction.commandName);
   if (!command) {
-    console.warn(
+    await logApp(
       `[Advertencia] Comando desconocido: ${interaction.commandName}`
     );
     return;
   }
   try {
     await command.execute(interaction);
-    console.log(
+    await logApp(
       `[Interacción] Comando '${interaction.commandName}' ejecutado por ${interaction.user.tag}.`
     );
   } catch (error) {
-    console.error(
-      `[ERROR] Error al ejecutar el comando '${interaction.commandName}':`,
-      error
+    await logApp(
+      `[ERROR] Error al ejecutar el comando '${interaction.commandName}': ${error}`
     );
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({

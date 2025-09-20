@@ -10,7 +10,7 @@ import {
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
 import { writeApexStatusState } from '../utils/state-manager';
 import { clearApiCache } from '../utils/apex-api-cache';
-import { APEX_LOGO_EMOJI } from '../models/constants';
+import { APEX_LOGO_EMOJI, HELP_EMOGI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 
 /**
@@ -63,7 +63,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const moreInfoButton = new ButtonBuilder()
       .setCustomId('server_status_info')
       .setLabel('Ayuda')
-      .setEmoji('❓')
+      .setEmoji(HELP_EMOGI)
       .setStyle(ButtonStyle.Secondary);
 
     const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(

@@ -11,6 +11,7 @@ import { removePlayerRankDate } from '../utils/player-data-manager';
 import { removeCommonApexRoleIfNoRank } from '../utils/role-helper';
 import { readRolesState } from '../utils/state-manager';
 import { updateRankCardMessage } from './update-rank-card-message';
+import { logApp } from '../utils/logger';
 
 /**
  * Elimina todos los roles de rango de Apex del usuario.
@@ -22,7 +23,7 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
   const { member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
 
-  console.log(
+  await logApp(
     `[Interacción] ${interaction.user.tag} está intentando eliminar su rango.`
   );
 
@@ -52,7 +53,7 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
     // Eliminar la fecha de asignación
     await removePlayerRankDate(guild.id, member.id);
 
-    console.log(
+    await logApp(
       `[Interacción] Roles de rango eliminados para ${interaction.user.tag}.`
     );
 
@@ -84,7 +85,7 @@ export async function handleRemoveRank(interaction: ButtonInteraction) {
       }
     }
   } catch (error) {
-    console.error('Error al quitar el rol:', error);
+    await logApp(`Error al quitar el rol: ${error}`);
     const errorEmbed = new EmbedBuilder()
       .setColor('#e74c3c')
       .setTitle('❌ Error')

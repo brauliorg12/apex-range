@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import fetch from 'node-fetch';
+import { logApp } from '../utils/logger';
 
 const MOZA_API_KEY = process.env.MOZA_API_KEY;
 const MOZA_URL = process.env.MOZA_URL;
@@ -8,12 +9,12 @@ const MOZA_URL = process.env.MOZA_URL;
 /**
  * Obtiene el perfil de un jugador de Apex Legends usando la API de Mozambique.
  * @param playerUid UID del jugador (ejemplo: 2853374219)
- * @param platform Plataforma (por defecto: 'PC')
+ * @param platform Plataforma (PC, PS4, X1, SWITCH)
  * @returns Datos del perfil del jugador o null si hay error.
  */
 export async function getApexProfile(
   playerUid: string,
-  platform: string = 'PC'
+  platform: string
 ): Promise<any | null> {
   if (!MOZA_API_KEY) {
     throw new Error('MOZA_API_KEY no está configurada en el entorno.');
@@ -23,14 +24,14 @@ export async function getApexProfile(
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || (data && (data as any).Error)) {
-      console.log(`[API][getApexProfile] status: ERROR | url: ${url}`);
+      await logApp(`[API][getApexProfile] status: ERROR | url: ${url}`);
       return null;
     }
-    console.log(`[API][getApexProfile] status: OK | url: ${url}`);
+    await logApp(`[API][getApexProfile] status: OK | url: ${url}`);
     return data;
   } catch (error) {
-    console.log(`[API][getApexProfile] status: ERROR | url: ${url}`);
-    console.error('Error al consultar la API de Apex:', error);
+    await logApp(`[API][getApexProfile] status: ERROR | url: ${url}`);
+    await logApp(`Error al consultar la API de Apex: ${error}`);
     return null;
   }
 }
@@ -38,12 +39,12 @@ export async function getApexProfile(
 /**
  * Obtiene el perfil de un jugador de Apex Legends usando la API de Mozambique por nombre de usuario.
  * @param playerName Nombre de usuario del jugador (ejemplo: Burlon23)
- * @param platform Plataforma (por defecto: 'PC')
+ * @param platform Plataforma (PC, PS4, X1, SWITCH)
  * @returns Datos del perfil del jugador o null si hay error.
  */
 export async function getApexProfileByName(
   playerName: string,
-  platform: string = 'PC'
+  platform: string
 ): Promise<any | null> {
   if (!MOZA_API_KEY) {
     throw new Error('MOZA_API_KEY no está configurada en el entorno.');
@@ -55,14 +56,14 @@ export async function getApexProfileByName(
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || (data && (data as any).Error)) {
-      console.log(`[API][getApexProfileByName] status: ERROR | url: ${url}`);
+      await logApp(`[API][getApexProfileByName] status: ERROR | url: ${url}`);
       return null;
     }
-    console.log(`[API][getApexProfileByName] status: OK | url: ${url}`);
+    await logApp(`[API][getApexProfileByName] status: OK | url: ${url}`);
     return data;
   } catch (error) {
-    console.log(`[API][getApexProfileByName] status: ERROR | url: ${url}`);
-    console.error('Error al consultar la API de Apex:', error);
+    await logApp(`[API][getApexProfileByName] status: ERROR | url: ${url}`);
+    await logApp(`Error al consultar la API de Apex: ${error}`);
     return null;
   }
 }
@@ -80,14 +81,14 @@ export async function getMapRotation(): Promise<any | null> {
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || (data && (data as any).Error)) {
-      console.log(`[API][getMapRotation] status: ERROR | url: ${url}`);
+      await logApp(`[API][getMapRotation] status: ERROR | url: ${url}`);
       return null;
     }
-    console.log(`[API][getMapRotation] status: OK | url: ${url}`);
+    await logApp(`[API][getMapRotation] status: OK | url: ${url}`);
     return data;
   } catch (error) {
-    console.log(`[API][getMapRotation] status: ERROR | url: ${url}`);
-    console.error('Error al consultar la rotación de mapas:', error);
+    await logApp(`[API][getMapRotation] status: ERROR | url: ${url}`);
+    await logApp(`Error al consultar la rotación de mapas: ${error}`);
     return null;
   }
 }
@@ -105,14 +106,14 @@ export async function getPredatorRank(): Promise<any | null> {
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || (data && (data as any).Error)) {
-      console.log(`[API][getPredatorRank] status: ERROR | url: ${url}`);
+      await logApp(`[API][getPredatorRank] status: ERROR | url: ${url}`);
       return null;
     }
-    console.log(`[API][getPredatorRank] status: OK | url: ${url}`);
+    await logApp(`[API][getPredatorRank] status: OK | url: ${url}`);
     return data;
   } catch (error) {
-    console.log(`[API][getPredatorRank] status: ERROR | url: ${url}`);
-    console.error('Error al consultar el rank de Predator:', error);
+    await logApp(`[API][getPredatorRank] status: ERROR | url: ${url}`);
+    await logApp(`Error al consultar el rank de Predator: ${error}`);
     return null;
   }
 }
@@ -130,26 +131,24 @@ export async function getServerStatus(): Promise<any | null> {
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || (data && (data as any).Error)) {
-      console.log(`[API][getServerStatus] status: ERROR | url: ${url}`);
+      await logApp(`[API][getServerStatus] status: ERROR | url: ${url}`);
       return null;
     }
-    console.log(`[API][getServerStatus] status: OK | url: ${url}`);
+    await logApp(`[API][getServerStatus] status: OK | url: ${url}`);
     return data;
   } catch (error) {
-    console.log(`[API][getServerStatus] status: ERROR | url: ${url}`);
-    console.error('Error al consultar el estado de los servidores:', error);
+    await logApp(`[API][getServerStatus] status: ERROR | url: ${url}`);
+    await logApp(`Error al consultar el estado de los servidores: ${error}`);
     return null;
   }
 }
 
 /**
  * Obtiene el leaderboard de Apex Legends. (API con whitelist)
- * @param platform Plataforma (PC, PS4, X1)
+ * @param platform Plataforma (PC, PS4, X1, SWITCH)
  * @returns Datos del leaderboard o null si hay error.
  */
-export async function getLeaderboard(
-  platform: string = 'PC'
-): Promise<any | null> {
+export async function getLeaderboard(platform: string): Promise<any | null> {
   if (!MOZA_API_KEY) {
     throw new Error('MOZA_API_KEY no está configurada en el entorno.');
   }
@@ -158,9 +157,12 @@ export async function getLeaderboard(
     const res = await fetch(url);
     const data = await res.json();
     // LOG detallado para inspección de la respuesta del leaderboard
-    console.log(
-      '[ApexAPI][DEBUG] Respuesta completa de getLeaderboard:',
-      JSON.stringify(data, null, 2)
+    await logApp(
+      `[DEBUG] Respuesta completa de getLeaderboard: ${JSON.stringify(
+        data,
+        null,
+        2
+      )}`
     );
     // Verifica si la respuesta indica que necesitas estar en la whitelist
     if (
@@ -170,7 +172,7 @@ export async function getLeaderboard(
         (data as any).Error ===
           'Unauthorized. You must be whitelisted to use this API.')
     ) {
-      console.log(`[API][getLeaderboard] status: ERROR | url: ${url}`);
+      await logApp(`[API][getLeaderboard] status: ERROR | url: ${url}`);
       // Mensaje específico para frontend/bot
       return {
         error:
@@ -179,11 +181,11 @@ export async function getLeaderboard(
         notice: 'Data provided by Apex Legends Status',
       };
     }
-    console.log(`[API][getLeaderboard] status: OK | url: ${url}`);
+    await logApp(`[API][getLeaderboard] status: OK | url: ${url}`);
     return data;
   } catch (error) {
-    console.log(`[API][getLeaderboard] status: ERROR | url: ${url}`);
-    console.error('Error al consultar el leaderboard:', error);
+    await logApp(`[API][getLeaderboard] status: ERROR | url: ${url}`);
+    await logApp(`Error al consultar el leaderboard: ${error}`);
     return null;
   }
 }

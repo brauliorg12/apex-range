@@ -51,7 +51,7 @@ export async function cleanupOldServerFiles(client: Client): Promise<void> {
     );
 
     if (obsoleteGuildIds.length > 0) {
-      console.log(
+      logApp(
         `[Cleanup] Encontrados ${obsoleteGuildIds.length} archivos de servidores obsoletos`
       );
 
@@ -68,7 +68,7 @@ export async function cleanupOldServerFiles(client: Client): Promise<void> {
         logApp(`Archivo limpiado para servidor obsoleto: ${guildId}`);
       }
       
-      console.log(`[Cleanup] ${obsoleteGuildIds.length} archivos limpiados`);
+      logApp(`[Cleanup] ${obsoleteGuildIds.length} archivos limpiados`);
       */
     }
   } catch (error) {

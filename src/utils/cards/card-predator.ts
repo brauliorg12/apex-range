@@ -1,4 +1,10 @@
 import { EmbedBuilder } from 'discord.js';
+import {
+  NINTENDO_SWITCH_EMOGI,
+  PC_ONLY_EMOGI,
+  PLAYSTATION_EMOGI,
+  XBOX_EMOGI,
+} from '../../models/constants';
 
 /**
  * Formatea la antigüedad de los datos en cache en minutos.
@@ -47,22 +53,22 @@ export function buildPredatorEmbed(
       hasData
         ? [
             {
-              name: '🖥️ PC',
+              name: PC_ONLY_EMOGI + ' PC',
               value: `\`\`\`${predatorRank.RP.PC.val} RP\`\`\``,
               inline: true,
             },
             {
-              name: '🎮 PlayStation',
+              name: PLAYSTATION_EMOGI + ' PlayStation',
               value: `\`\`\`${predatorRank.RP.PS4.val} RP\`\`\``,
               inline: true,
             },
             {
-              name: '🎮 Xbox',
+              name: XBOX_EMOGI + ' Xbox',
               value: `\`\`\`${predatorRank.RP.X1.val} RP\`\`\``,
               inline: true,
             },
             {
-              name: '🎮 Switch',
+              name: NINTENDO_SWITCH_EMOGI + ' Switch',
               value: `\`\`\`${predatorRank.RP.SWITCH.val} RP\`\`\``,
               inline: true,
             },

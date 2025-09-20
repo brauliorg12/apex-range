@@ -13,6 +13,13 @@ import {
 import { renderRankCardCanvas } from '../utils/rank-card-canvas';
 import { buildOnlineEmbedForRank } from '../utils/build-online-embed-rank';
 import { createSeeMoreButtonRow } from '../utils/online-embed-helper';
+import { getServerLogger } from '../utils/server-logger';
+
+// Cache global para buffers de cards de rangos
+const rankCardCache = new Map<string, Buffer>();
+
+// Cache global para embeds de rangos (simple, sin TTL por ahora)
+const rankEmbedCache = new Map<string, any>();
 
 /**
  * Actualiza solo el mensaje del card de un rango específico en el canal.
@@ -27,6 +34,10 @@ export async function updateRankCardMessage(
   rankShortId: string,
   messageId: string
 ) {
+  const serverLogger = getServerLogger(guild.id, guild.name);
+  const startTime = performance.now();
+  serverLogger.debug(`Iniciando updateRankCardMessage para ${rankShortId}`);
+
   const rank = APEX_RANKS.find((r) => r.shortId === rankShortId);
   if (!rank) return;
 
@@ -38,6 +49,11 @@ export async function updateRankCardMessage(
   // Obtén todos los jugadores del rango usando playerData
   const { getPlayerData } = await import('../utils/player-data-manager');
   const playerData = await getPlayerData(guild);
+  serverLogger.debug(
+    `PlayerData obtenido para ${rankShortId}: ${Math.round(
+      performance.now() - startTime
+    )}ms`
+  );
 
   const allMembers = getAllMembersByRole(guild, role, playerData);
   const sortedMembers = sortMembersByPriority(allMembers, playerData);
@@ -57,11 +73,18 @@ export async function updateRankCardMessage(
   let cardUrl = undefined;
   let files: AttachmentBuilder[] = [];
   if (emojiUrl) {
-    const cardBuffer = await renderRankCardCanvas(
-      emojiUrl,
-      rank.color,
-      rank.label
-    );
+    let cardBuffer = rankCardCache.get(rankShortId);
+    if (!cardBuffer) {
+      cardBuffer = await renderRankCardCanvas(emojiUrl, rank.color, rank.label);
+      rankCardCache.set(rankShortId, cardBuffer);
+      serverLogger.debug(
+        `Imagen generada para ${rankShortId}: ${Math.round(
+          performance.now() - startTime
+        )}ms`
+      );
+    } else {
+      serverLogger.debug(`Imagen cacheada para ${rankShortId}`);
+    }
     const cardName = `rankcard_${rank.shortId}.png`;
     const cardAttachment = new AttachmentBuilder(cardBuffer, {
       name: cardName,
@@ -81,6 +104,11 @@ export async function updateRankCardMessage(
     false, // showNumbers (solo true en efímeros)
     allMembers as GuildMember[] // <-- aquí pasas todos los miembros del rango
   );
+  serverLogger.debug(
+    `Embed construido para ${rankShortId}: ${Math.round(
+      performance.now() - startTime
+    )}ms`
+  );
 
   // Edita el mensaje del card
   try {
@@ -95,15 +123,20 @@ export async function updateRankCardMessage(
         guild.client
       ),
     });
+    serverLogger.debug(
+      `Mensaje editado para ${rankShortId}: ${Math.round(
+        performance.now() - startTime
+      )}ms`
+    );
   } catch (err: any) {
     if (err.code === 10008) {
-      console.warn(
-        `[updateRankCardMessage] El mensaje del card de rango ${rankShortId} no existe. Ejecuta el comando de setup para restaurar el panel.`
+      serverLogger.warn(
+        `El mensaje del card de rango ${rankShortId} no existe. Ejecuta el comando de setup para restaurar el panel.`
       );
       return; // No recrea el mensaje, solo advierte
     } else {
-      console.error(
-        `[updateRankCardMessage] Error inesperado al editar el mensaje del card:`,
+      serverLogger.error(
+        `Error inesperado al editar el mensaje del card:`,
         err
       );
     }

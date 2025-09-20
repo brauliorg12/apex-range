@@ -1,7 +1,7 @@
 import { AttachmentBuilder, EmbedBuilder, Guild, Role } from 'discord.js';
 import { loadImage } from '@napi-rs/canvas';
 import { getPlayerData } from './player-data-manager';
-import { COMMON_AURA_SIZE } from '../models/constants';
+import { COMMON_AURA_SIZE, NEW_EMOGI } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { performance } from 'node:perf_hooks';
 import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
@@ -234,7 +234,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
   // Construye el embed con la descripción de los usuarios
   const embed = new EmbedBuilder()
     .setColor('#2ecc71')
-    .setTitle('🆕 Últimos 5 registrados')
+    .setTitle(`${NEW_EMOGI} Últimos 5 registrados`)
     .setDescription(descriptions.join('\n'))
     .setImage('attachment://recent-avatars.png');
 

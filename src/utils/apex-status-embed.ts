@@ -11,6 +11,7 @@ import { buildRankedEmbed } from './cards/card-ranked';
 import { buildLtmEmbed } from './cards/card-ltm';
 import { buildPredatorEmbed } from './cards/card-predator';
 import { buildServerStatusEmbed } from './cards/card-server-status';
+import { logApp } from './logger';
 
 /**
  * Obtiene y construye los embeds de estado de Apex Legends para mostrar en Discord.
@@ -60,7 +61,7 @@ export async function createApexStatusEmbeds(
         await writeApiCache(key, data, guildId, channelId);
         cacheInfo[key] = false;
         cacheTimestamps[key] = Date.now();
-        console.log(`[ApexStatus] ${key}: Datos actualizados correctamente.`);
+        await logApp(`${key}: Datos actualizados correctamente.`);
         return data;
       } else {
         throw new Error(`[ApexStatus] ${key}: Respuesta inválida de la API`);
@@ -70,15 +71,13 @@ export async function createApexStatusEmbeds(
       if (cached) {
         cacheInfo[key] = true;
         cacheTimestamps[key] = cached.ts;
-        console.warn(
-          `[ApexStatus] ${key}: Usando datos en cache por error de API.`
-        );
+        await logApp(`${key}: Usando datos en cache por error de API.`);
         return cached.data;
       }
       cacheInfo[key] = false;
       cacheTimestamps[key] = undefined;
-      console.error(
-        `[ApexStatus] ${key}: No se pudo obtener datos ni de la API ni de cache.`
+      await logApp(
+        `${key}: No se pudo obtener datos ni de la API ni de cache.`
       );
       return null;
     }
@@ -135,7 +134,7 @@ export async function createApexStatusEmbeds(
   const serverStatus = resultMap.serverStatus;
 
   // Logging resumen de ciclo
-  console.log(`[ApexStatus] Actualización completada.`);
+  await logApp(`Actualización completada.`);
 
   // Construcción de embeds usando helpers separados
   const br = mapRotation?.battle_royale;

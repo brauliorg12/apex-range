@@ -4,6 +4,7 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import { REQUIRED_PERMISSIONS } from '../models/required-permissions';
+import { logApp } from '../utils/logger';
 
 /**
  * Verifica si el bot tiene todos los permisos necesarios en un canal específico
@@ -15,10 +16,10 @@ export async function checkBotPermissions(
   interaction: ChatInputCommandInteraction,
   channel: TextChannel
 ): Promise<boolean> {
-  console.log(
-    `[Permissions] 🔍 Verificando permisos en servidor ${
-      interaction.guild!.name
-    } (${interaction.guild!.id}) y canal ${channel.name} (${channel.id}):`
+  await logApp(
+    `🔍 Verificando permisos en servidor ${interaction.guild!.name} (${
+      interaction.guild!.id
+    }) y canal ${channel.name} (${channel.id})`
   );
 
   const botMember = await interaction.guild!.members.fetch(
@@ -40,9 +41,7 @@ export async function checkBotPermissions(
     }
 
     const status = hasPerm ? '✅' : '❌';
-    console.log(
-      `[Permissions] ${status} ${perm.description} (${perm.scope}): ${hasPerm}`
-    );
+    await logApp(`${status} ${perm.description} (${perm.scope}): ${hasPerm}`);
     permissionStatus.push(`${status} ${perm.description}`);
 
     if (!hasPerm) {
@@ -53,13 +52,10 @@ export async function checkBotPermissions(
   }
 
   // Mostrar resumen de permisos en logs
-  console.log(`[Permissions] 📋 Resumen de permisos:`);
-  console.log(`[Permissions] ${permissionStatus.join(' | ')}`);
+  await logApp(`📋 Resumen de permisos: ${permissionStatus.join(' | ')}`);
 
   if (missingPermissions.length > 0) {
-    console.log(
-      `[Permissions] ❌ Permisos faltantes: ${missingPermissions.join(', ')}`
-    );
+    await logApp(`❌ Permisos faltantes: ${missingPermissions.join(', ')}`);
 
     // Verificar si hay overrides específicos del canal
     const channelOverrides = channel.permissionOverwrites.cache;
@@ -105,6 +101,6 @@ export async function checkBotPermissions(
     return false;
   }
 
-  console.log(`[Permissions] ✅ Todos los permisos verificados correctamente`);
+  await logApp(`✅ Todos los permisos verificados correctamente`);
   return true;
 }

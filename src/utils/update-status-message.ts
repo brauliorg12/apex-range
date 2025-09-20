@@ -1,27 +1,60 @@
 import { Guild, TextChannel, EmbedBuilder } from 'discord.js';
-import {
-  readApexStatusState,
-  readRolesState,
-  writeApexStatusState,
-} from './state-manager';
+import { readRolesState } from './state-manager';
 import { getPlayerStats } from './player-stats';
 import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
-import { APEX_RANKS, MAX_ATTACHMENTS_PER_MESSAGE } from '../models/constants';
+import {
+  ALL_PLAYERS_EMOGI,
+  APEX_RANKS,
+  MAX_ATTACHMENTS_PER_MESSAGE,
+  STATS_LOGO_EMOGI,
+} from '../models/constants';
 import { updateRankCardMessage } from '../helpers/update-rank-card-message';
-import { createApexStatusEmbeds } from './apex-status-embed';
-import { notifyApexUpdateError, notifySetupRolesError } from './error-notifier';
+import { notifySetupRolesError } from './error-notifier';
 import { getServerLogger } from './server-logger';
 
-async function fetchChannel(guild: Guild, channelId: string) {
+// Map para encadenar actualizaciones secuenciales por guild
+const updateLocks = new Map<string, Promise<void>>();
+
+/**
+ * Obtiene un canal de texto específico de un servidor de Discord.
+ * @param guild El objeto Guild de Discord.js que representa el servidor.
+ * @param channelId El ID del canal a buscar.
+ * @returns Una promesa que resuelve a un TextChannel.
+ */
+export async function fetchChannel(guild: Guild, channelId: string) {
   return (await guild.channels.fetch(channelId)) as TextChannel;
 }
 
+/**
+ * Actualiza los mensajes de selección de roles, estadísticas de jugadores y cards de rangos en el canal configurado.
+ * Esta función lee el estado de roles del guild, obtiene estadísticas de jugadores, y actualiza los mensajes correspondientes.
+ * Maneja errores como mensajes no encontrados y notifica al usuario si es necesario.
+ * @param guild El objeto Guild de Discord para el servidor donde se actualizan los mensajes.
+ * @returns Una promesa que se resuelve cuando todas las actualizaciones se completan.
+ */
 export async function updateRoleCountMessage(guild: Guild) {
+  const guildId = guild.id;
+
+  // Obtener la promesa actual o inicializar con resolved
+  const currentPromise = updateLocks.get(guildId) || Promise.resolve();
+
+  // Encadenar la nueva actualización
+  const newPromise = currentPromise.then(() => performUpdate(guild));
+
+  // Actualizar el lock
+  updateLocks.set(guildId, newPromise);
+
+  // Esperar a que se complete
+  await newPromise;
+}
+
+async function performUpdate(guild: Guild) {
   const startTime = performance.now();
   const serverLogger = getServerLogger(guild.id, guild.name);
   serverLogger.info('Ejecutando actualización de mensajes de roles');
   try {
+    serverLogger.debug('Leyendo estado de roles...');
     const rolesState = await readRolesState(guild.id);
     if (
       !rolesState?.channelId ||
@@ -31,15 +64,18 @@ export async function updateRoleCountMessage(guild: Guild) {
       return;
     }
 
+    serverLogger.debug('Obteniendo canal...');
     const channel = await fetchChannel(guild, rolesState.channelId);
     if (!channel) return;
 
+    serverLogger.debug('Obteniendo estadísticas de jugadores...');
     const stats = await getPlayerStats(guild);
 
     let roleSelectionFound = true;
     let statsMessageFound = true;
 
     // Actualizar mensaje de selección de roles
+    serverLogger.debug('Actualizando mensaje de selección de roles...');
     try {
       const roleSelectionMessage = await channel.messages.fetch(
         rolesState.roleSelectionMessageId
@@ -56,6 +92,7 @@ export async function updateRoleCountMessage(guild: Guild) {
     }
 
     // Actualizar mensaje de estadísticas
+    serverLogger.debug('Actualizando mensaje de estadísticas...');
     try {
       const statsMessage = await channel.messages.fetch(
         rolesState.roleCountMessageId
@@ -63,18 +100,26 @@ export async function updateRoleCountMessage(guild: Guild) {
 
       const fields = [
         { name: 'En Línea', value: `🟢 - **${stats.online}**`, inline: true },
-        { name: 'Registrados', value: `👥 - **${stats.total}**`, inline: true },
+        {
+          name: 'Registrados',
+          value: `${ALL_PLAYERS_EMOGI} - **${stats.total}**`,
+          inline: true,
+        },
       ];
 
       const embed = new EmbedBuilder()
         .setColor('#bdc3c7')
-        .setTitle('Estadísticas de Jugadores')
+        .setTitle(`${STATS_LOGO_EMOGI} Estadísticas de Jugadores`)
         .setFields(fields);
 
+      serverLogger.debug('Construyendo card de avatares recientes...');
       const recentCard = await buildRecentAvatarsCard(guild);
 
       // Solo el resumen y el card de avatares, NO el header ni los cards por rango
-      const embedsToSend = [embed, ...(recentCard ? [recentCard.embed] : [])];
+      const embedsToSend = [
+        embed,
+        ...(recentCard ? [recentCard.embed] : []),
+      ].filter(Boolean);
       const filesToSend = [...(recentCard ? recentCard.files : [])].slice(
         0,
         MAX_ATTACHMENTS_PER_MESSAGE
@@ -105,12 +150,12 @@ export async function updateRoleCountMessage(guild: Guild) {
     }
 
     // --- Actualizar los cards por rango ---
+    serverLogger.debug('Actualizando cards de rangos...');
     if (rolesState && rolesState.channelId) {
       for (const rank of APEX_RANKS) {
         const msgId = rolesState.rankCardMessageIds?.[rank.shortId];
         if (msgId) {
           try {
-            // Debes tener una función updateRankCardMessage(guild, channel, rankId, msgId)
             await updateRankCardMessage(guild, channel, rank.shortId, msgId);
           } catch (err: any) {
             if (err.code === 10008) {
@@ -138,69 +183,6 @@ export async function updateRoleCountMessage(guild: Guild) {
       'Error al actualizar el mensaje de conteo de roles:',
       error
     );
+    throw error; // Re-throw para que el caller lo maneje si es necesario
   }
-}
-
-export async function updateApexInfoMessage(guild: Guild) {
-  const startTime = performance.now();
-  const serverLogger = getServerLogger(guild.id, guild.name);
-
-  serverLogger.info('Iniciando actualización del mensaje de Apex');
-  try {
-    const apexStatusState = await readApexStatusState(guild.id);
-    serverLogger.debug('Estado de Apex leído', apexStatusState);
-    if (!apexStatusState?.channelId || !apexStatusState.apexInfoMessageId) {
-      serverLogger.info(
-        'No hay estado válido para actualizar Apex en este servidor'
-      );
-      return;
-    }
-
-    const channel = await fetchChannel(guild, apexStatusState.channelId);
-    if (!channel) {
-      serverLogger.warn(`Canal no encontrado: ${apexStatusState.channelId}`);
-      return;
-    }
-
-    const embeds = await createApexStatusEmbeds(
-      apexStatusState.guildId,
-      apexStatusState.channelId
-    );
-    serverLogger.debug(`Embeds de Apex creados: ${embeds.length}`);
-
-    try {
-      await channel.messages.edit(apexStatusState.apexInfoMessageId, {
-        embeds,
-      });
-      serverLogger.info('Mensaje de Apex editado exitosamente');
-    } catch (error: any) {
-      serverLogger.error('Error editando mensaje de Apex', error.message);
-      if (error.code === 10008) {
-        serverLogger.warn('Mensaje de Apex no encontrado, limpiando estado');
-        const currentState = await readApexStatusState(guild.id);
-        if (currentState) {
-          await writeApexStatusState({
-            ...currentState,
-            apexInfoMessageId: undefined,
-            guildId: guild.id,
-          });
-        }
-        await notifyApexUpdateError(guild, channel, 'message_not_found');
-      } else if (error.code === 50013) {
-        // Missing Permissions
-        serverLogger.warn('Falta de permisos para editar el mensaje de Apex');
-        await notifyApexUpdateError(guild, channel, 'missing_permissions');
-      } else {
-        serverLogger.error('Error desconocido al actualizar Apex', error);
-        await notifyApexUpdateError(guild, channel, 'unknown', error.message);
-      }
-    }
-  } catch (error) {
-    serverLogger.error('Error general al actualizar el mensaje de Apex', error);
-  }
-  const executionTime = Math.round(performance.now() - startTime);
-  serverLogger.info(
-    'Actualización del mensaje de Apex completada',
-    executionTime
-  );
 }

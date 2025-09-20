@@ -141,16 +141,16 @@ export async function initBot(client: Client): Promise<void> {
     try {
       // 1. Inicializar guilds existentes
       await initializeExistingGuilds(readyClient);
-      
+
       // 2. Configurar eventos globales
       setupGuildEvents(readyClient);
-      
+
       // 3. Configurar handlers de nuevos guilds
       setupNewGuildHandler(readyClient);
-      
+
       // 4. Configurar limpieza de guilds
       setupGuildDeleteHandler(readyClient);
-      
+
       logApp('Bot inicializado completamente y listo para operar.');
     } catch (error) {
       logApp(`ERROR durante la inicialización del bot: ${error}`);
@@ -299,8 +299,11 @@ async function checkDuplicateInstance(): Promise<boolean> {
     try {
       process.kill(pid, 0); // Signal 0 solo verifica existencia
       const age = Date.now() - timestamp;
-      if (age < 300000) { // 5 minutos
-        console.error(`[ERROR] Ya hay una instancia del bot corriendo (PID: ${pid}). Saliendo...`);
+      if (age < 300000) {
+        // 5 minutos
+        console.error(
+          `[ERROR] Ya hay una instancia del bot corriendo (PID: ${pid}). Saliendo...`
+        );
         return true;
       }
     } catch {
@@ -431,12 +434,12 @@ WantedBy=multi-user.target
 
 ### Métricas de Rendimiento
 
-| Métrica | Valor Típico | Umbral de Alerta |
-|---------|-------------|------------------|
-| Tiempo de Inicio | < 30s | > 60s |
-| Memoria al Inicio | < 100MB | > 200MB |
-| CPU al Inicio | < 20% | > 50% |
-| Tasa de Éxito de APIs | > 95% | < 90% |
+| Métrica               | Valor Típico | Umbral de Alerta |
+| --------------------- | ------------ | ---------------- |
+| Tiempo de Inicio      | < 30s        | > 60s            |
+| Memoria al Inicio     | < 100MB      | > 200MB          |
+| CPU al Inicio         | < 20%        | > 50%            |
+| Tasa de Éxito de APIs | > 95%        | < 90%            |
 
 Este sistema asegura que el bot sea altamente confiable en entornos de producción, manejando reinicios de manera transparente y manteniendo la funcionalidad continua.
 
@@ -726,8 +729,156 @@ Ejemplo de visualización:
 - **Archivos de datos separados por servidor**.
 - **Health server integrado con monitoreo avanzado**.
 - **Presencia global con estadísticas combinadas de todos los servidores**.
+- **Soporte completo para múltiples plataformas de Apex Legends** (PC, PlayStation, Xbox, Nintendo Switch).
+- **Gestión inteligente de plataformas** con asignación automática de roles.
+- **Consultas precisas de perfiles** basadas en la plataforma seleccionada.
+- **Integración completa con APIs oficiales** de Mozambique para datos precisos por plataforma.
 
 ---
+
+## 🎮 **Soporte Completo para Múltiples Plataformas de Apex Legends**
+
+El bot ofrece un **soporte integral y profesional** para todas las plataformas disponibles en Apex Legends, asegurando una experiencia unificada y precisa para todos los jugadores independientemente de su plataforma de juego.
+
+### Plataformas Soportadas
+
+| Plataforma          | Icono | Rol Automático    | API Name | Disponibilidad |
+| ------------------- | ----- | ----------------- | -------- | -------------- |
+| **PC**              | 🖥️    | `PC`              | `PC`     | ✅ Completa    |
+| **PlayStation**     | 🎮    | `PlayStation`     | `PS4`    | ✅ Completa    |
+| **Xbox**            | 🎯    | `Xbox`            | `X1`     | ✅ Completa    |
+| **Nintendo Switch** | 🔴    | `Nintendo Switch` | `SWITCH` | ✅ Completa    |
+
+### Funcionalidades por Plataforma
+
+#### Gestión de Plataformas del Usuario
+
+- **Selección Interactiva**: Botones dedicados para cambiar plataforma con interfaz intuitiva
+- **Asignación Automática de Roles**: El bot crea y asigna roles de plataforma automáticamente
+- **Validación Inteligente**: Verificación de permisos y existencia de roles antes de asignar
+- **Persistencia de Datos**: La plataforma seleccionada se guarda permanentemente por usuario
+
+#### Consultas de Perfiles Precisos
+
+- **API Mozambique Integrada**: Consultas directas a la API oficial con soporte completo por plataforma
+- **Datos Específicos**: Estadísticas, rangos y perfiles precisos según la plataforma del jugador
+- **Cache Inteligente**: Optimización de consultas con cache por plataforma para mejor rendimiento
+- **Fallback Seguro**: Sistema de respaldo cuando la API no está disponible
+
+#### Estadísticas y Rankings
+
+- **Separación por Plataforma**: Rankings y estadísticas diferenciados cuando es relevante
+- **RP Predator por Plataforma**: Información específica del RP necesario según plataforma
+- **Estado de Servidores**: Monitoreo individual del estado de servidores por plataforma
+- **Compatibilidad Crossplay**: Soporte completo para características crossplay
+
+### Experiencia de Usuario Mejorada
+
+#### Interfaz Unificada
+
+- **Botones Consistentes**: Diseño uniforme para selección de plataforma en todos los menús
+- **Feedback Visual**: Indicadores claros de plataforma actual y cambios realizados
+- **Mensajes Informativos**: Confirmaciones detalladas de cambios de plataforma
+- **Ayuda Integrada**: Información completa sobre plataformas en el menú de ayuda
+
+#### Automatización Inteligente
+
+- **Detección Automática**: El bot detecta plataformas faltantes y las crea automáticamente
+- **Roles Organizados**: Sistema jerárquico de roles con plataformas claramente diferenciadas
+- **Sincronización**: Actualización automática de roles cuando cambian las plataformas
+- **Recuperación**: Restauración automática de configuraciones de plataforma al reiniciar
+
+### Beneficios Técnicos
+
+#### Rendimiento Optimizado
+
+- **Consultas Paralelas**: Múltiples plataformas procesadas simultáneamente cuando es posible
+- **Cache Multi-Nivel**: Cache específico por plataforma para consultas frecuentes
+- **Rate Limiting Inteligente**: Respeto de límites de API con distribución por plataforma
+- **Compresión de Datos**: Optimización de almacenamiento de datos por plataforma
+
+#### Escalabilidad
+
+- **Arquitectura Modular**: Soporte de plataformas implementado de manera extensible
+- **Configuración Dinámica**: Fácil adición de nuevas plataformas en el futuro
+- **Base de Datos Eficiente**: Almacenamiento optimizado de datos por plataforma
+- **Monitoreo Avanzado**: Métricas detalladas de uso por plataforma
+
+### Configuración y Setup
+
+#### Roles de Plataforma Automáticos
+
+El bot crea automáticamente los siguientes roles de plataforma durante `/setup-roles`:
+
+```
+PC
+PlayStation
+Xbox
+Nintendo Switch
+```
+
+#### Permisos Requeridos
+
+- **Gestionar Roles**: Para crear y asignar roles de plataforma automáticamente
+- **Verificación de Jerarquía**: El bot valida la jerarquía de roles para asignación correcta
+- **Sincronización**: Actualización automática de roles cuando cambian las plataformas
+
+#### Comandos Relacionados
+
+- **`/setup-roles`**: Configura roles de plataforma junto con roles de rango
+- **Botón "Gestionar Plataforma"**: Acceso directo desde el panel principal
+- **Menú Contextual**: Opción para cambiar plataforma desde cualquier usuario
+- **Comando `/apex-status`**: Muestra información específica por plataforma
+
+### Casos de Uso Avanzados
+
+#### Comunidades Multi-Plataforma
+
+- **Separación por Plataforma**: Rankings y estadísticas diferenciados cuando es necesario
+- **Eventos Específicos**: Organización de eventos por plataforma
+- **Comunicación Segmentada**: Mensajes dirigidos a jugadores de plataformas específicas
+- **Análisis Comparativo**: Comparaciones de rendimiento entre plataformas
+
+#### Integración con APIs
+
+- **Mozambique API**: Consultas precisas con soporte nativo para todas las plataformas
+- **Cache Inteligente**: Optimización específica por plataforma para mejor rendimiento
+- **Fallback Seguro**: Sistema de respaldo cuando APIs específicas fallan
+- **Actualizaciones Automáticas**: Sincronización automática de datos por plataforma
+
+### Solución de Problemas
+
+#### Problemas Comunes
+
+- **"Plataforma no encontrada"**: Verificar que el usuario haya seleccionado una plataforma válida
+- **"Rol no asignado"**: Comprobar permisos de "Gestionar Roles" del bot
+- **"Datos no actualizan"**: Verificar conectividad con API Mozambique
+- **"Plataforma duplicada"**: El bot previene asignaciones múltiples automáticamente
+
+#### Diagnóstico
+
+- **Logs Detallados**: Información específica sobre operaciones de plataforma
+- **Health Checks**: Verificación del estado de APIs por plataforma
+- **Métricas de Rendimiento**: Estadísticas de consultas exitosas por plataforma
+- **Debug Mode**: Información adicional para troubleshooting avanzado
+
+### Mejores Prácticas
+
+#### Para Administradores
+
+- **Configuración Inicial**: Ejecutar `/setup-roles` para crear roles de plataforma
+- **Monitoreo Regular**: Verificar que los roles de plataforma se mantengan actualizados
+- **Comunicación Clara**: Informar a los usuarios sobre la importancia de seleccionar plataforma
+- **Soporte Activo**: Ayudar a usuarios con problemas de selección de plataforma
+
+#### Para Usuarios
+
+- **Selección Inicial**: Elegir plataforma al unirse por primera vez
+- **Actualización**: Cambiar plataforma cuando sea necesario desde el menú
+- **Verificación**: Confirmar que el rol de plataforma se asignó correctamente
+- **Feedback**: Reportar cualquier problema con la selección de plataforma
+
+Este sistema de soporte multi-plataforma asegura que todos los jugadores de Apex Legends, independientemente de su plataforma de juego, tengan una experiencia completa, precisa y profesional con el bot.
 
 ## ⚡ **Optimizaciones de Rendimiento y Sistema de Cola Global**
 
@@ -752,17 +903,18 @@ class GuildUpdateQueue {
 
 #### Tipos de Prioridad
 
-| Prioridad | Valor | Uso | Ejemplos |
-|-----------|-------|-----|----------|
-| Alta | 2 | Eventos críticos | Nuevos miembros, cambios de presencia |
-| Normal | 1 | Actualizaciones regulares | Estadísticas de roles, mensajes de Apex |
-| Baja | 0 | Tareas opcionales | Limpieza de datos antiguos |
+| Prioridad | Valor | Uso                       | Ejemplos                                |
+| --------- | ----- | ------------------------- | --------------------------------------- |
+| Alta      | 2     | Eventos críticos          | Nuevos miembros, cambios de presencia   |
+| Normal    | 1     | Actualizaciones regulares | Estadísticas de roles, mensajes de Apex |
+| Baja      | 0     | Tareas opcionales         | Limpieza de datos antiguos              |
 
 ### Scheduler Global Optimizado (`global-scheduler.ts`)
 
 #### Reemplazo de Múltiples Timers
 
 **Antes**: Un timer por servidor por tarea
+
 ```typescript
 // Problema: 3 servidores × 3 tareas = 9 timers activos
 setInterval(() => updateRoles(guild), 60000);
@@ -771,6 +923,7 @@ setInterval(() => updateImages(guild), 600000);
 ```
 
 **Después**: Un scheduler global centralizado
+
 ```typescript
 // Solución: 1 scheduler gestionando todas las tareas
 class GlobalScheduler {
@@ -791,11 +944,11 @@ class GlobalScheduler {
 
 #### Comparación de Rendimiento
 
-| Tarea | Antes | Después | Mejora | Razón |
-|-------|-------|---------|--------|-------|
-| **Roles y Presencia** | 60 segundos | 2 minutos | -67% carga | Suficiente frecuencia para UX |
-| **Panel Apex** | 5 minutos | 5 minutos | Sin cambio | Depende de API externa |
-| **Imágenes** | 5 minutos | 10 minutos | -50% carga | Alto costo computacional |
+| Tarea                 | Antes       | Después    | Mejora     | Razón                         |
+| --------------------- | ----------- | ---------- | ---------- | ----------------------------- |
+| **Roles y Presencia** | 60 segundos | 2 minutos  | -67% carga | Suficiente frecuencia para UX |
+| **Panel Apex**        | 5 minutos   | 5 minutos  | Sin cambio | Depende de API externa        |
+| **Imágenes**          | 5 minutos   | 10 minutos | -50% carga | Alto costo computacional      |
 
 #### Lógica de Optimización
 
@@ -869,10 +1022,10 @@ globalScheduler.registerGuildTask(
 ```typescript
 // Consulta ordenada para respetar rate limits
 const endpoints = [
-  'mapRotation',    // Crítico - primero
-  'serverStatus',   // Crítico - segundo
-  null,             // Espera 1 segundo
-  'predatorRank'    // Secundario - último
+  'mapRotation', // Crítico - primero
+  'serverStatus', // Crítico - segundo
+  null, // Espera 1 segundo
+  'predatorRank', // Secundario - último
 ];
 ```
 
@@ -880,12 +1033,12 @@ const endpoints = [
 
 #### Límites de Escalabilidad
 
-| Aspecto | Límite Actual | Recomendado | Razón |
-|---------|---------------|-------------|-------|
-| Servidores | Sin límite teórico | 100-500 | Recursos del VPS |
-| Usuarios Totales | Sin límite | 100K+ | Arquitectura distribuida |
-| Tareas Concurrentes | 3 servidores | 5-10 | Balance CPU/memoria |
-| Cache Size | 100MB | 500MB | Memoria disponible |
+| Aspecto             | Límite Actual      | Recomendado | Razón                    |
+| ------------------- | ------------------ | ----------- | ------------------------ |
+| Servidores          | Sin límite teórico | 100-500     | Recursos del VPS         |
+| Usuarios Totales    | Sin límite         | 100K+       | Arquitectura distribuida |
+| Tareas Concurrentes | 3 servidores       | 5-10        | Balance CPU/memoria      |
+| Cache Size          | 100MB              | 500MB       | Memoria disponible       |
 
 #### Optimizaciones por Escala
 
@@ -913,7 +1066,7 @@ async function safeApiCall(endpoint: string, retries = 3): Promise<any> {
       if (result.ok) return result.json();
     } catch (error) {
       if (i === retries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
     }
   }
 }
@@ -928,8 +1081,8 @@ async function safeApiCall(endpoint: string, retries = 3): Promise<any> {
 const config = {
   maxConcurrency: 5,
   checkInterval: 3000, // 3 segundos
-  cacheTTL: 1800000,  // 30 minutos
-  maxRetries: 5
+  cacheTTL: 1800000, // 30 minutos
+  maxRetries: 5,
 };
 ```
 
@@ -944,15 +1097,15 @@ const config = {
 
 #### Métricas de Mejora
 
-| Métrica | Antes | Después | Mejora |
-|---------|-------|---------|--------|
-| **Timers Activos** | 3 por servidor | 1 global | -66% reducción |
-| **Frecuencia Roles** | 60s | 120s | -67% menos carga |
-| **Frecuencia Imágenes** | 300s | 600s | -50% menos carga |
-| **Conflictos** | Posibles | Eliminados | 100% estable |
-| **Duplicados** | Posibles | Eliminados | 100% eficiente |
-| **Tiempo de Inicio** | Variable | < 30s | Predecible |
-| **Memoria** | Alta | Optimizada | -30% promedio |
+| Métrica                 | Antes          | Después    | Mejora           |
+| ----------------------- | -------------- | ---------- | ---------------- |
+| **Timers Activos**      | 3 por servidor | 1 global   | -66% reducción   |
+| **Frecuencia Roles**    | 60s            | 120s       | -67% menos carga |
+| **Frecuencia Imágenes** | 300s           | 600s       | -50% menos carga |
+| **Conflictos**          | Posibles       | Eliminados | 100% estable     |
+| **Duplicados**          | Posibles       | Eliminados | 100% eficiente   |
+| **Tiempo de Inicio**    | Variable       | < 30s      | Predecible       |
+| **Memoria**             | Alta           | Optimizada | -30% promedio    |
 
 Este sistema asegura que el bot pueda escalar eficientemente a cientos de servidores mientras mantiene un rendimiento óptimo y una experiencia de usuario fluida.
 
@@ -1036,19 +1189,19 @@ El bot está diseñado para mantener la información actualizada constantemente 
 #### Eventos de Discord Monitoreados
 
 - **GuildMemberAdd**: Nuevo miembro se une → Actualizar estadísticas
-- **GuildMemberRemove**: Miembro abandona → Actualizar estadísticas  
+- **GuildMemberRemove**: Miembro abandona → Actualizar estadísticas
 - **PresenceUpdate**: Cambio de estado online → Actualizar presencia
 - **GuildCreate**: Bot añadido a servidor → Inicialización automática
 - **GuildDelete**: Bot removido → Limpieza de datos
 
 #### Actualizaciones Automáticas por Tipo
 
-| Tipo | Frecuencia | Trigger | Acción |
-|------|------------|---------|--------|
-| **Roles y Presencia** | 2 minutos | Timer + Eventos | Actualizar conteos y presencia global |
-| **Panel Apex** | 5 minutos | Timer | Refrescar mapas y RP Predator |
-| **Imágenes** | 10 minutos | Timer | Regenerar cards visuales |
-| **Cache API** | Variable | Respuesta API | Invalidar datos obsoletos |
+| Tipo                  | Frecuencia | Trigger         | Acción                                |
+| --------------------- | ---------- | --------------- | ------------------------------------- |
+| **Roles y Presencia** | 2 minutos  | Timer + Eventos | Actualizar conteos y presencia global |
+| **Panel Apex**        | 5 minutos  | Timer           | Refrescar mapas y RP Predator         |
+| **Imágenes**          | 10 minutos | Timer           | Regenerar cards visuales              |
+| **Cache API**         | Variable   | Respuesta API   | Invalidar datos obsoletos             |
 
 ### Arquitectura de Actualización en Tiempo Real
 
@@ -1057,15 +1210,19 @@ El bot está diseñado para mantener la información actualizada constantemente 
 ```typescript
 // Sistema de prioridades
 enum UpdatePriority {
-  HIGH = 2,    // Eventos críticos (nuevos miembros)
-  NORMAL = 1,  // Actualizaciones regulares
-  LOW = 0      // Tareas opcionales
+  HIGH = 2, // Eventos críticos (nuevos miembros)
+  NORMAL = 1, // Actualizaciones regulares
+  LOW = 0, // Tareas opcionales
 }
 
 // Ejemplo de encolamiento
-enqueueGuildUpdate(guild, async () => {
-  await updateRoleCountMessage(guild);
-}, UpdatePriority.HIGH);
+enqueueGuildUpdate(
+  guild,
+  async () => {
+    await updateRoleCountMessage(guild);
+  },
+  UpdatePriority.HIGH
+);
 ```
 
 #### Procesamiento Concurrente Controlado
@@ -1080,7 +1237,7 @@ enqueueGuildUpdate(guild, async () => {
 
 ```typescript
 // Detección automática de cambios
-guild.roles.cache.forEach(role => {
+guild.roles.cache.forEach((role) => {
   if (role.name !== originalName) {
     // Actualizar mapeo personalizado
     updateRoleMapping(guild.id, role.id, role.name);
@@ -1133,7 +1290,7 @@ async function retryWithBackoff(fn: Function, maxRetries = 3) {
     } catch (error) {
       if (i === maxRetries - 1) throw error;
       const delay = Math.pow(2, i) * 1000; // Backoff exponencial
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }
@@ -1156,11 +1313,11 @@ async function retryWithBackoff(fn: Function, maxRetries = 3) {
 
 #### Tipos de Notificaciones
 
-| Tipo | Destino | Condición | Acción |
-|------|---------|-----------|--------|
-| **Error Crítico** | DM Owner | Fallo de actualización | Investigación inmediata |
-| **Advertencia** | Canal | Cache obsoleto | Información al usuario |
-| **Recuperación** | Logs | Conectividad restaurada | Registro automático |
+| Tipo              | Destino  | Condición               | Acción                  |
+| ----------------- | -------- | ----------------------- | ----------------------- |
+| **Error Crítico** | DM Owner | Fallo de actualización  | Investigación inmediata |
+| **Advertencia**   | Canal    | Cache obsoleto          | Información al usuario  |
+| **Recuperación**  | Logs     | Conectividad restaurada | Registro automático     |
 
 ### Optimizaciones de Rendimiento
 
@@ -1218,11 +1375,11 @@ async function retryWithBackoff(fn: Function, maxRetries = 3) {
 
 ```typescript
 const realtimeConfig = {
-  updateInterval: 120000,      // 2 minutos
-  cacheTTL: 300000,           // 5 minutos
+  updateInterval: 120000, // 2 minutos
+  cacheTTL: 300000, // 5 minutos
   maxRetries: 3,
   backoffMultiplier: 2,
-  maxConcurrency: 3
+  maxConcurrency: 3,
 };
 ```
 
@@ -1316,7 +1473,7 @@ services:
       - ./.bot-state:/app/.bot-state
       - ./logs:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1522,7 +1679,7 @@ module.exports = {
   max_old_space_size: 512,
   max_new_space_size: 128,
   optimize_for_size: true,
-  always_compact: true
+  always_compact: true,
 };
 ```
 
@@ -1540,13 +1697,13 @@ node --prof dist/index.js
 
 #### KPIs Recomendados
 
-| Métrica | Objetivo | Alerta |
-|---------|----------|--------|
-| **Uptime** | >99.9% | <99.5% |
-| **Latencia Media** | <500ms | >2s |
-| **Tasa de Error** | <1% | >5% |
-| **Memoria** | <70% | >85% |
-| **CPU** | <60% | >80% |
+| Métrica            | Objetivo | Alerta |
+| ------------------ | -------- | ------ |
+| **Uptime**         | >99.9%   | <99.5% |
+| **Latencia Media** | <500ms   | >2s    |
+| **Tasa de Error**  | <1%      | >5%    |
+| **Memoria**        | <70%     | >85%   |
+| **CPU**            | <60%     | >80%   |
 
 #### Monitoreo Continuo
 

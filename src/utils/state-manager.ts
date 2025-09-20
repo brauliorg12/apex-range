@@ -46,6 +46,10 @@ export async function readApexStatusState(
   try {
     const raw = await fs.readFile(file, 'utf8');
     const data = JSON.parse(raw);
+    // Si data es un array (estado corrupto), retornar null
+    if (Array.isArray(data)) {
+      return null;
+    }
     return data.apexStatus || null;
   } catch {
     return null;

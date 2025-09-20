@@ -51,8 +51,9 @@ export async function verifyRolesExist(
   logger.info('Verificando roles existentes...');
   const canContinue = await handleMissingRoles(interaction);
   if (!canContinue) {
-    logger.info('Configuración cancelada por roles faltantes');
+    logger.info('Configuración detenida por roles faltantes');
     return false;
   }
+  logger.info('Roles verificados correctamente');
   return true;
 }
