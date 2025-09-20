@@ -58,6 +58,31 @@ export async function getPlayerPlatform(
 }
 
 /**
+ * Actualiza solo la plataforma de un usuario sin cambiar la fecha de asignación.
+ * Útil para cambios manuales de roles de plataforma.
+ * @param guildId - ID del servidor de Discord
+ * @param userId - ID del usuario de Discord
+ * @param platform - Nueva plataforma del jugador
+ * @returns Promise que se resuelve cuando se completa la actualización
+ */
+export async function updatePlayerPlatform(
+  guildId: string,
+  userId: string,
+  platform: string
+): Promise<void> {
+  const data = await getPlayers(guildId);
+  const idx = data.findIndex((r: PlayerRecord) => r.userId === userId);
+
+  if (idx >= 0) {
+    data[idx].platform = platform;
+    await savePlayers(guildId, data);
+  } else {
+    // Si no existe registro, crear uno nuevo con fecha actual
+    await updatePlayerRankDate(guildId, userId, '', platform);
+  }
+}
+
+/**
  * Elimina completamente el registro de un jugador de la base de datos del servidor.
  * @param guildId - ID del servidor de Discord
  * @param userId - ID del usuario de Discord cuyo registro será eliminado

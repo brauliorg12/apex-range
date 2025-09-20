@@ -1,7 +1,12 @@
 import { AttachmentBuilder, EmbedBuilder, Guild, Role } from 'discord.js';
 import { loadImage } from '@napi-rs/canvas';
 import { getPlayerData } from './player-data-manager';
-import { COMMON_AURA_SIZE, NEW_EMOGI } from '../models/constants';
+import {
+  COMMON_AURA_SIZE,
+  NEW_EMOGI,
+  APEX_PLATFORMS,
+  PC_ONLY_EMOGI,
+} from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { performance } from 'node:perf_hooks';
 import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
@@ -107,6 +112,8 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       let avatarUrl: string | null = null;
       let displayName = 'Usuario'; // Valor por defecto
       let emoji = '';
+      const platformInfo = APEX_PLATFORMS.find((p) => p.apiName === r.platform);
+      const platformIcon = platformInfo ? platformInfo.id : PC_ONLY_EMOGI;
       let member: any = null; // <-- Declaración aquí
 
       try {
@@ -146,7 +153,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       const mention = `<@${r.userId}>`;
 
       // Solo ícono de rango (si existe)
-      const parts = [`${i + 1}. ${mention}`];
+      const parts = [`${i + 1}. ${platformIcon} ${mention}`];
       if (emoji) parts.push(emoji);
       parts.push(`<t:${ts}:R>`);
       descriptions.push(parts.join(' — '));

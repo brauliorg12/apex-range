@@ -1,13 +1,11 @@
 import { Client, Guild } from 'discord.js';
-import { readRolesState, writePlayers } from '../utils/state-manager';
+import { readRolesState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { updateBotPresence } from '../utils/presence-helper';
 import { getGlobalApiStatus } from '../utils/global-api-status';
 import { checkApiHealth } from '../utils/api-health-check';
 import { createUpdateThrottler } from '../utils/update-throttler';
 import { logApp } from '../utils/logger';
-import { getPlayerData, getPlayerPlatform } from '../utils/player-data-manager';
-import { getAllRankedPlayers } from '../interactions/player-list';
 import { printBanner } from '../helpers/print-banner';
 import { cleanupOldServerFiles } from '../helpers/cleanup-old-server-files';
 import {
@@ -15,6 +13,7 @@ import {
   registerGuildPeriodicTasks,
 } from '../utils/global-scheduler';
 import { enqueueGuildUpdate } from '../utils/guild-update-queue';
+import { synchronizePlayersWithRoles } from '../utils/synchronize-players';
 
 /**
  * Inicializa un guild existente con configuración previa.
@@ -107,49 +106,6 @@ function logApiStatus(): void {
   logApp(`  Estado: ${color} ${apiStatus.ok ? 'Conectado' : 'Desconectado'}`);
   logApp(`  Última vez chequeado: ${lastChecked}`);
   logApp('------------------------------------------');
-}
-
-/**
- * Sincroniza el JSON de jugadores con los roles actuales del servidor.
- * Agrega nuevos jugadores con roles y elimina aquellos que ya no los tienen.
- *
- * @param guild - El guild a sincronizar.
- */
-async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
-  const players = await getAllRankedPlayers(guild);
-  const playerData = await getPlayerData(guild);
-
-  const playerIdsWithRank = new Set(players.map((p) => p.member.id));
-  let updated = false;
-
-  // Agregar jugadores con rol que no están en el JSON
-  for (const player of players) {
-    if (!playerData.some((p) => p.userId === player.member.id)) {
-      playerData.push({
-        userId: player.member.id,
-        assignedAt: new Date().toISOString(),
-        rank: player.rankName,
-        platform: (await getPlayerPlatform(guild.id, player.member.id)) || 'PC',
-      });
-      updated = true;
-    }
-  }
-
-  // Eliminar del JSON los jugadores que ya no tienen rol de rango
-  const originalLength = playerData.length;
-  const filteredPlayerData = playerData.filter((p) =>
-    playerIdsWithRank.has(p.userId)
-  );
-  if (filteredPlayerData.length !== originalLength) {
-    updated = true;
-  }
-
-  if (updated) {
-    await writePlayers(guild.id, filteredPlayerData);
-    logApp(
-      `Sincronización de jugadores con roles ejecutada en guild ${guild.name} (${guild.id})`
-    );
-  }
 }
 
 /**

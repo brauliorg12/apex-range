@@ -1,17 +1,12 @@
 import { Client, Guild, Events } from 'discord.js';
-import {
-  readRolesState,
-  readApexStatusState,
-  writePlayers,
-} from '../utils/state-manager';
+import { readRolesState, readApexStatusState } from '../utils/state-manager';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { updateBotPresence } from '../utils/presence-helper';
 import { logApp } from '../utils/logger';
-import { getPlayerData, getPlayerPlatform } from '../utils/player-data-manager';
-import { getAllRankedPlayers } from '../interactions/player-list';
 import { registerGuildPeriodicTasks } from '../utils/global-scheduler';
 import { enqueueGuildUpdate } from '../utils/guild-update-queue';
 import { updateApexInfoMessage } from '../helpers/update-apex-info-message';
+import { synchronizePlayersWithRoles } from '../utils/synchronize-players';
 
 /**
  * Configura el evento para cuando el bot se une a un nuevo servidor.
@@ -106,49 +101,6 @@ async function handleNewUnconfiguredGuild(guild: Guild): Promise<void> {
     await channel.send({
       content: `¡Hola! Soy Apex Range Bot. Para configurar el panel de rangos, un administrador debe ejecutar el comando \`/setup-roles\` en este canal. ¡Gracias por añadirme!`,
     });
-  }
-}
-
-/**
- * Sincroniza el JSON de jugadores con los roles actuales del servidor.
- * Función auxiliar para mantener consistencia con guild-initializer.
- *
- * @param guild - El guild a sincronizar.
- */
-async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
-  const players = await getAllRankedPlayers(guild);
-  const playerData = await getPlayerData(guild);
-
-  const playerIdsWithRank = new Set(players.map((p) => p.member.id));
-  let updated = false;
-
-  // Agregar jugadores con rol que no están en el JSON
-  for (const player of players) {
-    if (!playerData.some((p) => p.userId === player.member.id)) {
-      playerData.push({
-        userId: player.member.id,
-        assignedAt: new Date().toISOString(),
-        rank: player.rankName,
-        platform: (await getPlayerPlatform(guild.id, player.member.id)) || 'PC',
-      });
-      updated = true;
-    }
-  }
-
-  // Eliminar del JSON los jugadores que ya no tienen rol de rango
-  const originalLength = playerData.length;
-  const filteredPlayerData = playerData.filter((p) =>
-    playerIdsWithRank.has(p.userId)
-  );
-  if (filteredPlayerData.length !== originalLength) {
-    updated = true;
-  }
-
-  if (updated) {
-    await writePlayers(guild.id, filteredPlayerData);
-    logApp(
-      `Sincronización de jugadores con roles ejecutada en guild ${guild.name} (${guild.id})`
-    );
   }
 }
 
