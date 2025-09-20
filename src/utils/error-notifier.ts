@@ -28,7 +28,7 @@ export async function notifySetupRolesError(
     case 'role_selection_deleted':
       title = '⚠️ Mensaje de Selección de Rango Eliminado';
       description =
-        `El mensaje de **selección de rango** en el canal **#${channel.name}** ha sido eliminado.\n\n` +
+        `El mensaje de **selección de rango** en el canal <#${channel.id}> ha sido eliminado.\n\n` +
         'Los usuarios ya no pueden seleccionar su rango desde este canal.\n\n' +
         '**Solución:** Ejecuta `/setup-roles` para recrear los mensajes.';
       color = 0xffa500; // Naranja
@@ -36,7 +36,7 @@ export async function notifySetupRolesError(
     case 'stats_message_deleted':
       title = '⚠️ Mensaje de Estadísticas Eliminado';
       description =
-        `El mensaje de **estadísticas de jugadores** en el canal **#${channel.name}** ha sido eliminado.\n\n` +
+        `El mensaje de **estadísticas de jugadores** en el canal <#${channel.id}> ha sido eliminado.\n\n` +
         'Las estadísticas automáticas ya no se muestran en este canal.\n\n' +
         '**Solución:** Ejecuta `/setup-roles` para recrear los mensajes.';
       color = 0xffa500; // Naranja
@@ -44,7 +44,7 @@ export async function notifySetupRolesError(
     case 'both_deleted':
       title = '⚠️ Mensajes de Setup-Roles Eliminados';
       description =
-        `Los mensajes de **selección de rango y estadísticas** en el canal **#${channel.name}** han sido eliminados.\n\n` +
+        `Los mensajes de **selección de rango y estadísticas** en el canal <#${channel.id}> han sido eliminados.\n\n` +
         'La funcionalidad completa del bot en este canal se ha perdido.\n\n' +
         '**Solución:** Ejecuta `/setup-roles` para restaurar todo.';
       color = 0xff0000; // Rojo
@@ -122,7 +122,7 @@ export async function notifyApexUpdateError(
     case 'missing_permissions':
       title = '⚠️ Error de Actualización de Apex';
       description =
-        `No pude actualizar el embed de estado de Apex Legends en el canal **#${channel.name}**.\n\n` +
+        `No pude actualizar el embed de estado de Apex Legends en el canal <#${channel.id}>.\n\n` +
         'Verifica que el bot tenga permisos para **Gestionar Mensajes** en ese canal.\n\n' +
         'Si el problema persiste, ejecuta `/apex-status` de nuevo para resetear.';
       color = 0xff0000; // Rojo
@@ -130,7 +130,7 @@ export async function notifyApexUpdateError(
     case 'message_not_found':
       title = '⚠️ Mensaje de Apex No Encontrado';
       description =
-        `El mensaje de estado de Apex Legends en el canal **#${channel.name}** no fue encontrado. Puede haber sido eliminado.\n\n` +
+        `El mensaje de estado de Apex Legends en el canal <#${channel.id}> no fue encontrado. Puede haber sido eliminado.\n\n` +
         'Ejecuta `/apex-status` de nuevo para crear uno nuevo.';
       color = 0xffa500; // Naranja
       break;

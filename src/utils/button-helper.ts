@@ -74,27 +74,27 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
       .setEmoji(APEX_LOGO_EMOJI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId('show_all_players_menu')
-      .setLabel('Ver todos los jugadores')
-      .setEmoji(ALL_PLAYERS_EMOGI)
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId('show_more_options')
-      .setLabel('Filtrar jugadores en línea')
-      .setEmoji(SEARCH_EMOGI)
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
       .setCustomId('manage_rank_menu')
       .setLabel('Gestionar mi Rango')
       .setEmoji(LOGO_APP_EMOGI)
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('manage_platform')
+      .setLabel('Gestionar mi Plataforma')
+      .setEmoji(GAME_PLATFORMS_EMOGI)
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('show_all_players_menu')
+      .setLabel('Ver todos los jugadores')
+      .setEmoji(ALL_PLAYERS_EMOGI)
       .setStyle(ButtonStyle.Secondary)
   );
 
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId('manage_platform')
-      .setLabel('Gestionar mi Plataforma')
-      .setEmoji(GAME_PLATFORMS_EMOGI)
+      .setCustomId('show_more_options')
+      .setLabel('Filtrar jugadores en línea')
+      .setEmoji(SEARCH_EMOGI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')

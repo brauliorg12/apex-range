@@ -3,6 +3,7 @@ import {
   EmbedBuilder,
   Message,
   ChatInputCommandInteraction,
+  ButtonInteraction,
 } from 'discord.js';
 import { sendMessageWithTimeout } from '../set-message-timeout';
 import { ROLE_SELECTION_EMBED_TEXT } from '../update-role-selection-image';
@@ -116,7 +117,7 @@ export async function pinSetupMessages(
   roleSelectionMessage: Message,
   roleCountMessage: Message,
   channel: TextChannel,
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction | ButtonInteraction,
   logger: any
 ): Promise<void> {
   logger.info('Fijando mensajes...');

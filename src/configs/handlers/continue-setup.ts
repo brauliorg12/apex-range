@@ -1,4 +1,6 @@
 import { ButtonInteraction } from 'discord.js';
+import { getServerLogger } from '../../utils/server-logger';
+import { performSetup } from '../../helpers/setup-roles';
 
 /**
  * Handler para continuar con el setup después de crear roles
@@ -9,19 +11,33 @@ export async function handleContinueSetup(interaction: ButtonInteraction) {
   if (!interaction.isButton() || interaction.customId !== 'continue_setup')
     return;
 
-  // TODO revisar
-  // Limpiar el mensaje y mostrar instrucciones
+  if (!interaction.guild || !interaction.channel) return;
+
+  // Crear logger específico para este servidor
+  const logger = getServerLogger(interaction.guild.id, interaction.guild.name);
+
+  // Actualizar el mensaje para mostrar que está procesando
   await interaction.update({
-    content: '🔄 Continuando con la configuración...',
+    content: '🔄 Ejecutando configuración completa...',
     embeds: [],
     components: [],
   });
 
-  // Responder con instrucciones
-  await interaction.followUp({
-    content:
-      '✅ **¡Los roles han sido creados exitosamente!**\n\n' +
-      'Ahora puedes ejecutar nuevamente el comando `/setup-roles` para completar la configuración.',
-    ephemeral: true,
-  });
+  try {
+    // Ejecutar el setup completo
+    const channel = interaction.channel as any; // TextChannel
+    const result = await performSetup(channel, interaction as any, logger);
+
+    // Responder con el resultado
+    await interaction.editReply({
+      content: result.content,
+    });
+
+    logger.info('Setup completado desde botón');
+  } catch (error) {
+    logger.error('Error en setup desde botón:', error);
+    await interaction.editReply({
+      content: '❌ Ocurrió un error durante la configuración. Revisa los logs.',
+    });
+  }
 }

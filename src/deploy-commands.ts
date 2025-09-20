@@ -16,6 +16,7 @@ import { data as totalJugadoresCommand } from './commands/total-players';
 import { data as showMyRankCommand } from './commands/show-my-rank';
 import { data as apiStatusCommand } from './commands/api-status';
 import { data as apexStatusCommand } from './commands/apex-status';
+import { data as cleanupStateCommand } from './commands/cleanup-state';
 import { data as cleanupDataCommand } from './commands/cleanup-data';
 import { logApp } from './utils/logger';
 
@@ -25,6 +26,7 @@ const commands = [
   showMyRankCommand.toJSON(),
   apiStatusCommand.toJSON(),
   apexStatusCommand.toJSON(),
+  cleanupStateCommand.toJSON(),
   cleanupDataCommand.toJSON(),
 ];
 

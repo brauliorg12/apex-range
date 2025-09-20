@@ -80,12 +80,12 @@ async function showChannelPermissionsError(
     .setColor('#ff6b6b')
     .setTitle('❌ Permisos Insuficientes en el Canal')
     .setDescription(
-      `El bot no puede enviar mensajes en el canal **#${channel.name}**. Esto se debe a configuraciones específicas de permisos en este canal.`
+      `El bot no puede enviar mensajes en el canal <#${channel.id}>. Esto se debe a configuraciones específicas de permisos en este canal.`
     )
     .addFields(
       {
         name: '🔧 Solución Rápida',
-        value: `Ve al canal **#${channel.name}** y sigue estos pasos:`,
+        value: `Ve al canal <#${channel.id}> y sigue estos pasos:`,
         inline: false,
       },
       {

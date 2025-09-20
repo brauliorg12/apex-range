@@ -25,7 +25,6 @@ export const PLAYSTATION_EMOGI = '<:playstation:1418625871475900416>';
 export const XBOX_EMOGI = '<:xbox:1418625889750483155>';
 export const NINTENDO_SWITCH_EMOGI = '<:nintendo_switch:1418625902685720737>';
 
-export const PLAYING_EMOGI = '<:playing:1418635878095650918>';
 export const STATS_LOGO_EMOGI = '<:stats_bars:1418626722852765898>';
 export const SEARCH_EMOGI = '<:search:1418628214049472606>';
 export const HELP_EMOGI = '<:help:1418628581822566400>';

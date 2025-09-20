@@ -10,7 +10,7 @@ Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Lege
 
 ---
 
-**[>> Invitar Apex Legends Rank Bot a tu Servidor <<](https://discord.com/oauth2/authorize?client_id=1406424026427031696&scope=bot+applications.commands&permissions=268560384)**
+**[>> Invitar Apex Legends Rank Bot a tu Servidor <<](https://discord.com/oauth2/authorize?client_id=1406424026427031696&scope=bot+applications.commands&permissions=2251802229992448)**
 
 ### 🎯 **Análisis Detallado de Permisos Pre-configurados**
 
