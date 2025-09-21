@@ -16,7 +16,7 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
   const headerEmbed = new EmbedBuilder()
     .setColor('#bdc3c7')
     .setDescription(
-      `${APEX_LOGO_EMOJI} **División de Jugadores por Rango Apex**\n` +
+      `${APEX_LOGO_EMOJI} **Jugadores por Rango**\n` +
         '> Haz clic en los nombres para interactuar con perfiles'
     );
 
@@ -51,13 +51,8 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
     .setColor('#34495e')
     .setDescription(
       SETTINGS_ALL_EMOGI +
-        '** Panel de Gestión**\n' +
-        '> Consulta estadísticas globales\n' +
-        '> Lista de todos los registrados\n' +
-        '> Asigna o cambia tu rango de Apex Legends\n' +
-        '> Configura tu plataforma (PC, PlayStation, Xbox)\n' +
-        '> Busca jugadores conectados por rango\n' +
-        '> Información y comandos disponibles'
+        ' **Panel de Gestión**\n' +
+        '> *Estadísticas • Rangos • Plataformas • Búsqueda • Ayuda*'
     );
 
   const managementMsg = (await channel.send({

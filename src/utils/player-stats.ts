@@ -19,8 +19,13 @@ async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
       return [];
     }
 
-    // Fetch all members in paralelo
-    await guild.members.fetch();
+    // Intentar fetch de miembros con timeout y manejo de errores
+    try {
+      await guild.members.fetch();
+    } catch (error: any) {
+      console.warn('No se pudieron obtener todos los miembros del servidor, usando caché disponible:', error.message);
+      // Continuar con los miembros que ya están en caché
+    }
 
     const uniqueMembers = new Map<string, GuildMember>();
     rankRoles.forEach((role) => {
@@ -57,8 +62,14 @@ export async function getPlayerStats(guild: Guild) {
       total: rankedMembers.length,
       online: onlineMembers.length,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error en getPlayerStats:', error);
+    
+    // Proporcionar mensaje más específico según el tipo de error
+    if (error.message?.includes("Members didn't arrive in time")) {
+      throw new Error("Members didn't arrive in time. El servidor puede ser muy grande o tener problemas de conexión.");
+    }
+    
     throw error;
   }
 }

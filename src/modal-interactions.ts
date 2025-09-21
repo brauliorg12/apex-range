@@ -2,6 +2,7 @@ import { ModalSubmitInteraction } from 'discord.js';
 import { createCloseButtonRow } from './utils/button-helper';
 import { getApexProfileByName } from './services/apex-api';
 import { buildApexProfileEmbed } from './utils/apex-profile-embed'; // Nuevo import
+import { handleManualSetupModal } from './interactions/setup-modal-handler';
 import { logApp } from './utils/logger';
 
 /**
@@ -12,7 +13,9 @@ export async function handleModalInteraction(
   interaction: ModalSubmitInteraction
 ) {
   try {
-    if (interaction.customId.startsWith('apex_profile_modal_')) {
+    if (interaction.customId === 'manual_setup_modal') {
+      await handleManualSetupModal(interaction);
+    } else if (interaction.customId.startsWith('apex_profile_modal_')) {
       await interaction.deferReply({ ephemeral: true });
 
       // Obtiene datos del modal

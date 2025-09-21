@@ -2,7 +2,49 @@
 
 Esta guía explica en detalle todos los permisos que necesita Apex Legends Rank Bot para funcionar correctamente.
 
-## 🔐 Permisos Requeridos Detallados
+## �️ Configuración Básica de Discord
+
+### Roles requeridos
+
+Crea estos roles en tu servidor (nombres exactos):
+
+- Bronce
+- Plata
+- Oro
+- Platino
+- Diamante
+- Maestro
+- Apex Predator
+
+### Emojis personalizados
+
+Sube los emojis de rango y asígnales los nombres correctos, por ejemplo:
+
+- `Ranked_Tier1_Bronze.webp` como `:Ranked_Tier1_Bronze:`
+- ... (uno por cada rango)
+
+### Permisos del bot
+
+El bot incluye **detección automática mejorada de permisos faltantes** con mensajes detallados:
+
+- **Verificación granular**: Comprueba permisos por servidor y canal por separado.
+- **Mensajes de error específicos**: Indica exactamente qué permiso falta y cómo solucionarlo.
+- **Guía integrada**: Proporciona instrucciones directas para activar permisos faltantes.
+
+**Permisos requeridos:**
+
+- Gestionar roles
+- Gestionar canales
+- Enviar mensajes
+- Leer historial de mensajes
+- Usar emojis externos
+- Gestionar mensajes
+- Ver canales
+- Insertar enlaces
+- Adjuntar archivos
+- Usar comandos de aplicación
+
+## �🔐 Permisos Requeridos Detallados
 
 El bot requiere permisos específicos tanto a nivel de servidor como de canal. A continuación, una explicación detallada de cada permiso, dónde se utiliza y por qué es necesario:
 

@@ -15,6 +15,17 @@ import { handleShowAllPlayersMenu } from './interactions/player-list';
 import { handleHelpMenu, handleCloseHelpMenu } from './interactions/help-menu';
 import { handleRemoveRank } from './helpers/handle-remove-rank';
 import { logInteraction } from './utils/logger';
+import { handleSetupConfirmation } from './interactions/setup-confirmation-handler';
+import {
+  handleBackToModes,
+  handleCancelSetup,
+} from './interactions/setup-navigation';
+import { handleModoAuto } from './interactions/handlers/setup-modes-auto';
+import {
+  handleModoManual,
+  handleOpenManualModal,
+} from './interactions/handlers/setup-modes-manual';
+import { handleModoExistente } from './interactions/handlers/setup-modes-existente';
 
 /**
  * Asynchronously handles button interactions initiated by users.
@@ -30,6 +41,7 @@ import { logInteraction } from './utils/logger';
  */
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
   try {
+    // Crear logger específico para este servidor
     await logInteraction({
       type: 'Button',
       userTag: interaction.user.tag,
@@ -57,6 +69,41 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleHelpMenu(interaction);
     } else if (customId === 'close_help_menu') {
       await handleCloseHelpMenu(interaction);
+    } else if (customId === 'modo_auto') {
+      await handleModoAuto(interaction);
+    } else if (customId === 'modo_manual') {
+      await handleModoManual(interaction);
+    } else if (customId === 'open_manual_modal') {
+      await handleOpenManualModal(interaction);
+    } else if (customId === 'modo_existente') {
+      await handleModoExistente(interaction);
+    } else if (customId === 'confirm_auto') {
+      await handleSetupConfirmation(interaction, 'auto');
+    } else if (customId === 'confirm_manual') {
+      await handleSetupConfirmation(interaction, 'manual');
+    } else if (customId.startsWith('confirm_manual_')) {
+      // Extraer nombres de canales del customId
+      const parts = customId.split('_');
+      if (parts.length >= 4) {
+        const adminChannelName = parts[2];
+        const panelChannelName = parts[3];
+
+        // Pasar los nombres como opciones adicionales
+        const options = {
+          canal_admin: adminChannelName,
+          canal_publico: panelChannelName,
+        };
+
+        await handleSetupConfirmation(interaction, 'manual', options);
+      } else {
+        await handleSetupConfirmation(interaction, 'manual');
+      }
+    } else if (customId === 'confirm_existente') {
+      await handleSetupConfirmation(interaction, 'existente');
+    } else if (customId === 'back_to_modes') {
+      await handleBackToModes(interaction);
+    } else if (customId === 'cancel_setup') {
+      await handleCancelSetup(interaction);
     } else if (customId === 'show_more_options') {
       const rankFilterRow =
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(

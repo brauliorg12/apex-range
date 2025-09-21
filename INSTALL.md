@@ -2,6 +2,63 @@
 
 Esta guía proporciona instrucciones detalladas para instalar y configurar Apex Legends Rank Bot en tu servidor.
 
+## 🚀 Instalación Rápida
+
+### 1. Clona el repositorio
+
+```bash
+git clone https://github.com/brauliorg12/discord-apex.git
+cd discord-apex
+```
+
+### 2. Instala dependencias
+
+```bash
+npm install
+```
+
+### 3. Configura el archivo `.env`
+
+Crea un archivo `.env` en la raíz con las siguientes variables:
+
+```env
+# Variables Obligatorias
+DISCORD_TOKEN=TU_TOKEN_DEL_BOT
+CLIENT_ID=TU_CLIENT_ID
+
+# Variables Internas (Opcionales)
+API_URL=http://localhost:3001/health
+HEALTH_PORT=3001
+
+# APIs Externas
+TRACKER_API=TU_API_KEY_DE_APEX_TRACKER
+MOZA_API_KEY=TU_API_KEY_DE_MOZAMBIQUE
+MOZA_URL=https://api.mozambiquehe.re
+
+# Configuración Global
+EXCLUDED_ROLES=Admin,Apex,Server Booster,Moderador,Embajador,Illuminati
+```
+
+### 4. Compila el proyecto
+
+```bash
+npm run build
+```
+
+### 5. Despliega los comandos
+
+```bash
+npm run deploy-commands
+```
+
+### 6. Ejecuta el bot
+
+```bash
+npm run dev
+```
+
+> **Nota**: Para instrucciones detalladas y configuración avanzada, continúa leyendo esta guía.
+
 ## ⚙️ Instalación y Configuración
 
 ### 1. Clona el repositorio

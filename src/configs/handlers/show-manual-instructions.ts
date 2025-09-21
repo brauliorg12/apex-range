@@ -1,11 +1,6 @@
-import {
-  ButtonInteraction,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} from 'discord.js';
+import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { getApexRanksForGuild } from '../../helpers/get-apex-ranks-for-guild';
+import { createMainMenuEmbed } from '../../interactions/setup-navigation';
 
 /**
  * Handler para mostrar instrucciones manuales
@@ -35,18 +30,11 @@ export async function handleShowManualInstructions(
         '4. Una vez creados todos los roles, ejecuta nuevamente `/setup-roles`'
     );
 
-  const continueButton = new ButtonBuilder()
-    .setCustomId('continue_setup')
-    .setLabel('Entendido')
-    .setStyle(ButtonStyle.Primary)
-    .setEmoji('✅');
-
-  const components = [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(continueButton),
-  ];
+  // Mostrar menú principal de selección de modos después de las instrucciones
+  const menuData = createMainMenuEmbed(interaction.guild!.name);
 
   await interaction.update({
-    embeds: [embed],
-    components,
+    embeds: [embed, ...menuData.embeds],
+    components: menuData.components,
   });
 }

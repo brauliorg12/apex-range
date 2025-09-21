@@ -1,13 +1,8 @@
-import {
-  ButtonInteraction,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} from 'discord.js';
+import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { getApexRanksForGuild } from '../../helpers/get-apex-ranks-for-guild';
 import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-guild';
 import { GAME_PLATFORMS_EMOGI } from '../../models/constants';
+import { createMainMenuEmbed } from '../../interactions/setup-navigation';
 
 /**
  * Handler para proceder con la creación de roles faltantes después de confirmar mapeos
@@ -110,23 +105,20 @@ export async function handleProceedCreateRoles(interaction: ButtonInteraction) {
       .setTitle('🔧 Creación de Roles')
       .setDescription(description);
 
-    const components = [];
     if (createdRoles.length > 0) {
-      const continueButton = new ButtonBuilder()
-        .setCustomId('continue_setup')
-        .setLabel('Continuar Setup')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('▶️');
+      // Mostrar menú principal de selección de modos después de crear roles
+      const menuData = createMainMenuEmbed(interaction.guild!.name);
 
-      components.push(
-        new ActionRowBuilder<ButtonBuilder>().addComponents(continueButton)
-      );
+      await interaction.editReply({
+        embeds: [embed, ...menuData.embeds],
+        components: menuData.components,
+      });
+    } else {
+      await interaction.editReply({
+        embeds: [embed],
+        components: [],
+      });
     }
-
-    await interaction.editReply({
-      embeds: [embed],
-      components,
-    });
   } catch (error) {
     console.error('Error en handleProceedCreateRoles:', error);
     await interaction.editReply({

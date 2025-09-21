@@ -9,6 +9,7 @@ import { getApexRanksForGuild } from '../../helpers/get-apex-ranks-for-guild';
 import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-guild';
 import { suggestRoleMappings } from '../../helpers/suggest-role-mapping';
 import { GAME_PLATFORMS_EMOGI } from '../../models/constants';
+import { createMainMenuEmbed } from '../../interactions/setup-navigation';
 
 /**
  * Handler para crear roles faltantes automáticamente
@@ -162,24 +163,22 @@ export async function handleCreateMissingRoles(interaction: ButtonInteraction) {
       .setTitle('🔧 Creación de Roles')
       .setDescription(description);
 
-    const components = [];
     if (createdRoles.length > 0) {
-      const continueButton = new ButtonBuilder()
-        .setCustomId('continue_setup')
-        .setLabel('Continuar Setup')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('▶️');
+      // Mostrar menú principal de selección de modos después de crear roles
+      const menuData = createMainMenuEmbed(interaction.guild!.name);
 
-      components.push(
-        new ActionRowBuilder<ButtonBuilder>().addComponents(continueButton)
-      );
+      await interaction.editReply({
+        content: '',
+        embeds: [embed, ...menuData.embeds],
+        components: menuData.components,
+      });
+    } else {
+      await interaction.editReply({
+        content: '',
+        embeds: [embed],
+        components: [],
+      });
     }
-
-    await interaction.editReply({
-      content: '',
-      embeds: [embed],
-      components,
-    });
   } catch (error) {
     console.error('Error en handleCreateMissingRoles:', error);
     await interaction.editReply({

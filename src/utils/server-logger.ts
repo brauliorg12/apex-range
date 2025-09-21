@@ -2,10 +2,24 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const LOGS_DIR = path.join(__dirname, '../../logs');
+const GUILDS_DIR = path.join(LOGS_DIR, 'guilds');
 
 // Crear directorio de logs si no existe
 if (!fs.existsSync(LOGS_DIR)) {
   fs.mkdirSync(LOGS_DIR, { recursive: true });
+}
+
+// Crear directorio de guilds si no existe
+if (!fs.existsSync(GUILDS_DIR)) {
+  fs.mkdirSync(GUILDS_DIR, { recursive: true });
+}
+
+/**
+ * Obtiene la fecha actual en formato YYYY-MM-DD
+ */
+function getCurrentDateString(): string {
+  const now = new Date();
+  return now.toISOString().split('T')[0]; // YYYY-MM-DD
 }
 
 /**
@@ -13,14 +27,45 @@ if (!fs.existsSync(LOGS_DIR)) {
  */
 export class ServerLogger {
   private guildId: string;
-  private logFile: string;
+  private guildName: string;
+  private currentDate: string;
+  private currentLogFile: string;
 
   constructor(guildId: string, guildName?: string) {
     this.guildId = guildId;
-    const safeName = guildName
-      ? guildName.replace(/[^a-zA-Z0-9]/g, '_')
-      : 'unknown';
-    this.logFile = path.join(LOGS_DIR, `guild_${guildId}_${safeName}.log`);
+    this.guildName = guildName || 'unknown';
+    this.currentDate = getCurrentDateString();
+    this.currentLogFile = ''; // Se inicializará en updateLogFile
+    this.updateLogFile();
+  }
+
+  /**
+   * Actualiza el archivo de log actual basado en la fecha
+   */
+  private updateLogFile(): void {
+    const safeName = this.guildName.replace(/[^a-zA-Z0-9]/g, '_');
+    const dateDir = path.join(GUILDS_DIR, this.currentDate);
+
+    // Crear directorio de la fecha si no existe
+    if (!fs.existsSync(dateDir)) {
+      fs.mkdirSync(dateDir, { recursive: true });
+    }
+
+    this.currentLogFile = path.join(
+      dateDir,
+      `guild_${this.guildId}_${safeName}.log`
+    );
+  }
+
+  /**
+   * Verifica si necesitamos cambiar de archivo de log (nuevo día)
+   */
+  private checkDateChange(): void {
+    const today = getCurrentDateString();
+    if (today !== this.currentDate) {
+      this.currentDate = today;
+      this.updateLogFile();
+    }
   }
 
   private formatMessage(
@@ -47,9 +92,10 @@ export class ServerLogger {
 
   private writeToFile(content: string): void {
     try {
-      fs.appendFileSync(this.logFile, content);
+      this.checkDateChange(); // Verificar cambio de fecha antes de escribir
+      fs.appendFileSync(this.currentLogFile, content);
     } catch (error) {
-      console.error(`Error writing to log file ${this.logFile}:`, error);
+      console.error(`Error writing to log file ${this.currentLogFile}:`, error);
     }
   }
 
@@ -119,8 +165,15 @@ export const globalLogger = {
     const logMessage = `[${timestamp}] [GLOBAL]${timeInfo} ${message}${formattedArgs}\n`;
     console.log(logMessage.trim());
 
-    // También escribir a un archivo global
-    const globalLogFile = path.join(LOGS_DIR, 'global.log');
+    // Crear directorio para global si no existe
+    const globalDir = path.join(LOGS_DIR, 'global');
+    if (!fs.existsSync(globalDir)) {
+      fs.mkdirSync(globalDir, { recursive: true });
+    }
+
+    // Archivo global diario
+    const dateStr = getCurrentDateString();
+    const globalLogFile = path.join(globalDir, `global-${dateStr}.log`);
     try {
       fs.appendFileSync(globalLogFile, logMessage);
     } catch (error) {
@@ -146,7 +199,14 @@ export const globalLogger = {
     const logMessage = `[${timestamp}] [GLOBAL-ERROR]${timeInfo} ${message}${formattedArgs}\n`;
     console.error(logMessage.trim());
 
-    const globalLogFile = path.join(LOGS_DIR, 'global.log');
+    // Crear directorio para global si no existe
+    const globalDir = path.join(LOGS_DIR, 'global');
+    if (!fs.existsSync(globalDir)) {
+      fs.mkdirSync(globalDir, { recursive: true });
+    }
+
+    const dateStr = getCurrentDateString();
+    const globalLogFile = path.join(globalDir, `global-${dateStr}.log`);
     try {
       fs.appendFileSync(globalLogFile, logMessage);
     } catch (error) {

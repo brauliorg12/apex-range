@@ -1,6 +1,5 @@
 import {
   SlashCommandBuilder,
-  PermissionsBitField,
   ChatInputCommandInteraction,
   EmbedBuilder,
 } from 'discord.js';
@@ -18,8 +17,9 @@ export const data = new SlashCommandBuilder()
   .setDescription(
     '[ADMIN] Limpia archivos JSON de servidores donde el bot ya no está presente.'
   )
-  .addBooleanOption(option =>
-    option.setName('confirm')
+  .addBooleanOption((option) =>
+    option
+      .setName('confirm')
       .setDescription('Confirma que quieres eliminar los archivos antiguos')
       .setRequired(true)
   );
@@ -34,7 +34,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const botOwnerId = process.env.BOT_OWNER_ID || 'TU_DISCORD_ID_AQUI';
   if (interaction.user.id !== botOwnerId) {
     await interaction.reply({
-      content: 'Este comando solo puede ser usado por el administrador del bot.',
+      content:
+        'Este comando solo puede ser usado por el administrador del bot.',
       ephemeral: true,
     });
     return;
@@ -60,7 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Obtener lista de archivos existentes
     const [stateFiles, dbFiles] = await Promise.all([
       fs.readdir(stateDir).catch(() => []),
-      fs.readdir(dbDir).catch(() => [])
+      fs.readdir(dbDir).catch(() => []),
     ]);
 
     // Extraer guildIds de los archivos
@@ -83,12 +84,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     // Verificar cuáles guilds ya no están accesibles
-    const currentGuildIds = new Set(client.guilds.cache.map(g => g.id));
-    const obsoleteGuildIds = [...existingGuildIds].filter(id => !currentGuildIds.has(id));
+    const currentGuildIds = new Set(client.guilds.cache.map((g) => g.id));
+    const obsoleteGuildIds = [...existingGuildIds].filter(
+      (id) => !currentGuildIds.has(id)
+    );
 
     if (obsoleteGuildIds.length === 0) {
       await interaction.editReply({
-        content: '✅ No se encontraron archivos antiguos para limpiar. Todos los archivos corresponden a servidores activos.',
+        content:
+          '✅ No se encontraron archivos antiguos para limpiar. Todos los archivos corresponden a servidores activos.',
       });
       return;
     }
@@ -101,8 +105,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const stateFile = path.join(stateDir, `${guildId}.json`);
       const playersFile = path.join(dbDir, `players_${guildId}.json`);
 
-      const stateDeleted = await fs.unlink(stateFile).then(() => true).catch(() => false);
-      const playersDeleted = await fs.unlink(playersFile).then(() => true).catch(() => false);
+      const stateDeleted = await fs
+        .unlink(stateFile)
+        .then(() => true)
+        .catch(() => false);
+      const playersDeleted = await fs
+        .unlink(playersFile)
+        .then(() => true)
+        .catch(() => false);
 
       if (stateDeleted || playersDeleted) {
         cleanedCount++;
@@ -120,21 +130,28 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           : 'No se pudieron limpiar archivos. Puede que ya hayan sido eliminados.'
       )
       .addFields(
-        { name: 'Servidores Encontrados', value: `${obsoleteGuildIds.length}`, inline: true },
+        {
+          name: 'Servidores Encontrados',
+          value: `${obsoleteGuildIds.length}`,
+          inline: true,
+        },
         { name: 'Archivos Limpiados', value: `${cleanedCount}`, inline: true },
-        { name: 'Archivos Actuales', value: `${cleanedFiles.length}`, inline: true }
+        {
+          name: 'Archivos Actuales',
+          value: `${cleanedFiles.length}`,
+          inline: true,
+        }
       );
 
     if (cleanedFiles.length > 0) {
       embed.addFields({
         name: 'Archivos Eliminados',
-        value: cleanedFiles.map(f => `\`${f}\``).join('\n'),
-        inline: false
+        value: cleanedFiles.map((f) => `\`${f}\``).join('\n'),
+        inline: false,
       });
     }
 
     await interaction.editReply({ embeds: [embed] });
-
   } catch (error) {
     console.error('Error en cleanup-data:', error);
     await interaction.editReply({

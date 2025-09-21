@@ -4,5 +4,4 @@ export * from './setup-roles-permissions';
 export * from './setup-roles-creation';
 export * from './setup-roles-setup';
 export * from './perform-setup';
-export * from './create-confirmation-message';
 export * from './create-control-channel';

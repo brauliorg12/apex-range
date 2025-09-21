@@ -7,6 +7,16 @@ export const COMMON_AURA_SIZE = 40;
 // Parámetro global para controlar el máximo de jugadores por card en panel principal rankeds
 export const MAX_PLAYERS_PER_CARD = 5;
 
+/**
+ * Nombre por defecto para el canal de control
+ */
+export const DEFAULT_CONTROL_CHANNEL_NAME = 'apex-range-admin';
+
+/**
+ * Nombre por defecto para el canal del panel
+ */
+export const DEFAULT_PANEL_CHANNEL_NAME = 'apex-rangos';
+
 // Límite máximo de archivos adjuntos por mensaje (Discord y Canvas)
 export const MAX_ATTACHMENTS_PER_MESSAGE = 10;
 

@@ -3,7 +3,6 @@ import { handleServerStatusInfo } from '../../commands/apex-status';
 import {
   handleCreateMissingRoles,
   handleShowManualInstructions,
-  handleContinueSetup,
   handleCancelSetup,
   handleConfirmMappings,
   handleSkipMappings,
@@ -43,11 +42,6 @@ export async function handleButton(interaction: ButtonInteraction) {
 
   if (interaction.customId === 'show_manual_instructions') {
     await handleShowManualInstructions(interaction);
-    return;
-  }
-
-  if (interaction.customId === 'continue_setup') {
-    await handleContinueSetup(interaction);
     return;
   }
 
