@@ -8,6 +8,11 @@ import {
 import { DEFAULT_CONTROL_CHANNEL_NAME } from '../../models/constants';
 import { findExistingControlChannel } from './find-existing-control-channel';
 import { fixControlChannelPermissions } from './fix-control-channel-permissions';
+import {
+  createControlChannelSpecifiedEmbed,
+  createControlChannelDetectedEmbed,
+  createControlChannelCreatedEmbed,
+} from './control-channel-embeds';
 
 /**
  * Crea o verifica el canal de control del bot con permisos restringidos.
@@ -49,15 +54,7 @@ export async function createOrVerifyControlChannel(
     // Enviar mensaje de confirmación
     try {
       await selectedChannel.send({
-        content: `🤖 **Canal de Control Especificado**
-
-Este canal ha sido seleccionado como canal de control para Apex Range.
-
-**Estado:** ✅ Usando canal especificado
-**Nombre:** #${selectedChannel.name}
-**Permisos:** Verificados
-
-El bot usará este canal para operaciones internas y logs.`,
+        embeds: [createControlChannelSpecifiedEmbed(selectedChannel)],
       });
     } catch (error) {
       logger.warn(
@@ -94,15 +91,7 @@ El bot usará este canal para operaciones internas y logs.`,
       // Enviar mensaje de confirmación de uso
       try {
         await existingChannel.send({
-          content: `🤖 **Canal de Control Detectado**
-
-Este canal ha sido configurado como canal de control para Apex Range.
-
-**Estado:** ✅ Usando canal existente
-**Nombre:** #${existingChannel.name}
-**Permisos:** Verificados
-
-El bot usará este canal para operaciones internas y logs.`,
+          embeds: [createControlChannelDetectedEmbed(existingChannel)],
         });
       } catch (error) {
         logger.warn(
@@ -202,17 +191,7 @@ El bot usará este canal para operaciones internas y logs.`,
 
     // Enviar mensaje de bienvenida
     await controlChannel.send({
-      content: `🤖 **Canal de Control Creado**
-
-¡Bienvenido al canal de control de Apex Range!
-
-**Funciones:**
-- 📋 Centro de logs y operaciones internas
-- 🔧 Comando de administración del bot
-- ⚠️ Notificaciones de errores y estado
-- 🔒 Acceso restringido a admins y bot
-
-**Nota:** Este canal es invisible para miembros normales y esencial para el funcionamiento del bot.`,
+      embeds: [createControlChannelCreatedEmbed(controlChannel)],
     });
 
     return controlChannel;

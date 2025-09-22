@@ -18,6 +18,7 @@ import {
 } from '../../models/constants';
 import { createOrVerifyControlChannel } from './create-verify-control-channel';
 import { createOrVerifyPanelChannel } from './create-verify-panel-channel';
+import { createSetupCompletedEmbed } from './setup-embeds';
 
 /**
  * Funcion que ejecuta el setup completo despues de la confirmacion
@@ -263,22 +264,14 @@ export async function performSetup(
       const userCount = registeredUsers.length;
 
       await controlChannel.send({
-        content: `🎯 **Setup Roles Activado**
-
-¡El sistema de rangos de Apex Legends ha sido configurado exitosamente!
-
-**📍 Canal del Panel:** <#${panelChannel.id}>
-**⏱️ Tiempo de Configuración:** ${elapsed} segundos
-**👥 Usuarios Registrados:** ${userCount} ${userCount === 0 ? '(inicial)' : ''}
-**📊 Estado:** ${statsUpdated ? ' ✅ Actualizado' : ' ⚠️ Error en estadísticas'}
-
-**Información del Setup:**
-- Panel interactivo creado en <#${panelChannel.name}>
-- Mensajes de selección y estadísticas configurados
-- Sistema de roles operativo
-- Actualizaciones automáticas activadas
-
-Los usuarios ya pueden seleccionar sus rangos en el panel. ¡Disfruta del bot! 🎮`,
+        embeds: [
+          createSetupCompletedEmbed(
+            panelChannel,
+            elapsed,
+            userCount,
+            statsUpdated
+          ),
+        ],
       });
       logger.info('Mensaje de confirmación enviado al canal de control');
     } catch (error) {

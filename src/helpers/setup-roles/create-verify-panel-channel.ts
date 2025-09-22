@@ -7,6 +7,10 @@ import {
 import { DEFAULT_PANEL_CHANNEL_NAME } from '../../models/constants';
 import { findExistingPanelChannel } from './find-existing-panel-channel';
 import { fixPanelChannelPermissions } from './fix-panel-channel-permissions';
+import {
+  createPanelChannelSpecifiedEmbed,
+  createPanelChannelDetectedEmbed,
+} from './panel-channel-embeds';
 
 /**
  * Crea o verifica el canal del panel de rangos del bot.
@@ -57,15 +61,7 @@ export async function createOrVerifyPanelChannel(
     if (controlChannel) {
       try {
         await controlChannel.send({
-          content: `🎮 **Canal del Panel Especificado**
-
-Este canal ha sido seleccionado como canal del panel para Apex Range.
-
-**Estado:** ✅ Usando canal especificado
-**Nombre:** #${selectedChannel.name}
-**Tipo:** Panel de rangos público
-
-El bot colocará aquí el panel de selección de rangos y estadísticas.`,
+          embeds: [createPanelChannelSpecifiedEmbed(selectedChannel)],
         });
       } catch (error) {
         logger.warn(
@@ -109,15 +105,7 @@ El bot colocará aquí el panel de selección de rangos y estadísticas.`,
       if (controlChannel) {
         try {
           await controlChannel.send({
-            content: `🎮 **Canal del Panel Detectado**
-
-Este canal ha sido configurado como canal del panel para Apex Range.
-
-**Estado:** ✅ Usando canal existente
-**Nombre:** #${existingChannel.name}
-**Tipo:** Panel de rangos público
-
-El bot colocará aquí el panel de selección de rangos y estadísticas.`,
+            embeds: [createPanelChannelDetectedEmbed(existingChannel)],
           });
         } catch (error) {
           logger.warn(
