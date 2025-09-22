@@ -99,6 +99,48 @@ Después de verificar/crear los roles, el bot presenta un menú interactivo con 
 - **Estadísticas en tiempo real**: Ve cuántos jugadores hay por rango y quiénes están online.
 - **Cards visuales**: Avatares de los últimos registrados y listados por rango.
 
+### 🔄 **Flujo de Selección de Rango y Plataforma**
+
+El bot implementa un **flujo inteligente de configuración** que asegura que tengas todos los datos necesarios antes de asignar rangos:
+
+#### **Paso 1: Selección de Plataforma (Obligatoria)**
+
+Cuando haces clic en un botón de rango por primera vez:
+
+1. **Verificación automática**: El bot verifica si tienes una plataforma configurada
+2. **Si NO tienes plataforma**: Se muestra automáticamente el menú de selección de plataforma
+3. **Selección requerida**: Debes elegir tu plataforma (PC, PlayStation, Xbox, Nintendo Switch) antes de continuar
+4. **Asignación automática**: El bot te asigna el rol de plataforma correspondiente
+
+#### **Paso 2: Selección de Rango**
+
+Una vez configurada la plataforma:
+
+1. **Continuación automática**: Después de seleccionar plataforma, puedes elegir tu rango
+2. **Asignación completa**: El bot asigna tanto el rol de rango como el de plataforma
+3. **Actualización de estadísticas**: Los contadores y rankings se actualizan automáticamente
+
+#### **Ejemplo de Flujo Típico:**
+
+```
+Usuario hace clic en "Platino" →
+¿Tienes plataforma? No →
+Se muestra menú de plataformas →
+Usuario selecciona "PC" →
+Se asigna rol "PC" →
+Se muestra confirmación →
+Usuario puede seleccionar rango nuevamente →
+Se asignan roles "Platino" + "PC"
+```
+
+#### **Gestión Posterior**
+
+- **Cambiar plataforma**: Usa el botón "Gestionar mi Plataforma" en cualquier momento
+- **Cambiar rango**: Los botones de rango están siempre disponibles
+- **Ver configuración**: Tu plataforma actual se muestra en el menú de gestión
+
+> **💡 Importante**: La plataforma es **obligatoria** para mostrar estadísticas precisas y participar en rankings. Sin ella, no podrás seleccionar un rango.
+
 ## 🌐 Uso en Múltiples Canales
 
 Una de las características más poderosas del bot es su capacidad para funcionar en diferentes canales de forma simultánea e independiente.

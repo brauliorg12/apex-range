@@ -46,7 +46,7 @@ export async function updatePlayerRankDate(
  * Obtiene la plataforma de juego de un usuario específico en un servidor.
  * @param guildId - ID del servidor de Discord
  * @param userId - ID del usuario de Discord
- * @returns Promise que resuelve al nombre de la plataforma ('PC', 'PS4', 'X1', 'SWITCH') o 'PC' si no se encuentra
+ * @returns Promise que resuelve al nombre de la plataforma ('PC', 'PS4', 'X1', 'SWITCH') o '' si no se encuentra
  */
 export async function getPlayerPlatform(
   guildId: string,
@@ -54,7 +54,7 @@ export async function getPlayerPlatform(
 ): Promise<string> {
   const data = await getPlayers(guildId);
   const player = data.find((r: PlayerRecord) => r.userId === userId);
-  return player?.platform || 'PC'; // Por defecto PC si no se encuentra
+  return player?.platform || ''; // Por defecto vacío si no se encuentra
 }
 
 /**
@@ -96,5 +96,24 @@ export async function removePlayerRankDate(
   const next = data.filter((r: PlayerRecord) => r.userId !== userId);
   if (next.length !== data.length) {
     await savePlayers(guildId, next);
+  }
+}
+
+/**
+ * Elimina la plataforma de un usuario específico en un servidor, dejando el resto del registro intacto.
+ * @param guildId - ID del servidor de Discord
+ * @param userId - ID del usuario de Discord
+ * @returns Promise que se resuelve cuando se completa la eliminación
+ */
+export async function removePlayerPlatform(
+  guildId: string,
+  userId: string
+): Promise<void> {
+  const data = await getPlayers(guildId);
+  const idx = data.findIndex((r: PlayerRecord) => r.userId === userId);
+
+  if (idx >= 0) {
+    data[idx].platform = '';
+    await savePlayers(guildId, data);
   }
 }

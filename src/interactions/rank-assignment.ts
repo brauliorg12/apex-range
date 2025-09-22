@@ -1,9 +1,5 @@
 import { ButtonInteraction, GuildMember, EmbedBuilder } from 'discord.js';
-import {
-  APEX_RANKS,
-  APEX_PLATFORMS,
-  PC_ONLY_EMOGI,
-} from '../models/constants';
+import { APEX_RANKS, APEX_PLATFORMS, PC_ONLY_EMOGI } from '../models/constants';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
 import {
@@ -35,8 +31,8 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     const currentPlatform = await getPlayerPlatform(guild.id, member.id);
 
     if (!currentPlatform) {
-      // Si no tiene plataforma configurada, mostrar menú de gestionar plataforma
-      await handleManagePlatform(interaction);
+      // Si no tiene plataforma configurada, mostrar menú de gestionar plataforma con el rango seleccionado
+      await handleManagePlatform(interaction, selectedRank);
       return;
     }
 

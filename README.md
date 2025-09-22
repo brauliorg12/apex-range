@@ -85,6 +85,7 @@ Un bot profesional para comunidades de Apex Legends que permite:
 - **Presencia global con estadísticas combinadas de todos los servidores**.
 - **Soporte completo para múltiples plataformas de Apex Legends** (PC, PlayStation, Xbox, Nintendo Switch).
 - **Gestión inteligente de plataformas** con asignación automática de roles.
+- **Flujo inteligente de configuración**: Selección obligatoria de plataforma antes de rango para datos precisos.
 - **Consultas precisas de perfiles** basadas en la plataforma seleccionada.
 - **Integración completa con APIs oficiales** de Mozambique para datos precisos por plataforma.
 
