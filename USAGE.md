@@ -4,12 +4,12 @@ Esta guía explica cómo usar Apex Legends Rank Bot una vez instalado y configur
 
 ## 🟢 Comandos Disponibles
 
-| Comando / Acción   | Descripción                                                                                                                                                                                                         | Permisos      |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Comando / Acción   | Descripción                                                                                                                                                                                                 | Permisos      |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo. **3 modos disponibles:** Automático (nombres predeterminados), Manual (nombres personalizados), Canales Existentes | Administrador |
-| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                                                      | Todos         |
-| `/total-jugadores` | Muestra el número total de jugadores con rango                                                                                                                                                                      | Todos         |
-| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                                                                                                                | Owner del Bot |
+| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                                              | Todos         |
+| `/total-jugadores` | Muestra el número total de jugadores con rango                                                                                                                                                              | Todos         |
+| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                                                                                                        | Owner del Bot |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
 
@@ -55,10 +55,14 @@ Después de verificar/crear los roles, el bot presenta un menú interactivo con 
 
 ### 📎 **Modo Canales Existentes**
 
-- Utiliza canales ya creados en tu servidor
-- Selección visual de canales existentes mediante menús desplegables
-- No crea nuevos canales, solo configura los existentes
-- Perfecto para servidores con estructura establecida
+- Utiliza canales ya creados en tu servidor sin crear nuevos
+- **Selección interactiva**: Muestra un menú desplegable con todos los canales de texto disponibles
+- **Selección de dos canales**: Debes elegir exactamente 2 canales en orden específico:
+  - **Primer canal**: Canal de administración (será configurado como privado para administradores)
+  - **Segundo canal**: Canal del panel público (donde se mostrará el panel de rangos)
+- **Confirmación previa**: Antes de configurar, muestra una vista previa con los canales seleccionados (el embed de selección se reemplaza automáticamente por el de confirmación para una experiencia limpia)
+- **Configuración automática**: El bot configura permisos y contenido en los canales elegidos
+- Perfecto para servidores con estructura establecida que prefieren no crear canales adicionales
 
 ### 🚀 **Flujo de Configuración Completo**
 

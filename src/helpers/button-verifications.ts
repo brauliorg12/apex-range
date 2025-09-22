@@ -30,9 +30,10 @@ export async function verifyChannelAccessForButton(
       .setDescription('No tienes permisos para acceder a este canal.')
       .setColor(0xff0000);
 
-    await interaction.editReply({
+    await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
+      ephemeral: true,
     });
     return false;
   }
@@ -47,9 +48,10 @@ export async function verifyChannelAccessForButton(
       .setDescription('El bot no tiene permisos para acceder a este canal.')
       .setColor(0xff0000);
 
-    await interaction.editReply({
+    await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
+      ephemeral: true,
     });
     return false;
   }
@@ -85,9 +87,10 @@ export async function verifyBotPermissionsForButton(
       .setDescription('No se pudo verificar los permisos del bot.')
       .setColor(0xff0000);
 
-    await interaction.editReply({
+    await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
+      ephemeral: true,
     });
     return false;
   }
@@ -112,9 +115,10 @@ export async function verifyBotPermissionsForButton(
       )
       .setColor(0xff0000);
 
-    await interaction.editReply({
+    await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
+      ephemeral: true,
     });
     return false;
   }

@@ -1,10 +1,14 @@
 import { ButtonInteraction, EmbedBuilder, TextChannel } from 'discord.js';
 import { getServerLogger } from '../utils/server-logger';
+import { extractChannelsForExistingMode } from './handlers/setup-channels-extractor';
+import { validateChannelAccess } from './handlers/setup-channel-access-validator';
+import { validateBotPermissions } from './handlers/setup-bot-permissions-validator';
+import { buildSetupOptions } from './handlers/setup-options-builder';
+import { executeSetup } from './handlers/setup-executor';
 import {
-  verifyChannelAccessForButton,
-  verifyBotPermissionsForButton,
-} from '../helpers/button-verifications';
-import { performSetup } from '../helpers/setup-roles/perform-setup';
+  createErrorEmbed,
+  createSetupErrorEmbed,
+} from './handlers/setup-embed-helpers';
 
 /**
  * Maneja la confirmación y ejecución completa del setup para cualquier modo de configuración.
@@ -16,11 +20,10 @@ import { performSetup } from '../helpers/setup-roles/perform-setup';
  * El proceso incluye múltiples pasos de validación y proporciona feedback detallado al usuario
  * a través de embeds informativos durante todo el proceso.
  *
- * @param interaction - La interacción de botón que activó la confirmación del setup
- * @param mode - El modo de configuración seleccionado ('auto', 'manual', o 'existente')
- * @param options - Opciones adicionales específicas del modo (opcional)
- *                 Para modo manual: { canal_admin?: string, canal_publico?: string }
- * @returns Promise<void> - No retorna valor, maneja la respuesta directamente en la interacción
+ * @param interaction La interacción de botón que activó la confirmación del setup
+ * @param mode El modo de configuración seleccionado ('auto', 'manual', o 'existente')
+ * @param options Opciones adicionales específicas del modo (opcional)
+ * @returns Promise<void>
  */
 export async function handleSetupConfirmation(
   interaction: ButtonInteraction,
@@ -42,45 +45,91 @@ export async function handleSetupConfirmation(
 
   logger.info('deferUpdate completado');
 
-  // PASO 1: Verificar acceso al canal
-  const channel = interaction.channel;
-  if (!channel || !('name' in channel) || channel.type !== 0) {
-    // ChannelType.GuildText = 0
-    logger.error(
-      'No se pudo identificar el canal actual o no es un canal de texto'
-    );
-    const errorEmbed = new EmbedBuilder()
-      .setTitle('❌ Error')
-      .setDescription(
-        'No se pudo identificar el canal actual o no es un canal de texto válido.'
-      )
-      .setColor(0xff0000);
+  // Extraer canales para modo existente
+  let controlChannel: TextChannel | undefined;
+  let panelChannel: TextChannel | undefined;
+  if (mode === 'existente') {
+    // Si se pasaron opciones con IDs de canales, usarlos directamente
+    if (options?.canal_admin && options?.canal_publico) {
+      const adminCh = interaction.guild!.channels.cache.get(
+        options.canal_admin
+      );
+      const panelCh = interaction.guild!.channels.cache.get(
+        options.canal_publico
+      );
 
-    await interaction.editReply({
-      embeds: [errorEmbed],
+      if (!adminCh || !panelCh || adminCh.type !== 0 || panelCh.type !== 0) {
+        await interaction.followUp({
+          embeds: [
+            createErrorEmbed(
+              '❌ Error',
+              'Los canales seleccionados ya no existen o no son válidos.'
+            ),
+          ],
+          components: [],
+          ephemeral: true,
+        });
+        return;
+      }
+
+      controlChannel = adminCh as TextChannel;
+      panelChannel = panelCh as TextChannel;
+      logger.info(
+        `Canales obtenidos de opciones - Admin: #${controlChannel.name}, Panel: #${panelChannel.name}`
+      );
+    } else {
+      // Método alternativo: extraer del customId (para compatibilidad)
+      const channels = await extractChannelsForExistingMode(
+        interaction,
+        logger
+      );
+      if (!channels) {
+        await interaction.followUp({
+          embeds: [
+            createErrorEmbed(
+              '❌ Error',
+              'Los canales seleccionados ya no existen o no son válidos.'
+            ),
+          ],
+          components: [],
+          ephemeral: true,
+        });
+        return;
+      }
+      controlChannel = channels.controlChannel;
+      panelChannel = channels.panelChannel;
+    }
+  }
+
+  // Validar acceso al canal actual
+  const textChannel = await validateChannelAccess(interaction, mode, logger);
+  if (!textChannel) {
+    await interaction.followUp({
+      embeds: [
+        createErrorEmbed(
+          '❌ Error',
+          'No se pudo identificar el canal actual o no es un canal de texto válido.'
+        ),
+      ],
       components: [],
+      ephemeral: true,
     });
     return;
   }
 
-  const textChannel = channel as TextChannel;
-
-  logger.info(`Canal identificado: ${textChannel.name} (${textChannel.id})`);
-
-  if (!(await verifyChannelAccessForButton(interaction, textChannel, logger))) {
-    logger.info('Falta acceso al canal');
-    return; // verifyChannelAccessForButton ya maneja la respuesta
-  }
-  logger.info('Acceso al canal verificado');
-
-  // PASO 2: Verificar permisos del bot
+  // Validar permisos del bot
   if (
-    !(await verifyBotPermissionsForButton(interaction, textChannel, logger))
+    !(await validateBotPermissions(
+      interaction,
+      mode,
+      textChannel,
+      controlChannel,
+      panelChannel,
+      logger
+    ))
   ) {
-    logger.info('Faltan permisos del bot');
-    return; // verifyBotPermissionsForButton ya maneja la respuesta
+    return; // validateBotPermissions maneja la respuesta de error
   }
-  logger.info('Permisos del bot verificados');
 
   // Configurar título y descripción según el modo
   const modeConfig = {
@@ -126,188 +175,37 @@ export async function handleSetupConfirmation(
 
   await interaction.editReply({
     embeds: [loadingEmbed],
-    components: [], // Remover botones mientras se ejecuta
+    components: [],
   });
 
-  // Ejecutar el setup
+  // Ejecutar setup
   try {
     logger.info(`Iniciando configuración ${mode}...`);
 
-    // Configurar opciones según el modo
-    const setupOptions: any = { modo: mode };
-
-    if (mode === 'manual') {
-      // Para el modo manual, usar opciones pasadas o extraer del customId
-      if (options?.canal_admin && options?.canal_publico) {
-        setupOptions.canal_admin = options.canal_admin;
-        setupOptions.canal_publico = options.canal_publico;
-        logger.info(
-          `Nombres desde opciones - Admin: ${setupOptions.canal_admin}, Panel: ${setupOptions.canal_publico}`
-        );
-      } else {
-        // Fallback: extraer nombres de canales del customId
-        const parts = interaction.customId.split('_');
-        logger.info(`CustomId completo: ${interaction.customId}`);
-        logger.info(`Partes del customId: ${JSON.stringify(parts)}`);
-        if (parts.length >= 4) {
-          setupOptions.canal_admin = parts[2]; // tercer elemento después de split
-          setupOptions.canal_publico = parts[3]; // cuarto elemento
-          logger.info(
-            `Nombres extraídos - Admin: ${setupOptions.canal_admin}, Panel: ${setupOptions.canal_publico}`
-          );
-        } else {
-          // Fallback a valores por defecto si no se pudieron extraer
-          setupOptions.canal_admin = 'apex-range-admin';
-          setupOptions.canal_publico = 'apex-rangos';
-          logger.warn(
-            'No se pudieron extraer nombres del customId, usando valores por defecto'
-          );
-        }
-      }
-    } else if (mode === 'existente') {
-      // Para el modo existente, usar el canal actual como panel
-      setupOptions.panelChannelId = textChannel.id;
-    }
-
-    logger.info(
-      `Opciones finales para performSetup: ${JSON.stringify(setupOptions)}`
-    );
-
-    // Llamar a performSetup
-    logger.info('Llamando a performSetup...');
-    const result = await performSetup(
-      textChannel,
+    // Construir opciones de setup
+    const setupOptions = buildSetupOptions(
+      mode,
+      controlChannel,
+      panelChannel,
+      options,
       interaction,
-      logger,
-      setupOptions
+      logger
     );
-    logger.info('performSetup completado exitosamente');
 
-    logger.info(`Configuración ${mode} completada exitosamente`);
-
-    // Obtener información de los canales usando los nombres personalizados
-    const guild = interaction.guild!;
-    let controlChannelName = 'apex-range-admin'; // por defecto
-    let panelChannelName = 'apex-rangos'; // por defecto
-
-    // Si es modo manual, usar los nombres personalizados
-    if (
-      mode === 'manual' &&
-      setupOptions.canal_admin &&
-      setupOptions.canal_publico
-    ) {
-      controlChannelName = setupOptions.canal_admin;
-      panelChannelName = setupOptions.canal_publico;
-    }
-
-    const controlChannel = guild.channels.cache.find(
-      (ch) => ch.name === controlChannelName && ch.type === 0
+    await executeSetup(
+      interaction,
+      mode,
+      textChannel,
+      setupOptions,
+      config,
+      logger
     );
-    const panelChannel =
-      mode === 'existente'
-        ? textChannel
-        : guild.channels.cache.find(
-            (ch) => ch.name === panelChannelName && ch.type === 0
-          );
-
-    // Obtener estadísticas de usuarios registrados
-    const { readPlayers } = await import('../utils/state-manager');
-    const registeredUsers = await readPlayers(guild.id);
-    const userCount = registeredUsers.length;
-
-    // Crear embed detallado de éxito
-    const successEmbed = new EmbedBuilder()
-      .setTitle(config.successTitle)
-      .setDescription(config.successDescription)
-      .setColor(config.successColor)
-      .addFields(
-        {
-          name:
-            '📍 Canales ' + (mode === 'existente' ? 'Configurados' : 'Creados'),
-          value:
-            `• ${
-              controlChannel
-                ? `<#${controlChannel.id}>`
-                : `#${controlChannelName}`
-            } *(Administración)*\n` +
-            `• ${
-              panelChannel ? `<#${panelChannel.id}>` : `#${panelChannelName}`
-            } *(Panel de Rangos)*`,
-          inline: false,
-        },
-        {
-          name: '⏱️ Tiempo de Configuración:',
-          value: `${result.elapsed} segundos`,
-          inline: false,
-        },
-        {
-          name: '👥 Usuarios Registrados:',
-          value: `${userCount} ${userCount === 0 ? '(inicial)' : ''}`,
-          inline: false,
-        },
-        {
-          name: '📊 Estado:',
-          value: result.statsUpdated
-            ? '✅ Estadísticas actualizadas'
-            : '⚠️ Error en estadísticas',
-          inline: false,
-        },
-        {
-          name: '🎮 Funcionalidades:',
-          value:
-            `• Panel interactivo ${
-              mode === 'manual'
-                ? 'personalizado'
-                : mode === 'existente'
-                ? 'configurado'
-                : 'de rangos'
-            }\n` +
-            '• Sistema de selección automática\n' +
-            '• Estadísticas en tiempo real\n' +
-            '• Gestión de plataformas\n' +
-            '• Búsqueda por rangos',
-          inline: false,
-        }
-      )
-      .setFooter({
-        text: '¡Los usuarios ya pueden seleccionar sus rangos en el panel!',
-        iconURL: interaction.guild?.iconURL() || undefined,
-      })
-      .setTimestamp();
-
-    await interaction.editReply({
-      embeds: [successEmbed],
-      components: [],
-    });
   } catch (error) {
     console.error(`Error en setup ${mode}:`, error);
     logger.error(`Error en configuración ${mode}:`, error);
 
-    const errorEmbed = new EmbedBuilder()
-      .setTitle('❌ Error en la Configuración')
-      .setDescription(
-        `Ocurrió un error durante la configuración ${
-          mode === 'auto'
-            ? 'automática'
-            : mode === 'manual'
-            ? 'manual'
-            : 'con canales existentes'
-        }.\n\n` +
-          '**Posibles causas:**\n' +
-          '• El bot no tiene permisos para crear canales\n' +
-          `${mode === 'manual' ? '• Nombres de canales inválidos\n' : ''}` +
-          `${
-            mode === 'existente'
-              ? '• Los canales especificados no existen\n'
-              : ''
-          }` +
-          '• Error interno del servidor\n\n' +
-          'Por favor, verifica los permisos del bot e intenta nuevamente.'
-      )
-      .setColor(0xff0000);
-
     await interaction.editReply({
-      embeds: [errorEmbed],
+      embeds: [createSetupErrorEmbed(mode)],
       components: [],
     });
   }

@@ -98,8 +98,37 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       } else {
         await handleSetupConfirmation(interaction, 'manual');
       }
-    } else if (customId === 'confirm_existente') {
-      await handleSetupConfirmation(interaction, 'existente');
+    } else if (customId.startsWith('confirm_existente_')) {
+      // Extraer IDs de canales del customId
+      const parts = customId.split('_');
+      if (parts.length >= 4) {
+        const adminChannelId = parts[2];
+        const panelChannelId = parts[3];
+
+        // Obtener los canales del servidor
+        const adminChannel =
+          interaction.guild?.channels.cache.get(adminChannelId);
+        const panelChannel =
+          interaction.guild?.channels.cache.get(panelChannelId);
+
+        if (!adminChannel || !panelChannel) {
+          await interaction.reply({
+            content: '❌ Uno o ambos canales seleccionados ya no existen.',
+            ephemeral: true,
+          });
+          return;
+        }
+
+        // Pasar los canales como opciones adicionales
+        const options = {
+          canal_admin: adminChannelId,
+          canal_publico: panelChannelId,
+        };
+
+        await handleSetupConfirmation(interaction, 'existente', options);
+      } else {
+        await handleSetupConfirmation(interaction, 'existente');
+      }
     } else if (customId === 'back_to_modes') {
       await handleBackToModes(interaction);
     } else if (customId === 'cancel_setup') {

@@ -177,7 +177,8 @@ export async function performSetup(
       logger,
       selectedControlChannel,
       createChannels,
-      controlChannelName
+      controlChannelName,
+      options.modo
     );
     logger.info('PASO 8: Canal de control creado/verificado exitosamente');
 
@@ -208,7 +209,8 @@ export async function performSetup(
       controlChannel, // Puede ser undefined si falló la creación
       selectedPanelChannel,
       createChannels,
-      panelChannelName
+      panelChannelName,
+      options.modo
     );
     logger.info('PASO 9: Canal del panel creado/verificado exitosamente');
   } catch (error) {

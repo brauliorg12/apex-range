@@ -52,7 +52,8 @@ export async function createOrVerifyControlChannel(
   logger: any,
   selectedChannel?: TextChannel,
   createChannels: boolean = true,
-  customName?: string
+  customName?: string,
+  modo?: string
 ): Promise<TextChannel> {
   logger.info('Verificando/creando canal de control del bot...');
 
@@ -94,27 +95,33 @@ El bot usará este canal para operaciones internas y logs.`,
     return selectedChannel;
   }
 
-  // PASO 1: Buscar canal existente
-  const existingChannel = await findExistingControlChannel(guild);
-  if (existingChannel) {
+  // Para modo manual, no buscar existente; intentar crear siempre
+  if (modo === 'manual' && customName) {
     logger.info(
-      `Canal de control encontrado: #${existingChannel.name} (${existingChannel.id})`
+      `Modo manual: Intentando crear nuevo canal de control con nombre: ${customName}`
     );
-
-    // Verificar permisos del canal existente
-    const botPermissions = existingChannel.permissionsFor(guild.members.me!);
-    if (!botPermissions?.has(PermissionFlagsBits.SendMessages)) {
-      logger.warn(
-        'El canal de control existente no tiene permisos adecuados para el bot'
+  } else {
+    // PASO 1: Buscar canal existente
+    const existingChannel = await findExistingControlChannel(guild);
+    if (existingChannel) {
+      logger.info(
+        `Canal de control encontrado: #${existingChannel.name} (${existingChannel.id})`
       );
-      // Intentar arreglar permisos
-      await fixControlChannelPermissions(existingChannel, logger);
-    }
 
-    // Enviar mensaje de confirmación de uso
-    try {
-      await existingChannel.send({
-        content: `🤖 **Canal de Control Detectado**
+      // Verificar permisos del canal existente
+      const botPermissions = existingChannel.permissionsFor(guild.members.me!);
+      if (!botPermissions?.has(PermissionFlagsBits.SendMessages)) {
+        logger.warn(
+          'El canal de control existente no tiene permisos adecuados para el bot'
+        );
+        // Intentar arreglar permisos
+        await fixControlChannelPermissions(existingChannel, logger);
+      }
+
+      // Enviar mensaje de confirmación de uso
+      try {
+        await existingChannel.send({
+          content: `🤖 **Canal de Control Detectado**
 
 Este canal ha sido configurado como canal de control para Apex Range.
 
@@ -123,14 +130,15 @@ Este canal ha sido configurado como canal de control para Apex Range.
 **Permisos:** Verificados
 
 El bot usará este canal para operaciones internas y logs.`,
-      });
-    } catch (error) {
-      logger.warn(
-        'No se pudo enviar mensaje de confirmación al canal existente'
-      );
-    }
+        });
+      } catch (error) {
+        logger.warn(
+          'No se pudo enviar mensaje de confirmación al canal existente'
+        );
+      }
 
-    return existingChannel;
+      return existingChannel;
+    }
   }
 
   // Si no se permite crear canales y no hay uno existente, dar error
@@ -194,8 +202,20 @@ El bot usará este canal para operaciones internas y logs.`,
       });
     }
 
+    let channelName = customName || DEFAULT_CONTROL_CHANNEL_NAME;
+    if (modo === 'manual' && customName) {
+      // Para modo manual, si el nombre ya existe, agregar sufijo para evitar duplicado
+      const existing = guild.channels.cache.find(
+        (ch) => ch.name === customName && ch.type === ChannelType.GuildText
+      );
+      if (existing) {
+        channelName = `${customName}-manual`;
+        logger.info(`Nombre duplicado, usando sufijo: ${channelName}`);
+      }
+    }
+
     const controlChannel = await guild.channels.create({
-      name: customName || DEFAULT_CONTROL_CHANNEL_NAME, // Usar nombre personalizado o por defecto
+      name: channelName,
       type: ChannelType.GuildText,
       topic:
         'Canal de control interno del bot Apex Range - Solo para administradores y el bot',
@@ -334,7 +354,8 @@ export async function createOrVerifyPanelChannel(
   controlChannel?: TextChannel,
   selectedChannel?: TextChannel,
   createChannels: boolean = true,
-  customName?: string
+  customName?: string,
+  modo?: string
 ): Promise<TextChannel> {
   logger.info('Verificando/creando canal del panel de rangos...');
 
@@ -383,33 +404,39 @@ El bot colocará aquí el panel de selección de rangos y estadísticas.`,
     return selectedChannel;
   }
 
-  // PASO 1: Buscar canal existente
-  const existingChannel = await findExistingPanelChannel(guild);
-  if (existingChannel) {
+  // Para modo manual, no buscar existente; intentar crear siempre
+  if (modo === 'manual' && customName) {
     logger.info(
-      `Canal del panel encontrado: #${existingChannel.name} (${existingChannel.id})`
+      `Modo manual: Intentando crear nuevo canal del panel con nombre: ${customName}`
     );
-
-    // Verificar permisos del canal existente
-    const botPermissions = existingChannel.permissionsFor(guild.members.me!);
-    if (
-      !botPermissions?.has([
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ViewChannel,
-      ])
-    ) {
-      logger.warn(
-        'El canal del panel existente no tiene permisos adecuados para el bot'
+  } else {
+    // PASO 1: Buscar canal existente
+    const existingChannel = await findExistingPanelChannel(guild);
+    if (existingChannel) {
+      logger.info(
+        `Canal del panel encontrado: #${existingChannel.name} (${existingChannel.id})`
       );
-      // Intentar arreglar permisos básicos
-      await fixPanelChannelPermissions(existingChannel, logger);
-    }
 
-    // Enviar mensaje de confirmación de uso al canal de control si está disponible
-    if (controlChannel) {
-      try {
-        await controlChannel.send({
-          content: `🎮 **Canal del Panel Detectado**
+      // Verificar permisos del canal existente
+      const botPermissions = existingChannel.permissionsFor(guild.members.me!);
+      if (
+        !botPermissions?.has([
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.ViewChannel,
+        ])
+      ) {
+        logger.warn(
+          'El canal del panel existente no tiene permisos adecuados para el bot'
+        );
+        // Intentar arreglar permisos básicos
+        await fixPanelChannelPermissions(existingChannel, logger);
+      }
+
+      // Enviar mensaje de confirmación de uso al canal de control si está disponible
+      if (controlChannel) {
+        try {
+          await controlChannel.send({
+            content: `🎮 **Canal del Panel Detectado**
 
 Este canal ha sido configurado como canal del panel para Apex Range.
 
@@ -418,15 +445,16 @@ Este canal ha sido configurado como canal del panel para Apex Range.
 **Tipo:** Panel de rangos público
 
 El bot colocará aquí el panel de selección de rangos y estadísticas.`,
-        });
-      } catch (error) {
-        logger.warn(
-          'No se pudo enviar mensaje de confirmación al canal de control'
-        );
+          });
+        } catch (error) {
+          logger.warn(
+            'No se pudo enviar mensaje de confirmación al canal de control'
+          );
+        }
       }
-    }
 
-    return existingChannel;
+      return existingChannel;
+    }
   }
 
   // Si no se permite crear canales, dar error
@@ -454,8 +482,20 @@ El bot colocará aquí el panel de selección de rangos y estadísticas.`,
   }
 
   try {
+    let channelName = customName || DEFAULT_PANEL_CHANNEL_NAME;
+    if (modo === 'manual' && customName) {
+      // Para modo manual, si el nombre ya existe, agregar sufijo para evitar duplicado
+      const existing = guild.channels.cache.find(
+        (ch) => ch.name === customName && ch.type === ChannelType.GuildText
+      );
+      if (existing) {
+        channelName = `${customName}-manual`;
+        logger.info(`Nombre duplicado, usando sufijo: ${channelName}`);
+      }
+    }
+
     const panelChannel = await guild.channels.create({
-      name: customName || DEFAULT_PANEL_CHANNEL_NAME, // Usar nombre personalizado o por defecto
+      name: channelName,
       type: ChannelType.GuildText,
       topic:
         'Panel de rangos y estadísticas de Apex Legends - Gestionado por Apex Range Bot',
