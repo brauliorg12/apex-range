@@ -1,49 +1,10 @@
 import { EmbedBuilder, ButtonInteraction } from 'discord.js';
-
-/**
- * Crea un embed de error estándar para respuestas de setup.
- * @param title Título del embed
- * @param description Descripción del error
- * @returns EmbedBuilder configurado
- */
-export function createErrorEmbed(
-  title: string,
-  description: string
-): EmbedBuilder {
-  return new EmbedBuilder()
-    .setTitle(title)
-    .setDescription(description)
-    .setColor(0xff0000);
-}
-
-/**
- * Crea un embed de error para configuración fallida.
- * @param mode Modo de configuración que falló
- * @returns EmbedBuilder configurado con mensaje detallado
- */
-export function createSetupErrorEmbed(mode: string): EmbedBuilder {
-  const modeText =
-    mode === 'auto'
-      ? 'automática'
-      : mode === 'manual'
-      ? 'manual'
-      : 'con canales existentes';
-
-  return new EmbedBuilder()
-    .setTitle('❌ Error en la Configuración')
-    .setDescription(
-      `Ocurrió un error durante la configuración ${modeText}.\n\n` +
-        '**Posibles causas:**\n' +
-        '• El bot no tiene permisos para crear canales\n' +
-        `${mode === 'manual' ? '• Nombres de canales inválidos\n' : ''}` +
-        `${
-          mode === 'existente' ? '• Los canales especificados no existen\n' : ''
-        }` +
-        '• Error interno del servidor\n\n' +
-        'Por favor, verifica los permisos del bot e intenta nuevamente.'
-    )
-    .setColor(0xff0000);
-}
+import {
+  ALL_PLAYERS_EMOGI,
+  SETTINGS_ALL_EMOGI,
+  STATS_LOGO_EMOGI,
+  TIMER_EMOGI,
+} from '../../models/constants';
 
 /**
  * Crea el embed de éxito para el setup completado.
@@ -98,8 +59,18 @@ export function createSuccessEmbed(
     .setColor(config.successColor)
     .addFields(
       {
+        name: SETTINGS_ALL_EMOGI + '  Tipo de Panel Interactivo:',
+        value:
+          mode === 'manual'
+            ? 'Personalizado (nombres definidos por el usuario)'
+            : mode === 'existente'
+            ? 'Configurado con canales existentes'
+            : 'Estándar de rangos (creado automáticamente)',
+        inline: false,
+      },
+      {
         name:
-          '📍 Canales ' + (mode === 'existente' ? 'Configurados' : 'Creados'),
+          '📍 Canales ' + (mode === 'existente' ? 'Configurados:' : 'Creados:'),
         value:
           `• ${
             controlChannel
@@ -118,32 +89,25 @@ export function createSuccessEmbed(
         inline: false,
       },
       {
-        name: '⏱️ Tiempo de Configuración:',
+        name: TIMER_EMOGI + ' Tiempo de Configuración:',
         value: `${result.elapsed} segundos`,
         inline: false,
       },
       {
-        name: '👥 Usuarios Registrados:',
+        name: ALL_PLAYERS_EMOGI + ' Usuarios Registrados:',
         value: `${userCount} ${userCount === 0 ? '(inicial)' : ''}`,
         inline: false,
       },
       {
-        name: '📊 Estado:',
+        name: STATS_LOGO_EMOGI + ' Estadísticas:',
         value: result.statsUpdated
-          ? '✅ Estadísticas actualizadas'
+          ? '✅ actualizadas'
           : '⚠️ Error en estadísticas',
         inline: false,
       },
       {
-        name: '🎮 Funcionalidades:',
+        name: SETTINGS_ALL_EMOGI + ' Funcionalidades',
         value:
-          `• Panel interactivo ${
-            mode === 'manual'
-              ? 'personalizado'
-              : mode === 'existente'
-              ? 'configurado'
-              : 'de rangos'
-          }\n` +
           '• Gestión de rangos y plataformas\n' +
           '• Visualización de jugadores registrados con Estadísticas en tiempo real\n' +
           '• Panel de Gestión (Ver perfil Apex Global, Ayuda, etc.)',

@@ -8,7 +8,7 @@ import { executeSetup } from './handlers/setup-executor';
 import {
   createErrorEmbed,
   createSetupErrorEmbed,
-} from './handlers/setup-embed-helpers';
+} from './handlers/setup-error-embed';
 
 /**
  * Maneja la confirmación y ejecución completa del setup para cualquier modo de configuración.
