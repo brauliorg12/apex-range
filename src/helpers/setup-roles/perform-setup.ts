@@ -11,15 +11,13 @@ import {
   saveSetupState,
   finalizeSetup,
 } from '../setup-roles';
-import {
-  createOrVerifyControlChannel,
-  createOrVerifyPanelChannel,
-} from './create-control-channel';
 import { writeBotControlState, readPlayers } from '../../utils/state-manager';
 import {
   DEFAULT_CONTROL_CHANNEL_NAME,
   DEFAULT_PANEL_CHANNEL_NAME,
 } from '../../models/constants';
+import { createOrVerifyControlChannel } from './create-verify-control-channel';
+import { createOrVerifyPanelChannel } from './create-verify-panel-channel';
 
 /**
  * Funcion que ejecuta el setup completo despues de la confirmacion

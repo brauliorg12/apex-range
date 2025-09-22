@@ -144,10 +144,9 @@ export function createSuccessEmbed(
               ? 'configurado'
               : 'de rangos'
           }\n` +
-          '• Sistema de selección automática\n' +
-          '• Estadísticas en tiempo real\n' +
-          '• Gestión de plataformas\n' +
-          '• Búsqueda por rangos',
+          '• Gestión de rangos y plataformas\n' +
+          '• Visualización de jugadores registrados con Estadísticas en tiempo real\n' +
+          '• Panel de Gestión (Ver perfil Apex Global, Ayuda, etc.)',
         inline: false,
       }
     )
