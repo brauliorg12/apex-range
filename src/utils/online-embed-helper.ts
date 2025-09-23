@@ -8,7 +8,7 @@ import {
   Client,
   GuildMember,
 } from 'discord.js';
-import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
+import { APEX_RANKS } from '../models/constants';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { getRankEmoji } from './emoji-helper';
 import { createCloseButtonRow } from './button-helper';
@@ -78,7 +78,7 @@ export async function getRankPageEmbed(
   guild: Guild,
   rankId: string,
   page: number,
-  maxPerCard = MAX_PLAYERS_PER_CARD,
+  maxPerCard: number,
   showNumbers: boolean = true
 ) {
   const { getPlayerData } = await import('./player-data-manager');

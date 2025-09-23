@@ -7,7 +7,10 @@ import {
   GuildMember,
   Role,
 } from 'discord.js';
-import { MAX_PLAYERS_PER_CARD } from '../models/constants';
+import {
+  MAX_PLAYERS_PER_CARD,
+  MAX_PLAYERS_PER_PAGE,
+} from '../models/constants';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { buildOnlineEmbedForRank } from './build-online-embed-rank';
 import { createSeeMoreButtonRow } from './online-embed-helper';
@@ -126,7 +129,7 @@ export async function buildAllOnlineEmbeds(
     const seeMoreRow = createSeeMoreButtonRow(
       rank,
       sortedMembers.length,
-      maxPerCard,
+      MAX_PLAYERS_PER_PAGE,
       guild.client
     );
 

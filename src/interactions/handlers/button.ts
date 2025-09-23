@@ -10,7 +10,7 @@ import {
 } from '../../configs/setup-roles-handlers';
 import { logInteraction, logApp } from '../../utils/logger';
 import { getRankPageEmbed } from '../../utils/online-embed-helper';
-import { MAX_PLAYERS_PER_CARD } from '../../models/constants';
+import { MAX_PLAYERS_PER_PAGE } from '../../models/constants';
 import { handleButtonInteraction } from '../../button-interactions';
 import { handlePlatformAssignment } from '../rank-management';
 
@@ -80,7 +80,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         interaction.guild!,
         rankId,
         1,
-        MAX_PLAYERS_PER_CARD,
+        MAX_PLAYERS_PER_PAGE, // cantidad por página efímera
         true
       );
       if (!pageResult)
@@ -120,7 +120,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         interaction.guild!,
         rankId,
         page,
-        MAX_PLAYERS_PER_CARD // cantidad por pagina
+        MAX_PLAYERS_PER_PAGE // cantidad por pagina
       );
       if (!pageResult)
         return await interaction.reply({

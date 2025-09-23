@@ -6,6 +6,8 @@ export const COMMON_AURA_SIZE = 40;
 
 // Parámetro global para controlar el máximo de jugadores por card en panel principal rankeds
 export const MAX_PLAYERS_PER_CARD = 5;
+// Parámetro global para controlar el máximo de jugadores por card en panel principal rankeds
+export const MAX_PLAYERS_PER_PAGE = 10;
 
 /**
  * Nombre por defecto para el canal de control
