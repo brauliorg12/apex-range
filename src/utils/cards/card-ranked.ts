@@ -27,23 +27,9 @@ function formatTimeLeft(remaining?: string) {
  */
 function formatNextMap(map?: string, dateStr?: string) {
   if (!map || !dateStr) return 'No disponible';
-  const now = new Date();
   const nextDate = new Date(dateStr.replace(' ', 'T') + 'Z');
-  const isToday = nextDate.toDateString() === now.toDateString();
-  const isTomorrow = nextDate.getDate() === now.getDate() + 1;
-  let dayText = isToday
-    ? 'hoy'
-    : isTomorrow
-    ? 'mañana'
-    : nextDate.toLocaleDateString('es-ES');
-  return `Próximo mapa: ${map} • ${dayText} a las ${nextDate.toLocaleTimeString(
-    'es-ES',
-    {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }
-  )}`;
+  const timestamp = Math.floor(nextDate.getTime() / 1000);
+  return ` ${map} • <t:${timestamp}:D> <t:${timestamp}:t>`;
 }
 
 /**
@@ -88,6 +74,7 @@ export function buildRankedEmbed(
         )}`
       : undefined;
 
+  // TODO revisar datos de split y season end de API
   // Construye la descripción con info de split y fin de temporada
   const rankedDescArr = [
     ranked?.current?.eventType === 'split'
@@ -108,12 +95,12 @@ export function buildRankedEmbed(
     .setDescription(rankedDescArr.length > 0 ? rankedDescArr.join(' • ') : ' ')
     .addFields(
       {
-        name: 'Mapa actual',
+        name: 'Mapa actual:',
         value: hasData ? `\`\`\`${ranked.current.map}\`\`\`` : 'No disponible',
         inline: true,
       },
       {
-        name: 'Tiempo restante',
+        name: 'Tiempo restante:',
         value: hasData
           ? `\`\`\`${formatTimeLeft(ranked.current.remainingTimer)}\`\`\`` // Formatea el tiempo restante
           : 'No disponible',
@@ -121,21 +108,19 @@ export function buildRankedEmbed(
       }
     );
 
-  // Footer con info de próximo mapa y cache
+  // Agregar campo para próximo mapa si hay datos
+  if (ranked?.next?.map) {
+    embed.addFields({
+      name: 'Próximo mapa:',
+      value: formatNextMap(ranked.next.map, ranked.next.readableDate_start),
+      inline: false,
+    });
+  }
+
+  // Footer solo con info de cache si aplica
   if (footerText) {
     embed.setFooter({
-      text: ranked?.next?.map
-        ? `${formatNextMap(
-            ranked.next.map,
-            ranked.next.readableDate_start
-          )} • ${footerText}`
-        : `Próximo mapa: No disponible • ${footerText}`,
-    });
-  } else {
-    embed.setFooter({
-      text: ranked?.next?.map
-        ? formatNextMap(ranked.next.map, ranked.next.readableDate_start)
-        : 'Próximo mapa: No disponible',
+      text: footerText,
     });
   }
 

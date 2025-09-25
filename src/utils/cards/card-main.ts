@@ -32,13 +32,7 @@ setInterval(updateVersion, 300000);
  * @returns Un objeto EmbedBuilder configurado con título, descripción y footer con versión.
  */
 export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
-  const fecha = now.toLocaleDateString('es-ES');
-  const hora = now.toLocaleTimeString('es-ES', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true,
-  });
+  const timestamp = Math.floor(now.getTime() / 1000);
 
   return new EmbedBuilder()
     .setColor('#bdc3c7')
@@ -47,7 +41,7 @@ export function buildMainEmbed(now: Date, cacheInfo: Record<string, boolean>) {
       [
         '> ' + REFRESH_EMOGI + ' Se actualiza cada 5 minutos.',
         '> ' + TIMER_EMOGI + ' Última actualización:',
-        `\`\`\`${fecha} ${hora}\`\`\``,
+        `> <t:${timestamp}:D> <t:${timestamp}:t>`,
         '🌐 Datos desde la API de Mozambique',
         '[Más info](https://apexlegendsapi.com/)',
       ].join('\n')

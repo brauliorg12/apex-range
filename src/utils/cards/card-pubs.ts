@@ -25,23 +25,9 @@ function formatTimeLeft(remaining?: string) {
  */
 function formatNextMap(map?: string, dateStr?: string) {
   if (!map || !dateStr) return 'No disponible';
-  const now = new Date();
   const nextDate = new Date(dateStr.replace(' ', 'T') + 'Z');
-  const isToday = nextDate.toDateString() === now.toDateString();
-  const isTomorrow = nextDate.getDate() === now.getDate() + 1;
-  let dayText = isToday
-    ? 'hoy'
-    : isTomorrow
-    ? 'mañana'
-    : nextDate.toLocaleDateString('es-ES');
-  return `Próximo mapa: ${map} • ${dayText} a las ${nextDate.toLocaleTimeString(
-    'es-ES',
-    {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }
-  )}`;
+  const timestamp = Math.floor(nextDate.getTime() / 1000);
+  return ` ${map} • <t:${timestamp}:D> <t:${timestamp}:t>`;
 }
 
 /**
@@ -72,12 +58,12 @@ export function buildPubsEmbed(
     .setImage(hasData ? br.current.asset : null)
     .addFields(
       {
-        name: 'Mapa actual',
+        name: 'Mapa actual:',
         value: hasData ? `\`\`\`${br.current.map}\`\`\`` : 'No disponible',
         inline: true,
       },
       {
-        name: 'Tiempo restante',
+        name: 'Tiempo restante:',
         value: hasData
           ? `\`\`\`${formatTimeLeft(br.current.remainingTimer)}\`\`\``
           : 'No disponible',
@@ -85,20 +71,19 @@ export function buildPubsEmbed(
       }
     );
 
+  // Agregar campo para próximo mapa si hay datos
+  if (br?.next?.map) {
+    embed.addFields({
+      name: 'Próximo mapa:',
+      value: formatNextMap(br.next.map, br.next.readableDate_start),
+      inline: false,
+    });
+  }
+
+  // Footer solo con info de cache si aplica
   if (footerText) {
     embed.setFooter({
-      text: br?.next?.map
-        ? `${formatNextMap(
-            br.next.map,
-            br.next.readableDate_start
-          )} • ${footerText}`
-        : `Próximo mapa: No disponible • ${footerText}`,
-    });
-  } else {
-    embed.setFooter({
-      text: br?.next?.map
-        ? formatNextMap(br.next.map, br.next.readableDate_start)
-        : 'Próximo mapa: No disponible',
+      text: footerText,
     });
   }
 

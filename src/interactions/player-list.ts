@@ -107,7 +107,9 @@ export async function handleShowAllPlayersMenu(
           .map((m, index) => {
             const assignedAt = playerDateById.get(m.id);
             const dateString = assignedAt
-              ? ` - _${new Date(assignedAt).toLocaleDateString('es-ES')}_`
+              ? ` - _<t:${Math.floor(
+                  new Date(assignedAt).getTime() / 1000
+                )}:D>_`
               : '';
             return `${index + 1}. \`${m.displayName}\`${dateString}`;
           })

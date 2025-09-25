@@ -26,24 +26,10 @@ function formatTimeLeft(remaining?: string) {
  */
 function formatNextMap(map?: string, dateStr?: string, eventName?: string) {
   if (!map || !dateStr) return 'No disponible';
-  const now = new Date();
   const nextDate = new Date(dateStr.replace(' ', 'T') + 'Z');
-  const isToday = nextDate.toDateString() === now.toDateString();
-  const isTomorrow = nextDate.getDate() === now.getDate() + 1;
-  let dayText = isToday
-    ? 'hoy'
-    : isTomorrow
-    ? 'mañana'
-    : nextDate.toLocaleDateString('es-ES');
+  const timestamp = Math.floor(nextDate.getTime() / 1000);
   let eventText = eventName ? ` (${eventName})` : '';
-  return `Próximo mapa: ${map}${eventText} • ${dayText} a las ${nextDate.toLocaleTimeString(
-    'es-ES',
-    {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }
-  )}`;
+  return ` ${map}${eventText} • <t:${timestamp}:D> <t:${timestamp}:t>`;
 }
 
 /**
@@ -92,19 +78,19 @@ export function buildLtmEmbed(
     .setImage(hasData ? ltm.current.asset : null)
     .addFields(
       {
-        name: 'Modo de juego',
+        name: 'Modo de juego:',
         value: hasData
           ? `\`\`\`${ltm.current.eventName}\`\`\``
           : 'No disponible',
         inline: true,
       },
       {
-        name: 'Mapa actual',
+        name: 'Mapa actual:',
         value: hasData ? `\`\`\`${ltm.current.map}\`\`\`` : 'No disponible',
         inline: true,
       },
       {
-        name: 'Tiempo restante',
+        name: 'Tiempo restante:',
         value: hasData
           ? `\`\`\`${formatTimeLeft(ltm.current.remainingTimer)}\`\`\``
           : 'No disponible',
@@ -112,25 +98,23 @@ export function buildLtmEmbed(
       }
     );
 
+  // Agregar campo para próximo mapa si hay datos
+  if (ltm?.next?.map) {
+    embed.addFields({
+      name: 'Próximo mapa:',
+      value: formatNextMap(
+        ltm.next.map,
+        ltm.next.readableDate_start,
+        ltm.next.eventName
+      ),
+      inline: false,
+    });
+  }
+
+  // Footer solo con info de cache si aplica
   if (footerText) {
     embed.setFooter({
-      text: ltm?.next?.map
-        ? `${formatNextMap(
-            ltm.next.map,
-            ltm.next.readableDate_start,
-            ltm.next.eventName
-          )} • ${footerText}`
-        : `Próximo mapa: No disponible • ${footerText}`,
-    });
-  } else {
-    embed.setFooter({
-      text: ltm?.next?.map
-        ? formatNextMap(
-            ltm.next.map,
-            ltm.next.readableDate_start,
-            ltm.next.eventName
-          )
-        : 'Próximo mapa: No disponible',
+      text: footerText,
     });
   }
 
