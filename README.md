@@ -89,6 +89,7 @@ Un bot profesional para comunidades de Apex Legends que permite:
 - **Consultas precisas de perfiles** basadas en la plataforma seleccionada.
 - **Integración completa con APIs oficiales** de Mozambique para datos precisos por plataforma.
 - **Configuración personalizable de roles excluidos**: Permite ocultar roles específicos en los cards de rangos para una visualización más limpia.
+- **Fechas adaptadas a la zona horaria del usuario**: Las fechas en embeds, listas de jugadores y actualizaciones se muestran automáticamente en la zona horaria de cada usuario de Discord.
 
 ---
 
