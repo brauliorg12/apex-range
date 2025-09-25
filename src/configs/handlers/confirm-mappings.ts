@@ -29,7 +29,10 @@ export async function handleConfirmMappings(interaction: ButtonInteraction) {
     );
 
     // Guardar sugerencias en configuración
-    saveServerConfig(interaction.guild!.id, suggestions);
+    saveServerConfig(interaction.guild!.id, {
+      ranks: suggestions,
+      excludedRoles: [],
+    });
 
     const embed = new EmbedBuilder()
       .setColor('#00ff00')

@@ -88,6 +88,7 @@ Un bot profesional para comunidades de Apex Legends que permite:
 - **Flujo inteligente de configuración**: Selección obligatoria de plataforma antes de rango para datos precisos.
 - **Consultas precisas de perfiles** basadas en la plataforma seleccionada.
 - **Integración completa con APIs oficiales** de Mozambique para datos precisos por plataforma.
+- **Configuración personalizable de roles excluidos**: Permite ocultar roles específicos en los cards de rangos para una visualización más limpia.
 
 ---
 

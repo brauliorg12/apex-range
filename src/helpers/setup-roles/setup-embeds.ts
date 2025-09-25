@@ -1,4 +1,10 @@
-import { EmbedBuilder, TextChannel } from 'discord.js';
+import {
+  EmbedBuilder,
+  TextChannel,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from 'discord.js';
 import {
   ALL_PLAYERS_EMOGI,
   STATS_LOGO_EMOGI,
@@ -17,8 +23,8 @@ export function createSetupCompletedEmbed(
   elapsed: string | number,
   userCount: number,
   statsUpdated: boolean
-): EmbedBuilder {
-  return new EmbedBuilder()
+) {
+  const embed = new EmbedBuilder()
     .setTitle('🎯 Setup Roles Activado')
     .setDescription(
       '¡El sistema de rangos de Apex Legends ha sido configurado exitosamente!'
@@ -54,4 +60,14 @@ export function createSetupCompletedEmbed(
       text: 'Los usuarios ya pueden seleccionar sus rangos en el panel. ¡Disfruta del bot! 🎮',
     })
     .setColor(0x00ff00); // Verde para éxito
+
+  const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('configure_excluded_roles_admin')
+      .setLabel('Configurar Roles Excluidos')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🚫')
+  );
+
+  return { embeds: [embed], components: [buttons] };
 }

@@ -39,12 +39,12 @@ export function createMainMenuEmbed(guildName: string) {
     new ButtonBuilder()
       .setCustomId('modo_auto')
       .setLabel('Automático')
-      .setStyle(ButtonStyle.Success)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('🔄'),
     new ButtonBuilder()
       .setCustomId('modo_manual')
       .setLabel('Manual')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('⚙️'),
     new ButtonBuilder()
       .setCustomId('modo_existente')
@@ -53,7 +53,15 @@ export function createMainMenuEmbed(guildName: string) {
       .setEmoji('📎')
   );
 
-  return { embeds: [modeEmbed], components: [modeButtons] };
+  const extraButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('configure_excluded_roles')
+      .setLabel('Configurar Roles Excluidos')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🚫')
+  );
+
+  return { embeds: [modeEmbed], components: [modeButtons, extraButtons] };
 }
 
 /**
@@ -103,4 +111,15 @@ export async function handleCancelSetup(interaction: ButtonInteraction) {
     embeds: [cancelEmbed],
     components: [],
   });
+}
+
+/**
+ * Maneja la navegación de vuelta al panel de administración.
+ * Esta función puede ser personalizada para mostrar el embed del panel de admin específico.
+ * Actualmente, por defecto, vuelve al menú de modos de setup.
+ * @param interaction La interacción de botón
+ */
+export async function handleBackToAdminPanel(interaction: ButtonInteraction) {
+  // Por ahora, vuelve al menú de modos. Personaliza esta función para mostrar el embed del panel de admin.
+  await handleBackToModes(interaction);
 }

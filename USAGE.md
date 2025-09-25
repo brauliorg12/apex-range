@@ -4,12 +4,12 @@ Esta guía explica cómo usar Apex Legends Rank Bot una vez instalado y configur
 
 ## 🟢 Comandos Disponibles
 
-| Comando / Acción   | Descripción                                                                                                                                                                                                 | Permisos      |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo. **3 modos disponibles:** Automático (nombres predeterminados), Manual (nombres personalizados), Canales Existentes | Administrador |
-| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                                              | Todos         |
-| `/total-jugadores` | Muestra el número total de jugadores con rango                                                                                                                                                              | Todos         |
-| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                                                                                                        | Owner del Bot |
+| Comando / Acción   | Descripción                                                                                                                                                                                 | Permisos                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo. **4 opciones disponibles:** Automático, Manual, Canales Existentes, **Configurar Roles Excluidos** | Administrador (excepto roles excluidos) |
+| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                              | Todos                                   |
+| `/total-jugadores` | Muestra el número total de jugadores con rango                                                                                                                                              | Todos                                   |
+| `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                                                                                        | Owner del Bot                           |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
 
@@ -33,7 +33,7 @@ Si faltan roles, el bot ofrece opciones inteligentes:
 
 ### 🎯 **Selección de Modo de Configuración**
 
-Después de verificar/crear los roles, el bot presenta un menú interactivo con tres opciones principales:
+Después de verificar/crear los roles, el bot presenta un menú interactivo con **cuatro opciones principales**:
 
 ### 🔄 **Modo Automático**
 
@@ -53,23 +53,57 @@ Después de verificar/crear los roles, el bot presenta un menú interactivo con 
 - Confirmación detallada antes de crear canales
 - Experiencia guiada paso a paso con feedback visual
 
-### 📎 **Modo Canales Existentes**
+### � **Configuración de Roles Excluidos**
 
-- Utiliza canales ya creados en tu servidor sin crear nuevos
-- **Selección interactiva**: Muestra un menú desplegable con todos los canales de texto disponibles
-- **Selección de dos canales**: Debes elegir exactamente 2 canales en orden específico:
-  - **Primer canal**: Canal de administración (será configurado como privado para administradores)
-  - **Segundo canal**: Canal del panel público (donde se mostrará el panel de rangos)
-- **Confirmación previa**: Antes de configurar, muestra una vista previa con los canales seleccionados (el embed de selección se reemplaza automáticamente por el de confirmación para una experiencia limpia)
-- **Configuración automática**: El bot configura permisos y contenido en los canales elegidos
-- Perfecto para servidores con estructura establecida que prefieren no crear canales adicionales
+Después de seleccionar el modo de configuración, el bot ofrece una **opción adicional** para personalizar qué roles **NO** se mostrarán en los paréntesis de los cards de rangos (banderas de países).
+
+#### **Acceso desde Panel de Admin**
+
+Además del setup inicial, puedes gestionar los roles excluidos en cualquier momento desde el **panel de administración** (disponible después de completar el setup). Busca el botón correspondiente en el menú de admin para abrir el mismo **embed interactivo** y ajustar la configuración sin necesidad de repetir el setup completo.
+
+#### **Acceso a la Configuración**
+
+- En el menú principal de `/setup-roles`, encontrarás el botón **"🚫 Configurar Roles Excluidos"**
+- Abre un modal separado (solo visible para ti) con la lista de roles disponibles para excluir
+
+#### **Selección Interactiva**
+
+- **Botones chequeables**: Cada rol tiene un botón que cambia visualmente al seleccionarlo
+  - **No seleccionado**: Gris con nombre del rol
+  - **Seleccionado**: Verde con ✅ y nombre del rol
+- **Selección múltiple**: Puedes marcar/desmarcar varios roles antes de confirmar
+- **Límite**: Hasta 20 roles por página (se muestran en filas de 5 botones)
+
+#### **Roles Automáticamente Excluidos**
+
+La lista ya filtra automáticamente los roles del sistema:
+
+- `@everyone` (rol por defecto)
+- **Rangos de Apex**: Rookie, Bronce, Plata, Oro, Platino, Diamante, Maestro, Apex Predator
+- **Plataformas**: PC, PlayStation, Xbox, Nintendo Switch
+- **Países**: Todos los países reconocidos (Argentina, España, México, etc.)
+
+#### **Confirmación y Guardado**
+
+- **"Confirmar Selección"**: Guarda los roles marcados como excluidos
+- **"No Excluir Ninguno"**: Limpia cualquier selección (muestra todos los roles permitidos)
+- **Guardado por servidor**: La configuración se almacena en `db/server-config-{guildId}.json`
+
+#### **Efecto en los Cards**
+
+Después de configurar, los roles excluidos **NO aparecerán** en los paréntesis de los cards de rangos. Por ejemplo:
+
+- **Sin excluir**: `@usuario (Moderador, VIP, 🇦🇷 Argentina)`
+- **Excluyendo "Moderador"**: `@usuario (VIP, 🇦🇷 Argentina)`
+
+> **💡 Nota**: Esta configuración es opcional y cualquier usuario puede ajustarla. No requiere permisos de administrador.
 
 ### 🚀 **Flujo de Configuración Completo**
 
 1. **Ejecución**: Usuario ejecuta `/setup-roles`
 2. **Verificación**: Bot verifica roles automáticamente
 3. **Creación**: Si faltan roles, ofrece creación automática o instrucciones
-4. **Selección**: Muestra menú con 3 botones para elegir modo
+4. **Selección**: Muestra menú con **4 botones** para elegir modo o configurar roles excluidos
 5. **Interacción**: Modal o selección según el modo elegido
 6. **Validación**: Verificación automática de permisos y configuración
 7. **Confirmación**: Vista previa de lo que se creará/configurará

@@ -26,6 +26,9 @@ import {
   handleOpenManualModal,
 } from './interactions/handlers/setup-modes-manual';
 import { handleModoExistente } from './interactions/handlers/setup-modes-existente';
+import { handleRoleSelection } from './configs/handlers/role-selection-handlers';
+import { createRoleSelectionMenu } from './interactions/role-selection-menu';
+import { getExcludedRolesForGuild } from './utils/role-filter';
 
 /**
  * Asynchronously handles button interactions initiated by users.
@@ -133,6 +136,15 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleBackToModes(interaction);
     } else if (customId === 'cancel_setup') {
       await handleCancelSetup(interaction);
+    } else if (
+      customId.startsWith('role_select_') ||
+      customId.startsWith('role_select_admin_') ||
+      customId === 'role_skip' ||
+      customId === 'role_skip_admin' ||
+      customId === 'back_to_modes' ||
+      customId === 'back_to_modes_admin'
+    ) {
+      await handleRoleSelection(interaction);
     } else if (customId === 'show_more_options') {
       const rankFilterRow =
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
@@ -178,6 +190,20 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
         components: [platformSelectRow, closeButtonRow],
         ephemeral: true,
       });
+      return;
+    } else if (customId === 'configure_excluded_roles') {
+      await createRoleSelectionMenu(
+        interaction,
+        getExcludedRolesForGuild(interaction.guild!.id),
+        false
+      );
+      return;
+    } else if (customId === 'configure_excluded_roles_admin') {
+      await createRoleSelectionMenu(
+        interaction,
+        getExcludedRolesForGuild(interaction.guild!.id),
+        true
+      );
       return;
     }
   } catch (error) {

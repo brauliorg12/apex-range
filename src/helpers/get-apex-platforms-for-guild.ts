@@ -16,7 +16,7 @@ export function getApexPlatformsForGuild(
 ): ApexPlatform[] {
   const config = loadServerConfig(guildId);
   return APEX_PLATFORMS.map((platform) => {
-    const mappedName = config[platform.shortId] || platform.roleName;
+    const mappedName = config.ranks[platform.shortId] || platform.roleName;
     // Si guild está disponible, valida si el rol existe
     if (guild) {
       const roleExists = guild.roles.cache.some(

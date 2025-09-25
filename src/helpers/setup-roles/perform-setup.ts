@@ -263,16 +263,14 @@ export async function performSetup(
       const registeredUsers = await readPlayers(interaction.guild!.id);
       const userCount = registeredUsers.length;
 
-      await controlChannel.send({
-        embeds: [
-          createSetupCompletedEmbed(
-            panelChannel,
-            elapsed,
-            userCount,
-            statsUpdated
-          ),
-        ],
-      });
+      await controlChannel.send(
+        createSetupCompletedEmbed(
+          panelChannel,
+          elapsed,
+          userCount,
+          statsUpdated
+        )
+      );
       logger.info('Mensaje de confirmación enviado al canal de control');
     } catch (error) {
       logger.warn(

@@ -16,7 +16,7 @@ export function getApexRanksForGuild(
 ): ApexRank[] {
   const config = loadServerConfig(guildId);
   return APEX_RANKS.map((rank) => {
-    const mappedName = config[rank.shortId] || rank.roleName;
+    const mappedName = config.ranks[rank.shortId] || rank.roleName;
     // Si guild está disponible, valida si el rol existe
     if (guild) {
       const roleExists = guild.roles.cache.some(

@@ -1,5 +1,9 @@
 /**
- * Convierte un código ISO de país a emoji Unicode de bandera.
+ * Convierte un código ISO de país (2 letras) a su correspondiente emoji Unicode de bandera.
+ * Utiliza el algoritmo estándar de regional indicator symbols para generar banderas.
+ * Ejemplo: 'ES' -> 🇪🇸
+ * @param isoCode Código ISO del país en mayúsculas (ej: 'ES', 'US')
+ * @returns Emoji de bandera Unicode
  */
 function isoToFlagEmoji(isoCode: string): string {
   return isoCode
@@ -8,9 +12,11 @@ function isoToFlagEmoji(isoCode: string): string {
 }
 
 /**
- * Mapea nombre de país (MAYÚSCULAS) a código ISO.
+ * Mapea nombre de país (en MAYÚSCULAS) a su código ISO de 2 letras.
+ * Usado para identificar roles de países en el servidor y generar emojis de banderas.
+ * Contiene países reconocidos internacionalmente.
  */
-const COUNTRY_NAME_TO_ISO: Record<string, string> = {
+export const COUNTRY_NAME_TO_ISO: Record<string, string> = {
   AFGHANISTAN: 'AF',
   ALBANIA: 'AL',
   ARGELIA: 'DZ',
@@ -200,8 +206,11 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
 };
 
 /**
- * Devuelve el emoji de bandera para un rol de país (en mayúsculas).
- * Si no es un país conocido, retorna el nombre original.
+ * Devuelve el emoji de bandera para un rol de país dado su nombre.
+ * Si el nombre coincide con un país conocido, retorna el emoji de bandera.
+ * Si no, retorna el nombre original sin cambios.
+ * @param roleName Nombre del rol (país) en cualquier caso
+ * @returns Emoji de bandera o nombre original
  */
 export function getCountryFlag(roleName: string): string {
   const iso = COUNTRY_NAME_TO_ISO[roleName.toUpperCase()];
