@@ -3,30 +3,37 @@ import {
   ButtonBuilder,
   ButtonStyle,
   Client,
+  Guild,
 } from 'discord.js';
 import {
   ALL_PLAYERS_EMOGI,
   APEX_LOGO_EMOJI,
-  APEX_RANKS,
   GAME_PLATFORMS_EMOGI,
   HELP_EMOGI,
   LOGO_APP_EMOGI,
   SEARCH_EMOGI,
 } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Crea los botones de selección de rango para el panel principal.
  * Cada botón representa un rango de Apex y muestra su emoji y nombre.
  * Los botones se dividen en filas de máximo 5 por fila, como requiere Discord.
+ * IMPORTANTE: Usa los roles mapeados del servidor para soportar roles personalizados.
  * @param client Cliente de Discord.
+ * @param guild Guild donde se mostrarán los botones.
  * @returns Array de ActionRowBuilder<ButtonBuilder> con los botones de rango.
  */
 export function createRankButtons(
-  client: Client
+  client: Client,
+  guild: Guild
 ): ActionRowBuilder<ButtonBuilder>[] {
+  // Obtener los rangos mapeados del servidor (soporta roles personalizados)
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  
   // Mapea los rangos de Apex a botones con emoji y nombre
-  const buttons = APEX_RANKS.map((rank) =>
+  const buttons = ranks.map((rank) =>
     new ButtonBuilder()
       .setCustomId(rank.shortId)
       .setLabel(rank.label)

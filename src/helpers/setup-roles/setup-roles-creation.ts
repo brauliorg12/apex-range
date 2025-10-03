@@ -42,7 +42,7 @@ export async function createRoleSelectionMessage(
       channel,
       {
         embeds: [roleSelectionEmbed],
-        components: createRankButtons(channel.client),
+        components: createRankButtons(channel.client, channel.guild),
       },
       15000
     );

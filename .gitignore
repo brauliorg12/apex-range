@@ -26,3 +26,6 @@ logs/
 
 # Website
 /website
+
+# VSCode
+.vscode/

@@ -35,12 +35,54 @@ Si faltan roles, el bot ofrece opciones inteligentes:
 
 Después de verificar/crear los roles, el bot presenta un menú interactivo con **cuatro opciones principales**:
 
+### 🎯 **Sistema Inteligente de Mapeo de Roles**
+
+Antes de elegir el modo de configuración, el bot realiza un **análisis inteligente de roles** de tu servidor:
+
+#### **Detección Automática de Roles Existentes**
+
+El bot busca automáticamente roles que coincidan con los rangos de Apex Legends:
+
+- **Coincidencia exacta**: "Apex Predator", "Platino", "Nintendo Switch"
+- **Variantes comunes**: "Predator" → "Apex Predator", "Switch" → "Nintendo Switch", "PS" → "PlayStation"
+- **Algoritmo fuzzy**: Utiliza distancia de Levenshtein (70% de similitud) para detectar roles similares
+
+#### **Sugerencias de Mapeo Inteligentes**
+
+Si encuentras roles personalizados en tu servidor:
+
+- El bot te mostrará una **vista previa de los mapeos sugeridos**
+- Puedes **confirmar** usar tus roles existentes
+- O **rechazar** para que el bot cree roles nuevos con nombres estándar
+
+#### **Alias Soportados Automáticamente**
+
+El sistema reconoce estas variantes sin necesidad de configuración:
+
+**Rangos:**
+
+- "Predator", "Pred", "Apex Predator" → Apex Predator
+- "Master", "Maestro" → Master
+- "Diamond", "Diamante" → Diamante
+- "Platinum", "Platino" → Platino
+- Y todas las demás variantes en español/inglés
+
+**Plataformas:**
+
+- "Switch", "Nintendo", "NintendoSwitch" → Nintendo Switch
+- "PS", "PS4", "PS5", "PSN" → PlayStation
+- "Xbox", "X1", "XboxOne" → Xbox
+- "PC", "Origin", "Steam" → PC
+
+> **💡 Ventaja**: Si tu servidor ya tiene roles de rangos con nombres personalizados, el bot los reutilizará automáticamente, evitando duplicados y respetando tu estructura existente.
+
 ### 🔄 **Modo Automático**
 
 - Crea automáticamente los canales con nombres predeterminados
 - Canales: `#apex-range-admin` (control) y `#apex-rangos` (panel público)
 - Proceso de un solo clic con confirmación visual
 - Ideal para configuración rápida y servidores nuevos
+- Respeta roles personalizados detectados en el análisis previo
 
 ### ⚙️ **Modo Manual Interactivo**
 
@@ -120,11 +162,11 @@ Después de configurar, los roles excluidos **NO aparecerán** en los paréntesi
 
 ## Menú Contextual
 
-- `Ver mi rango en Apex Range` (contexto) | Muestra tu rango actual y opciones de gestión | Todos |
+El bot incluye un comando de contexto que aparece al hacer click derecho sobre un usuario:
 
-## Menú Contextual
+- **Ver mi rango en Apex Range** - Muestra el rango actual del usuario seleccionado con opciones de gestión (si eres tú mismo)
 
-- `Ver mi rango en Apex Range` (contexto) | Muestra tu rango actual y opciones de gestión | Todos |
+Este comando está disponible para todos los usuarios y proporciona acceso rápido a la información de rangos sin necesidad de usar comandos slash.
 
 ## 🎛️ Panel Interactivo
 

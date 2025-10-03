@@ -4,13 +4,13 @@ import {
   UserContextMenuCommandInteraction,
   EmbedBuilder,
 } from 'discord.js';
-import { APEX_RANKS } from '../models/constants';
 import {
   createRankButtons,
   createManagementButtons,
   createCloseButtonRow,
 } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Definición del comando contextual "Ver mi rango en Apex Range" para Discord.
@@ -50,8 +50,9 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       return;
     }
 
-    // Busca si tiene algún rol de rango
-    const userRank = APEX_RANKS.find((rank) =>
+    // Busca si tiene algún rol de rango (usar roles mapeados)
+    const ranks = getApexRanksForGuild(interaction.guild.id, interaction.guild);
+    const userRank = ranks.find((rank) =>
       member.roles.cache.some((role) => role.name === rank.roleName)
     );
 
@@ -95,7 +96,10 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       await interaction.reply({
         embeds: [embed],
         components: isSelf
-          ? [...createRankButtons(interaction.client), closeButton]
+          ? [
+              ...createRankButtons(interaction.client, interaction.guild),
+              closeButton,
+            ]
           : [closeButton],
         ephemeral: true,
       });

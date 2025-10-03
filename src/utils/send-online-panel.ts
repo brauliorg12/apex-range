@@ -1,12 +1,12 @@
 import { Guild, EmbedBuilder, Message } from 'discord.js';
 import {
   APEX_LOGO_EMOJI,
-  APEX_RANKS,
   SETTINGS_ALL_EMOGI,
 } from '../models/constants';
 import { readRolesState, writeRolesState } from './state-manager';
 import { createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './build-all-online-embed';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 /**
  * Envía el panel de rangos con un header y cards con botón "Ver más".
@@ -25,6 +25,9 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
   const sentMessages = [];
   const rankCardMessageIds: { [shortId: string]: string } = {};
 
+  // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+  const ranks = getApexRanksForGuild(guild.id, guild);
+
   // Envía el header
   const headerMsg = (await channel.send({ embeds: [headerEmbed] })) as Message;
   sentMessages.push(headerMsg);
@@ -41,8 +44,8 @@ export async function sendOnlinePanel(channel: any, guild: Guild) {
     const msg = (await channel.send(messageOptions)) as Message;
     sentMessages.push(msg);
 
-    // Guarda el ID del mensaje para el rango
-    rankCardMessageIds[APEX_RANKS[i].shortId] = msg.id;
+    // Guarda el ID del mensaje para el rango usando roles mapeados
+    rankCardMessageIds[ranks[i].shortId] = msg.id;
   }
 
   // Envía los botones de gestión como último mensaje

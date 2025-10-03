@@ -134,15 +134,37 @@ npm run dev
 
 ### Roles requeridos
 
-Crea estos roles en tu servidor (nombres exactos):
+#### Opción 1: El bot crea los roles automáticamente (Recomendado)
 
-- Bronce
-- Plata
-- Oro
-- Platino
-- Diamante
-- Maestro
-- Apex Predator
+Durante el setup con `/setup-roles`, el bot puede crear automáticamente todos los roles necesarios si tiene permisos de "Gestionar Roles". No necesitas crear nada manualmente.
+
+#### Opción 2: Usa tus roles existentes (Sistema Inteligente)
+
+Si ya tienes roles de rangos con nombres personalizados:
+
+- El bot los **detectará automáticamente** durante el setup
+- Soporta **variantes comunes** de nombres (ej: "Predator" en lugar de "Apex Predator")
+- Te mostrará una **vista previa** de los roles que encontró
+- Podrás **confirmar o rechazar** usar tus roles personalizados
+
+**Nombres estándar soportados:**
+
+- Bronce / Bronze
+- Plata / Silver
+- Oro / Gold
+- Platino / Platinum
+- Diamante / Diamond
+- Maestro / Master
+- Apex Predator / Predator / Pred
+
+**Plataformas soportadas:**
+
+- PC / Origin / Steam
+- PlayStation / PS / PS4 / PS5 / PSN
+- Xbox / X1 / XboxOne
+- Nintendo Switch / Switch / Nintendo
+
+> **💡 Nota**: El bot reconoce automáticamente estas variantes sin necesidad de configuración adicional. Si tus roles tienen nombres diferentes, el sistema de coincidencia fuzzy intentará mapearlos automáticamente usando algoritmo de Levenshtein.
 
 ### Emojis personalizados
 

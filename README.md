@@ -12,11 +12,11 @@ Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Lege
 
 **[>> Invitar Apex Legends Rank Bot a tu Servidor <<](https://discord.com/oauth2/authorize?client_id=1406424026427031696&scope=bot+applications.commands&permissions=268560400)**
 
-### 🎯 **Análisis Detallado de Permisos Pre-configurados**
+## 🎯 **Análisis Detallado de Permisos Pre-configurados**
 
 ¡Excelente configuración! El valor `268560400` incluye **exactamente** todos los permisos críticos necesarios para el funcionamiento óptimo del bot.
 
-#### 📋 **Permisos Incluidos en el Enlace:**
+### 📋 **Permisos Incluidos en el Enlace:**
 
 | Permiso                    | Valor Binario | Estado      | Descripción                          |
 | -------------------------- | ------------- | ----------- | ------------------------------------ |
@@ -90,6 +90,8 @@ Un bot profesional para comunidades de Apex Legends que permite:
 - **Integración completa con APIs oficiales** de Mozambique para datos precisos por plataforma.
 - **Configuración personalizable de roles excluidos**: Permite ocultar roles específicos en los cards de rangos para una visualización más limpia.
 - **Fechas adaptadas a la zona horaria del usuario**: Las fechas en embeds, listas de jugadores y actualizaciones se muestran automáticamente en la zona horaria de cada usuario de Discord.
+- **Sistema inteligente de mapeo de roles personalizados**: Soporta roles con nombres personalizados en tu servidor, con reconocimiento automático de variantes comunes (ej: "Predator" → "Apex Predator", "Switch" → "Nintendo Switch", "PS" → "PlayStation").
+- **Algoritmo de coincidencia fuzzy**: Utiliza distancia de Levenshtein para sugerir automáticamente mapeos de roles existentes durante el setup inicial.
 
 ---
 
@@ -100,6 +102,7 @@ Para información detallada sobre instalación, uso y configuración avanzada, c
 - **[INSTALL.md](INSTALL.md)** - Instalación y configuración básica
 - **[USAGE.md](USAGE.md)** - Comandos y uso del bot
 - **[PERMISSIONS.md](PERMISSIONS.md)** - Permisos requeridos y configuración de Discord
+- **[ROLE-MAPPING.md](ROLE-MAPPING.md)** - Sistema inteligente de mapeo de roles personalizados
 - **[MULTI-SERVER.md](MULTI-SERVER.md)** - Funcionalidades multi-servidor e inicialización
 - **[PLATFORMS.md](PLATFORMS.md)** - Soporte para múltiples plataformas
 - **[API.md](API.md)** - Panel de estado y detalles de API

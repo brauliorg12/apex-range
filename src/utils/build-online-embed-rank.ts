@@ -6,8 +6,6 @@ import {
   PresenceStatus,
 } from 'discord.js';
 import {
-  APEX_RANKS,
-  APEX_PLATFORMS,
   PC_ONLY_EMOGI,
 } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
@@ -15,6 +13,8 @@ import { getStatusIcon } from '../interfaces/status-icon';
 import { filterAllowedRoles } from './role-filter';
 import { getCountryFlag } from './country-flag';
 import { getPlayerPlatform } from './player-data-manager';
+import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
+import { ApexRank } from '../interfaces/apex-rank';
 
 /**
  * Construye un embed visual para mostrar la lista de jugadores de un rango específico en Apex Legends.
@@ -22,9 +22,10 @@ import { getPlayerPlatform } from './player-data-manager';
  * Esta función genera un embed de Discord que incluye información sobre los jugadores en línea de un rango determinado,
  * con íconos de estado de presencia, menciones clickeables, roles/banderas de países y paginación opcional.
  * Se utiliza principalmente en los paneles interactivos de rangos para mostrar listas de jugadores por rango.
+ * Usa roles mapeados del servidor para soportar roles personalizados.
  *
  * @param guild - El servidor de Discord (Guild) donde se mostrarán los jugadores.
- * @param rank - El objeto de rango de APEX_RANKS que define el rango a mostrar (incluye color, emoji, etc.).
+ * @param rank - El objeto de rango (ApexRank) que define el rango a mostrar (incluye color, emoji, etc.).
  * @param members - Array de miembros (GuildMember[]) del rango que se mostrarán en esta página o vista.
  * @param cardUrl - (Opcional) URL de la imagen a adjuntar al embed (por ejemplo, un gráfico de estadísticas).
  * @param totalCount - (Opcional) Número total de jugadores en el rango (usado para footers de paginación).
@@ -36,7 +37,7 @@ import { getPlayerPlatform } from './player-data-manager';
  */
 export async function buildOnlineEmbedForRank(
   guild: Guild,
-  rank: (typeof APEX_RANKS)[number],
+  rank: ApexRank,
   members: GuildMember[],
   cardUrl?: string,
   totalCount?: number,
@@ -87,9 +88,10 @@ export async function buildOnlineEmbedForRank(
           (member.presence?.status as PresenceStatus) || 'offline';
         const icon = getStatusIcon(status);
 
-        // Obtener ícono de plataforma
+        // Obtener ícono de plataforma (usar roles mapeados)
+        const platforms = getApexPlatformsForGuild(guild.id, guild);
         const platform = await getPlayerPlatform(guild.id, member.id);
-        const platformInfo = APEX_PLATFORMS.find((p) => p.apiName === platform);
+        const platformInfo = platforms.find((p) => p.apiName === platform);
         // Siendo id el icono en la constante // TODO mejorar
         const platformIcon = platformInfo?.id || PC_ONLY_EMOGI;
 

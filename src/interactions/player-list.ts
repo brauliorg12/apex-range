@@ -5,26 +5,30 @@ import {
   Guild,
   GuildMember,
 } from 'discord.js';
-import { ALL_PLAYERS_EMOGI, APEX_RANKS } from '../models/constants';
+import { ALL_PLAYERS_EMOGI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
 import { Player, PlayerRecord } from '../interfaces/player';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { logApp } from '../utils/logger';
 
 /**
  * Obtiene todos los jugadores del servidor que tienen algún rol de rango de Apex Legends.
- *
- * - Recorre todos los miembros del servidor y verifica si tienen un rol de rango definido en APEX_RANKS.
- * - Devuelve un arreglo de objetos Player con el miembro y el nombre del rango.
+ * 
+ * Utiliza el sistema de mapeo de roles para soportar roles personalizados del servidor.
+ * Recorre todos los miembros y verifica si tienen un rol de rango asignado.
  *
  * @param guild Servidor de Discord donde buscar los jugadores.
- * @returns Lista de jugadores con su rango.
+ * @returns Lista de jugadores con su rango asignado.
  */
 export async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
   await guild.members.fetch(); // Asegurarse de que todos los miembros están en caché
 
   const players: Player[] = [];
-  const rankRoleNames = APEX_RANKS.map((r) => r.roleName);
+  // Usar roles mapeados del servidor para soportar roles personalizados
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  const rankRoleNames = ranks.map((r) => r.roleName);
 
   guild.members.cache.forEach((member) => {
     const rankRole = member.roles.cache.find((role) =>
@@ -39,11 +43,14 @@ export async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
 }
 
 /**
- * Maneja la interacción para mostrar el listado de todos los jugadores registrados por rango.
- * Muestra un embed con los nombres y fechas de registro.
- * @param interaction Interacción de botón de Discord.
- * @param rankShortId ID corto del rango para filtrar (opcional).
- * @param onlyOnline Indica si solo se deben mostrar los jugadores en línea (opcional).
+ * Muestra el listado de jugadores registrados agrupados por rango.
+ * 
+ * Presenta un embed con los nombres de jugadores y sus fechas de registro,
+ * utilizando los roles mapeados del servidor para soportar nombres personalizados.
+ * 
+ * @param interaction Interacción de botón o menú de selección de Discord.
+ * @param rankShortId ID corto del rango para filtrar (opcional, muestra todos si se omite).
+ * @param onlyOnline Si es true, solo muestra jugadores con estado en línea.
  */
 export async function handleShowAllPlayersMenu(
   interaction: ButtonInteraction | StringSelectMenuInteraction,
@@ -63,14 +70,20 @@ export async function handleShowAllPlayersMenu(
       (playerData as PlayerRecord[]).map((p) => [p.userId, p.assignedAt])
     );
 
-    // --- FILTRA LOS RANGOS SI rankShortId ESTÁ PRESENTE ---
-    let filteredRanks = APEX_RANKS;
+    // Obtener rangos mapeados del servidor y filtrar si se especificó un rango
+    const allRanks = getApexRanksForGuild(
+      interaction.guild.id,
+      interaction.guild
+    );
+    let filteredRanks = allRanks;
     if (rankShortId) {
-      filteredRanks = APEX_RANKS.filter((r) => r.shortId === rankShortId);
+      filteredRanks = allRanks.filter((r) => r.shortId === rankShortId);
     }
-    // ------------------------------------------------------
+    await logApp(
+      `[handleShowAllPlayersMenu] Filtrando con ${filteredRanks.length} rangos`
+    );
 
-    // Agrupar jugadores por rango
+    // Agrupar jugadores por rango usando roles mapeados
     const playersByRank: Record<string, GuildMember[]> = {};
     for (const rank of filteredRanks) {
       playersByRank[rank.roleName] = [];
@@ -135,7 +148,9 @@ export async function handleShowAllPlayersMenu(
       components: [createCloseButtonRow()],
     });
   } catch (error) {
-    console.error('Error al mostrar todos los jugadores:', error);
+    await logApp(
+      `Error al mostrar lista de jugadores en ${interaction.guild?.name}: ${error}`
+    );
     const errorEmbed = new EmbedBuilder()
       .setColor('#e74c3c')
       .setTitle('❌ Error')

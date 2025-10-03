@@ -7,8 +7,6 @@ import {
   ButtonStyle,
 } from 'discord.js';
 import {
-  APEX_PLATFORMS,
-  APEX_RANKS,
   GAME_PLATFORMS_EMOGI,
   PC_ONLY_EMOGI,
 } from '../models/constants';
@@ -21,6 +19,9 @@ import { logApp } from '../utils/logger';
 import { debounceUpdateRoleCountMessage } from '../helpers/debounce-update-role-count';
 import { ensureCommonApexRole } from '../utils/role-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
+import { ApexRank } from '../interfaces/apex-rank';
 
 /**
  * Maneja la gestión de plataforma para usuarios sin rango
@@ -29,7 +30,7 @@ import { getRankEmoji } from '../utils/emoji-helper';
  */
 export async function handleManagePlatform(
   interaction: ButtonInteraction,
-  selectedRank?: (typeof APEX_RANKS)[0]
+  selectedRank?: ApexRank
 ) {
   if (!interaction.guild || !interaction.member) return;
   const member = interaction.member as GuildMember;
@@ -41,6 +42,9 @@ export async function handleManagePlatform(
   await interaction.deferReply({ ephemeral: true });
 
   try {
+    // Obtener plataformas mapeadas del servidor (soporta roles personalizados)
+    const platforms = getApexPlatformsForGuild(interaction.guild.id, interaction.guild);
+    
     // Obtener la plataforma actual del usuario desde la base de datos
     const currentPlatform = await getPlayerPlatform(
       interaction.guild.id,
@@ -48,7 +52,7 @@ export async function handleManagePlatform(
     );
 
     // Buscar información detallada de la plataforma actual
-    const currentPlatformInfo = APEX_PLATFORMS.find(
+    const currentPlatformInfo = platforms.find(
       (p) => p.apiName === currentPlatform
     );
 
@@ -66,8 +70,8 @@ export async function handleManagePlatform(
           : `**No tienes ninguna plataforma seleccionada.**\n\nSelecciona tu plataforma de Apex Legends para poder elegir un rango.`
       );
 
-    // Crear botones interactivos para cada plataforma disponible
-    const platformButtons = APEX_PLATFORMS.map((platform) =>
+    // Crear botones interactivos para cada plataforma disponible (usa roles mapeados)
+    const platformButtons = platforms.map((platform) =>
       new ButtonBuilder()
         .setCustomId(
           selectedRank
@@ -111,6 +115,10 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
   const { customId, member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
 
+  // Obtener roles mapeados del servidor (soporta roles personalizados)
+  const platforms = getApexPlatformsForGuild(guild.id, guild);
+  const ranks = getApexRanksForGuild(guild.id, guild);
+
   const isWithRank = customId.includes('_and_rank_');
   const parts = customId
     .replace('set_platform', '')
@@ -119,14 +127,14 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
   const platformShortId = parts[1];
   const rankShortId = isWithRank ? parts[2] : undefined;
 
-  const selectedPlatform = APEX_PLATFORMS.find(
+  const selectedPlatform = platforms.find(
     (p) => p.shortId === platformShortId
   );
 
   if (!selectedPlatform) return;
 
   const selectedRank = rankShortId
-    ? APEX_RANKS.find((r) => r.shortId === rankShortId)
+    ? ranks.find((r) => r.shortId === rankShortId)
     : undefined;
 
   await logApp(
@@ -160,12 +168,12 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
     const platformRole = guild.roles.cache.find(
       (role) => role.name === selectedPlatform.roleName
     );
-    if (platformRole) {
+      if (platformRole) {
       if (botMember.roles.highest.position <= platformRole.position) {
         throw new Error('Bot role hierarchy too low for platform role');
       }
-      // Remover roles de plataforma anteriores
-      const otherPlatformRoles = APEX_PLATFORMS.filter(
+      // Remover roles de plataforma anteriores (usar roles mapeados)
+      const otherPlatformRoles = platforms.filter(
         (p) => p.shortId !== platformShortId
       ).map((p) => p.roleName);
 
@@ -179,15 +187,13 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
 
     // Si hay rango seleccionado, asignar también
     if (selectedRank) {
-      // Remover rangos anteriores
+      // Remover rangos anteriores (usar roles mapeados)
       const rankRolesToRemove = member.roles.cache.filter((role) =>
-        APEX_RANKS.some(
+        ranks.some(
           (rank) =>
             rank.roleName === role.name && rank.shortId !== selectedRank.shortId
         )
-      );
-
-      if (rankRolesToRemove.size > 0) {
+      );      if (rankRolesToRemove.size > 0) {
         await member.roles.remove(rankRolesToRemove);
       }
 

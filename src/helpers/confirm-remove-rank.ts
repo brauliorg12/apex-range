@@ -7,7 +7,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from 'discord.js';
-import { APEX_RANKS, APEX_PLATFORMS } from '../models/constants';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { createCloseButtonRow } from '../utils/button-helper';
 import {
@@ -18,12 +17,14 @@ import { removeCommonApexRoleIfNoRank } from '../utils/role-helper';
 import { readRolesState } from '../utils/state-manager';
 import { updateRankCardMessage } from './update-rank-card-message';
 import { logApp } from '../utils/logger';
+import { getApexRanksForGuild } from './get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from './get-apex-platforms-for-guild';
 
 /**
  * Maneja la confirmación y eliminación completa de roles de rango y plataforma de Apex Legends.
  *
  * Proceso:
- * 1. Verifica si el usuario tiene roles de rango asignados
+ * 1. Verifica si el usuario tiene roles de rango asignados (usa roles mapeados del servidor)
  * 2. Muestra mensaje de confirmación con botones de aceptar/cancelar
  * 3. Espera respuesta del usuario (30 segundos timeout)
  * 4. Si confirma: elimina roles de Discord, limpia base de datos, actualiza mensajes de estado
@@ -42,7 +43,9 @@ export async function confirmRemoveRank(interaction: ButtonInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const allRankRoleNames = APEX_RANKS.map((r) => r.roleName);
+    // Usar roles mapeados del servidor (soporta roles personalizados)
+    const ranks = getApexRanksForGuild(guild.id, guild);
+    const allRankRoleNames = ranks.map((r) => r.roleName);
     const rolesToRemove = member.roles.cache.filter((role) =>
       allRankRoleNames.includes(role.name)
     );
@@ -114,8 +117,9 @@ export async function confirmRemoveRank(interaction: ButtonInteraction) {
           await member.roles.remove(rolesToRemove);
           await removeCommonApexRoleIfNoRank(member);
 
-          // Eliminar roles de plataforma
-          const allPlatformRoleNames = APEX_PLATFORMS.map((p) => p.roleName);
+          // Eliminar roles de plataforma (usar roles mapeados)
+          const platforms = getApexPlatformsForGuild(guild.id, guild);
+          const allPlatformRoleNames = platforms.map((p) => p.roleName);
           const platformRolesToRemove = member.roles.cache.filter((role) =>
             allPlatformRoleNames.includes(role.name)
           );
@@ -152,7 +156,9 @@ export async function confirmRemoveRank(interaction: ButtonInteraction) {
               const channel = guild.channels.cache.get(
                 rolesState.channelId
               ) as TextChannel;
-              for (const rank of APEX_RANKS) {
+              // Usar roles mapeados del servidor
+              const ranksForUpdate = getApexRanksForGuild(guild.id, guild);
+              for (const rank of ranksForUpdate) {
                 const msgId = rolesState.rankCardMessageIds?.[rank.shortId];
                 if (msgId) {
                   await updateRankCardMessage(

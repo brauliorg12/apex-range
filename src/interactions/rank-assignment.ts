@@ -1,5 +1,5 @@
 import { ButtonInteraction, GuildMember, EmbedBuilder } from 'discord.js';
-import { APEX_RANKS, APEX_PLATFORMS, PC_ONLY_EMOGI } from '../models/constants';
+import { PC_ONLY_EMOGI } from '../models/constants';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
 import {
@@ -10,16 +10,22 @@ import { logApp } from '../utils/logger';
 import { ensureCommonApexRole } from '../utils/role-helper';
 import { handleManagePlatform } from './rank-management';
 import { debounceUpdateRoleCountMessage } from '../helpers/debounce-update-role-count';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
+import { ApexRank } from '../interfaces/apex-rank';
 
 /**
  * Maneja la asignación de rango cuando un usuario hace clic en un botón de rango.
+ * Usa roles mapeados del servidor para soportar roles personalizados.
  * @param interaction Interacción del botón recibida desde Discord.
  */
 export async function handleRoleAssignment(interaction: ButtonInteraction) {
   const { customId, member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
 
-  const selectedRank = APEX_RANKS.find((rank) => rank.shortId === customId);
+  // Usar roles mapeados del servidor (soporta roles personalizados)
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  const selectedRank = ranks.find((rank) => rank.shortId === customId);
   if (!selectedRank) return;
 
   await logApp(
@@ -40,7 +46,7 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     await interaction.deferReply({ ephemeral: true });
     await assignRankAndPlatform(interaction, selectedRank, currentPlatform);
   } catch (error) {
-    console.error('Error al asignar rango:', error);
+    await logApp(`Error al asignar rango a ${member.user.tag}: ${error}`);
 
     let errorDescription =
       'Hubo un error al actualizar tu rango. Inténtalo de nuevo.';
@@ -75,11 +81,15 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
  */
 async function assignRankAndPlatform(
   interaction: ButtonInteraction,
-  selectedRank: (typeof APEX_RANKS)[0],
+  selectedRank: ApexRank,
   platform: string
 ) {
   const { member, guild } = interaction;
   if (!(member instanceof GuildMember) || !guild) return;
+
+  // Usar roles mapeados del servidor (soporta roles personalizados)
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  const platforms = getApexPlatformsForGuild(guild.id, guild);
 
   const botMember = guild.members.me;
   if (!botMember) {
@@ -91,9 +101,9 @@ async function assignRankAndPlatform(
     throw new Error('Bot missing ManageRoles permission');
   }
 
-  // Remover rangos anteriores
+  // Remover rangos anteriores (usar roles mapeados)
   const rankRolesToRemove = member.roles.cache.filter((role) =>
-    APEX_RANKS.some(
+    ranks.some(
       (rank) =>
         rank.roleName === role.name && rank.shortId !== selectedRank.shortId
     )
@@ -107,15 +117,28 @@ async function assignRankAndPlatform(
   const rankRole = guild.roles.cache.find(
     (role) => role.name === selectedRank.roleName
   );
-  if (rankRole) {
-    if (botMember.roles.highest.position <= rankRole.position) {
-      throw new Error('Bot role hierarchy too low for rank role');
-    }
-    await member.roles.add(rankRole);
+  
+  if (!rankRole) {
+    await logApp(
+      `Rol "${selectedRank.roleName}" no encontrado en servidor ${guild.name}`
+    );
+    throw new Error(`El rol "${selectedRank.roleName}" no existe en este servidor`);
   }
+  
+  if (botMember.roles.highest.position <= rankRole.position) {
+    await logApp(
+      `Jerarquía de roles insuficiente: Bot (${botMember.roles.highest.position}) <= Rol (${rankRole.position})`
+    );
+    throw new Error('Bot role hierarchy too low for rank role');
+  }
+  
+  await member.roles.add(rankRole);
+  await logApp(
+    `Rol "${rankRole.name}" asignado exitosamente a ${member.user.tag}`
+  );
 
-  // Asignar rol de plataforma si existe
-  const platformInfo = APEX_PLATFORMS.find((p) => p.apiName === platform);
+  // Asignar rol de plataforma si existe (usar roles mapeados)
+  const platformInfo = platforms.find((p) => p.apiName === platform);
   if (platformInfo) {
     const platformRole = guild.roles.cache.find(
       (role) => role.name === platformInfo.roleName
@@ -124,8 +147,8 @@ async function assignRankAndPlatform(
       if (botMember.roles.highest.position <= platformRole.position) {
         throw new Error('Bot role hierarchy too low for platform role');
       }
-      // Remover otros roles de plataforma
-      const otherPlatformRoles = APEX_PLATFORMS.filter(
+      // Remover otros roles de plataforma (usar roles mapeados)
+      const otherPlatformRoles = platforms.filter(
         (p) => p.apiName !== platform
       ).map((p) => p.roleName);
 

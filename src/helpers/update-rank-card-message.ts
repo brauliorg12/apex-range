@@ -5,7 +5,7 @@ import {
   TextChannel,
   GuildMember,
 } from 'discord.js';
-import { APEX_RANKS, MAX_PLAYERS_PER_CARD } from '../models/constants';
+import { MAX_PLAYERS_PER_CARD } from '../models/constants';
 import {
   getAllMembersByRole,
   sortMembersByPriority,
@@ -14,6 +14,7 @@ import { renderRankCardCanvas } from '../utils/rank-card-canvas';
 import { buildOnlineEmbedForRank } from '../utils/build-online-embed-rank';
 import { createSeeMoreButtonRow } from '../utils/online-embed-helper';
 import { getServerLogger } from '../utils/server-logger';
+import { getApexRanksForGuild } from './get-apex-ranks-for-guild';
 
 // Cache global para buffers de cards de rangos
 const rankCardCache = new Map<string, Buffer>();
@@ -38,13 +39,23 @@ export async function updateRankCardMessage(
   const startTime = performance.now();
   serverLogger.debug(`Iniciando updateRankCardMessage para ${rankShortId}`);
 
-  const rank = APEX_RANKS.find((r) => r.shortId === rankShortId);
-  if (!rank) return;
+  // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  const rank = ranks.find((r) => r.shortId === rankShortId);
+  if (!rank) {
+    serverLogger.warn(`Rank no encontrado: ${rankShortId}`);
+    return;
+  }
 
   const role: Role | undefined = guild.roles.cache.find(
     (r): r is Role => r.name === rank.roleName
   );
-  if (!role) return;
+  if (!role) {
+    serverLogger.warn(`Role de Discord no encontrado: ${rank.roleName} para ${rankShortId}`);
+    return;
+  }
+  
+  serverLogger.debug(`Actualizando card para ${rank.label} (${rank.roleName}) - Role ID: ${role.id}`);
 
   // Obtén todos los jugadores del rango usando playerData
   const { getPlayerData } = await import('../utils/player-data-manager');

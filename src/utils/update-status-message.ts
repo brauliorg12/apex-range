@@ -5,13 +5,13 @@ import { createRankButtons } from './button-helper';
 import { buildRecentAvatarsCard } from './recent-avatars-card';
 import {
   ALL_PLAYERS_EMOGI,
-  APEX_RANKS,
   MAX_ATTACHMENTS_PER_MESSAGE,
   STATS_LOGO_EMOGI,
 } from '../models/constants';
 import { updateRankCardMessage } from '../helpers/update-rank-card-message';
 import { notifySetupRolesError } from './error-notifier';
 import { getServerLogger } from './server-logger';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 
 // Map para encadenar actualizaciones secuenciales por guild
 const updateLocks = new Map<string, Promise<void>>();
@@ -106,7 +106,7 @@ async function performUpdate(guild: Guild) {
       const roleSelectionMessage = await channel.messages.fetch(
         rolesState.roleSelectionMessageId
       );
-      const updatedButtons = createRankButtons(guild.client);
+      const updatedButtons = createRankButtons(guild.client, guild);
       await roleSelectionMessage.edit({ components: updatedButtons });
     } catch (error: any) {
       if (error.code === 10008) {
@@ -178,7 +178,9 @@ async function performUpdate(guild: Guild) {
     // --- Actualizar los cards por rango ---
     serverLogger.debug('Actualizando cards de rangos...');
     if (rolesState && rolesState.channelId) {
-      for (const rank of APEX_RANKS) {
+      // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+      const ranks = getApexRanksForGuild(guild.id, guild);
+      for (const rank of ranks) {
         const msgId = rolesState.rankCardMessageIds?.[rank.shortId];
         if (msgId) {
           try {

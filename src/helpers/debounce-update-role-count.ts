@@ -1,5 +1,6 @@
 import { Guild } from 'discord.js';
 import { updateRoleCountMessage } from '../utils/update-status-message';
+import { logApp } from '../utils/logger';
 
 // Map para debounce de actualizaciones en background
 const updateTimeouts = new Map<string, NodeJS.Timeout>();
@@ -24,7 +25,7 @@ export function debounceUpdateRoleCountMessage(
   const timeout = setTimeout(() => {
     updateTimeouts.delete(guildId);
     updateRoleCountMessage(guild).catch((err) =>
-      console.error('Error en actualización debounced:', err)
+      logApp(`Error en actualización debounced para ${guild.name}: ${err}`)
     );
   }, delay);
 

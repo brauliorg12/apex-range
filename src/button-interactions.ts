@@ -3,8 +3,8 @@ import {
   ActionRowBuilder,
   StringSelectMenuBuilder,
 } from 'discord.js';
-import { APEX_RANKS } from './models/constants';
 import { createCloseButtonRow } from './utils/button-helper';
+import { getApexRanksForGuild } from './helpers/get-apex-ranks-for-guild';
 import {
   handleManageRankMenu,
   handleRoleAssignment,
@@ -58,7 +58,12 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
 
     if (customId === 'manage_rank_menu') {
       await handleManageRankMenu(interaction);
-    } else if (APEX_RANKS.some((rank) => rank.shortId === customId)) {
+    } else if (
+      interaction.guild &&
+      getApexRanksForGuild(interaction.guild.id, interaction.guild).some(
+        (rank) => rank.shortId === customId
+      )
+    ) {
       await handleRoleAssignment(interaction);
     } else if (customId === 'manage_platform') {
       await handleManagePlatform(interaction);
@@ -152,7 +157,10 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
             .setCustomId('RANK_FILTER')
             .setPlaceholder('Filtrar por rango')
             .addOptions(
-              APEX_RANKS.map((r) => ({ label: r.label, value: r.shortId }))
+              getApexRanksForGuild(
+                interaction.guild!.id,
+                interaction.guild!
+              ).map((r) => ({ label: r.label, value: r.shortId }))
             )
         );
       const closeButtonRow = createCloseButtonRow();

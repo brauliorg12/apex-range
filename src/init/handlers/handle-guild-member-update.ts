@@ -1,6 +1,5 @@
 import { Client } from 'discord.js';
 import { readRolesState } from '../../utils/state-manager';
-import { APEX_RANKS, APEX_PLATFORMS } from '../../models/constants';
 import { logApp } from '../../utils/logger';
 import { enqueueGuildUpdate } from '../../utils/guild-update-queue';
 import { updateRoleCountMessage } from '../../utils/update-status-message';
@@ -11,6 +10,8 @@ import {
   getPlayerPlatform,
   updatePlayerPlatform,
 } from '../../utils/player-data-manager';
+import { getApexRanksForGuild } from '../../helpers/get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-guild';
 
 /**
  * Maneja cambios en miembros de servidores configurados, especialmente cambios de roles de Apex Legends.
@@ -74,8 +75,11 @@ export async function handleGuildMemberUpdate(
   if (oldRoles.equals(newRoles)) return; // No hay cambios en roles
 
   // Paso 3: Filtrado de roles Apex - Identificar cambios en roles de rango y plataforma
-  const apexRoleNames = APEX_RANKS.map((rank) => rank.roleName);
-  const platformRoleNames = APEX_PLATFORMS.map((platform) => platform.roleName);
+  // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+  const ranks = getApexRanksForGuild(newMember.guild.id, newMember.guild);
+  const platforms = getApexPlatformsForGuild(newMember.guild.id, newMember.guild);
+  const apexRoleNames = ranks.map((rank) => rank.roleName);
+  const platformRoleNames = platforms.map((platform) => platform.roleName);
   const allApexRoleNames = [...apexRoleNames, ...platformRoleNames];
 
   const oldApexRoles = oldRoles.filter((role: any) =>
@@ -117,7 +121,8 @@ export async function handleGuildMemberUpdate(
       let newRank: string | undefined;
       if (newRankRoles.size > 0) {
         const newRankRole = newRankRoles.first();
-        const rankInfo = APEX_RANKS.find(
+        // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+        const rankInfo = ranks.find(
           (r) => r.roleName === newRankRole.name
         );
         newRank = rankInfo?.shortId;
@@ -146,7 +151,8 @@ export async function handleGuildMemberUpdate(
     if (platformChanged && !rankChanged) {
       if (newPlatformRoles.size > 0) {
         const newPlatformRole = newPlatformRoles.first();
-        const platformInfo = APEX_PLATFORMS.find(
+        // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+        const platformInfo = platforms.find(
           (p) => p.roleName === newPlatformRole.name
         );
         if (platformInfo) {
@@ -176,8 +182,10 @@ export async function handleGuildMemberUpdate(
         rolesState.channelId
       ) as any;
       if (channel) {
+        // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
         // Actualizar todos los rangos que podrían haber cambiado
-        for (const rank of APEX_RANKS) {
+        const ranksForUpdate = getApexRanksForGuild(newMember.guild.id, newMember.guild);
+        for (const rank of ranksForUpdate) {
           const rankMessageId = rolesState.rankCardMessageIds?.[rank.shortId];
           if (rankMessageId) {
             await updateRankCardMessage(

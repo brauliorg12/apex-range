@@ -7,8 +7,6 @@ import {
   Guild,
 } from 'discord.js';
 import {
-  APEX_RANKS,
-  APEX_PLATFORMS,
   GAME_PLATFORMS_EMOGI,
   PC_ONLY_EMOGI,
 } from '../models/constants';
@@ -16,6 +14,8 @@ import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getPlayerPlatform } from '../utils/player-data-manager';
 import { logApp } from '../utils/logger';
+import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
 
 /**
  * Construye el payload (embed y botones) para el menú de gestión de rango privado de un usuario.
@@ -28,10 +28,14 @@ export async function buildManageRankPayload(
   guild: Guild,
   member: GuildMember
 ) {
+  // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  const platforms = getApexPlatformsForGuild(guild.id, guild);
+  
   const memberRankRoles = member.roles.cache.filter((role) =>
-    APEX_RANKS.some((rank) => rank.roleName === role.name)
+    ranks.some((rank) => rank.roleName === role.name)
   );
-  const currentRank = APEX_RANKS.find(
+  const currentRank = ranks.find(
     (rank) =>
       memberRankRoles.size > 0 &&
       rank.roleName === memberRankRoles.first()!.name
@@ -39,7 +43,7 @@ export async function buildManageRankPayload(
 
   // Obtener plataforma actual del usuario
   const currentPlatform = await getPlayerPlatform(guild.id, member.id);
-  const platformInfo = APEX_PLATFORMS.find(
+  const platformInfo = platforms.find(
     (p) => p.apiName === currentPlatform
   );
 
@@ -66,7 +70,8 @@ export async function buildManageRankPayload(
     .setTitle(title)
     .setDescription(description);
 
-  const row1Buttons = APEX_RANKS.slice(0, 4).map((rank) =>
+  // Usar roles mapeados del servidor
+  const row1Buttons = ranks.slice(0, 4).map((rank) =>
     new ButtonBuilder()
       .setCustomId(rank.shortId)
       .setLabel(rank.label)
@@ -79,7 +84,8 @@ export async function buildManageRankPayload(
   );
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
 
-  const row2Buttons = APEX_RANKS.slice(4).map((rank) =>
+  // Usar roles mapeados del servidor
+  const row2Buttons = ranks.slice(4).map((rank) =>
     new ButtonBuilder()
       .setCustomId(rank.shortId)
       .setLabel(rank.label)
