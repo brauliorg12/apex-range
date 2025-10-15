@@ -31,6 +31,7 @@
 5. **(Opcional) Crea el release en GitHub usando el tag creado automáticamente.**
 
 6. **Para seguir trabajando, actualiza tu rama local:**
+
    ```bash
    git pull
    ```

@@ -12,6 +12,7 @@ import { APEX_RANKS } from '../models/constants';
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { getRankEmoji } from './emoji-helper';
 import { createCloseButtonRow } from './button-helper';
+import { buildOnlineEmbedForRank } from './build-online-embed-rank';
 import { createPlayerPaginationEmbed } from './player-pagination-helper';
 import { sortMembersByPriority } from './build-all-online-embed';
 
@@ -41,12 +42,39 @@ export function createSeeMoreButtonRow(
 }
 
 /**
+ * Crea los botones de paginación para un rango (servidores pequeños).
+ */
+export function createPaginationButtons(
+  rankId: string,
+  currentPage: number,
+  totalPages: number
+) {
+  if (totalPages <= 1) return [createCloseButtonRow()]; // Solo botón cerrar si no hay paginación
+
+  const row = new ActionRowBuilder<ButtonBuilder>();
+  row.addComponents(
+    new ButtonBuilder()
+      .setCustomId(`rank_${rankId}_prev_${currentPage}`)
+      .setLabel('⬅️ Anterior')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(currentPage === 1),
+    new ButtonBuilder()
+      .setCustomId(`rank_${rankId}_next_${currentPage}`)
+      .setLabel('Siguiente ➡️')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(currentPage === totalPages),
+    // Boton Cerrar
+    ...createCloseButtonRow().components
+  );
+  return [row];
+}
+
+/**
  * Genera el embed, archivos y botones para una página específica de jugadores por rango.
  * Solo retorna un embed por card, respetando el máximo por parámetro.
- * 
- * IMPORTANTE: Para servidores grandes (4000+ miembros), esta función confía en playerData
- * y no requiere que todos los miembros estén en caché. Los miembros faltantes se mostrarán
- * sin información de presencia (como offline).
+ *
+ * - Servidores pequeños (<1000 jugadores): Usa caché de Discord para verificar roles reales
+ * - Servidores grandes (>=1000 jugadores): Usa playerData con proxies para mejor rendimiento
  */
 export async function getRankPageEmbed(
   guild: Guild,
@@ -77,15 +105,19 @@ export async function getRankPageEmbed(
   );
 
   // Buscar el rol usando mapeo del servidor o aliases
-  const { getApexRanksForGuild } = await import('../helpers/get-apex-ranks-for-guild');
+  const { getApexRanksForGuild } = await import(
+    '../helpers/get-apex-ranks-for-guild'
+  );
   const serverRanks = getApexRanksForGuild(guild.id, guild);
   const serverRankInfo = serverRanks.find((r: any) => r.shortId === rankId);
-  const roleNameToFind = serverRankInfo ? serverRankInfo.roleName : rank.roleName;
-  
+  const roleNameToFind = serverRankInfo
+    ? serverRankInfo.roleName
+    : rank.roleName;
+
   const role: Role | undefined = guild.roles.cache.find(
     (r): r is Role => r.name === roleNameToFind
   );
-  
+
   if (!role) {
     await logApp(
       `[getRankPageEmbed] ❌ Rol no encontrado en el servidor: ${roleNameToFind} (buscado para shortId: ${rankId})`
@@ -97,16 +129,29 @@ export async function getRankPageEmbed(
     `[getRankPageEmbed] ✅ Rol encontrado: ${role.name} (${role.id})`
   );
 
-  // Obtener TODOS los miembros del rango desde playerData (incluye proxies)
-  const { getAllMembersByRoleWithProxies } = await import('./build-all-online-embed');
-  const allMembers = getAllMembersByRoleWithProxies(guild, role, playerData);
-  
+  // Detectar si es servidor grande (igual que en player-list.ts)
+  const isLargeServer = playerData.length >= 1000;
+
+  await logApp(
+    `[getRankPageEmbed] Servidor ${
+      isLargeServer ? 'GRANDE' : 'PEQUEÑO'
+    } detectado (${playerData.length} jugadores registrados)`
+  );
+
+  // Obtener miembros según el tamaño del servidor
+  const { getAllMembersByRole, getAllMembersByRoleWithProxies } = await import(
+    './build-all-online-embed'
+  );
+  const allMembers = isLargeServer
+    ? getAllMembersByRoleWithProxies(guild, role, playerData) // Servidores grandes: usa proxies
+    : getAllMembersByRole(guild, role, playerData); // Servidores pequeños: verifica caché real
+
   // Si no hay miembros en playerData, retornar null
   if (!allMembers || allMembers.length === 0) {
     await logApp(
       `[getRankPageEmbed] ❌ NO HAY MIEMBROS con el rango ${rank.roleName}. ` +
-      `Esto indica que playerData no tiene jugadores con rank='${rankId}'. ` +
-      `Verifica que la sincronización se haya ejecutado y que el archivo JSON tenga datos.`
+        `Esto indica que playerData no tiene jugadores con rank='${rankId}'. ` +
+        `Verifica que la sincronización se haya ejecutado y que el archivo JSON tenga datos.`
     );
     return null;
   }
@@ -114,7 +159,7 @@ export async function getRankPageEmbed(
   await logApp(
     `[getRankPageEmbed] ✅ Se encontraron ${allMembers.length} miembros con el rango ${rank.roleName}`
   );
-  
+
   const sortedMembers = sortMembersByPriority(allMembers, playerData);
 
   const totalPages = Math.ceil(sortedMembers.length / maxPerCard);
@@ -123,32 +168,6 @@ export async function getRankPageEmbed(
     (pageNum - 1) * maxPerCard,
     pageNum * maxPerCard
   );
-
-  // 🔥 FETCH de los miembros de la página actual para resolver menciones
-  await logApp(
-    `[getRankPageEmbed] 🔄 Haciendo fetch de ${pageMembers.length} miembros para resolver menciones...`
-  );
-  try {
-    // Fetch cada miembro individualmente si no está en caché
-    const fetchPromises = pageMembers.map(async (m) => {
-      if (!guild.members.cache.has(m.id)) {
-        try {
-          await guild.members.fetch(m.id);
-        } catch {
-          // Ignorar errores individuales (usuario pudo haberse ido del servidor)
-        }
-      }
-    });
-    await Promise.all(fetchPromises);
-    await logApp(
-      `[getRankPageEmbed] ✅ Fetch completado. Menciones deberían resolverse correctamente.`
-    );
-  } catch (fetchError) {
-    await logApp(
-      `[getRankPageEmbed] ⚠️ Error al hacer fetch de miembros: ${fetchError}`
-    );
-    // Continuar de todos modos
-  }
 
   // Obtener URL del emoji grande
   const emojiMatch =
@@ -173,6 +192,87 @@ export async function getRankPageEmbed(
     });
     files.push(cardAttachment);
     cardUrl = `attachment://${cardName}`;
+  }
+
+  // =============================================
+  // SERVIDORES PEQUEÑOS: Método original (buildOnlineEmbedForRank)
+  // =============================================
+  if (!isLargeServer) {
+    await logApp(
+      `[getRankPageEmbed] � Usando método SIMPLE para servidor pequeño`
+    );
+
+    const embed = await buildOnlineEmbedForRank(
+      guild,
+      rank,
+      pageMembers,
+      cardUrl,
+      sortedMembers.length, // totalCount
+      pageNum, // página actual
+      maxPerCard, // máximo por página
+      showNumbers, // mostrar numeración
+      allMembers as GuildMember[] // todos los miembros del rango
+    );
+
+    const totalCount = sortedMembers.length;
+    const startIdx = (pageNum - 1) * maxPerCard + 1;
+    const endIdx = startIdx + pageMembers.length - 1;
+
+    let footerText = `📄 Página ${pageNum} de ${totalPages} | 👥 Mostrando jugadores ${startIdx}-${endIdx} de ${totalCount}`;
+    if (totalPages > 1) {
+      footerText += '\n👉 Usa los botones para navegar';
+    }
+    embed.setFooter({ text: footerText });
+
+    const componentsBtns: ActionRowBuilder<ButtonBuilder>[] =
+      totalPages > 1
+        ? createPaginationButtons(rank.shortId, pageNum, totalPages)
+        : [createCloseButtonRow()];
+
+    await logApp(
+      `[getRankPageEmbed] ✅ Embed original creado: ${pageMembers.length} jugadores en página ${pageNum}/${totalPages}`
+    );
+
+    return {
+      embed,
+      files,
+      components: componentsBtns,
+      page: pageNum,
+      totalPages,
+    };
+  }
+
+  // =============================================
+  // SERVIDORES GRANDES: Método con paginación avanzada
+  // =============================================
+  await logApp(
+    `[getRankPageEmbed] 🔥 Usando método AVANZADO con emojis para servidor grande`
+  );
+
+  // �🔥 FETCH de los miembros de la página actual para resolver menciones
+  await logApp(
+    `[getRankPageEmbed] 🔄 Haciendo fetch de ${pageMembers.length} miembros para resolver menciones...`
+  );
+  try {
+    // Fetch cada miembro individualmente si no está en caché
+    const fetchPromises = pageMembers.map(async (m) => {
+      if (!guild.members.cache.has(m.id)) {
+        try {
+          await guild.members.fetch(m.id);
+        } catch {
+          // Ignorar errores individuales (usuario pudo haberse ido del servidor)
+        }
+      }
+    });
+    await Promise.all(fetchPromises);
+    await logApp(
+      `[getRankPageEmbed] ✅ Fetch completado. Menciones deberían resolverse correctamente.`
+    );
+  } catch (fetchError) {
+    await logApp(
+      `[getRankPageEmbed] ⚠️ Error al hacer fetch de miembros: ${fetchError}`
+    );
+    // Continuar de todos modos
   }
 
   // Usar el nuevo helper de paginación
