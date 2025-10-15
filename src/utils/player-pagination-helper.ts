@@ -122,6 +122,30 @@ export async function createPlayerPaginationEmbed(
       }
     }
 
+    // 🔥 Fetch preventivo de miembros de la página actual para resolver menciones
+    await logApp(
+      `[createPlayerPaginationEmbed] 🔄 Haciendo fetch de ${pageMembers.length} miembros para resolver menciones...`
+    );
+    try {
+      const fetchPromises = pageMembers.map(async (m) => {
+        if (!guild.members.cache.has(m.id)) {
+          try {
+            await guild.members.fetch(m.id);
+          } catch {
+            // Ignorar errores individuales (usuario pudo haberse ido del servidor)
+          }
+        }
+      });
+      await Promise.all(fetchPromises);
+      await logApp(
+        `[createPlayerPaginationEmbed] ✅ Fetch completado para página ${pageNum}`
+      );
+    } catch (fetchError) {
+      await logApp(
+        `[createPlayerPaginationEmbed] ⚠️ Error al hacer fetch: ${fetchError}`
+      );
+    }
+
     // Generar lista de jugadores
     if (pageMembers.length > 0) {
       const memberLines = await Promise.all(
@@ -167,12 +191,10 @@ export async function createPlayerPaginationEmbed(
               }
             }
 
-            // Nombre del jugador (mención o displayName)
-            if (useDisplayName) {
-              line += `\`${member.displayName}\``;
-            } else {
-              line += `<@${member.id}>`;
-            }
+            // Nombre del jugador: TEMPORAL - mostrar mención + nombre copiable (doble)
+            // Esto ayuda a diagnosticar problemas de caché en servidores grandes
+            const displayName = member.displayName || 'Usuario';
+            line += `<@${member.id}> \`${displayName}\``;
 
             // Roles/banderas
             if (showRoles) {
@@ -310,10 +332,14 @@ export async function createPlayerPaginationEmbed(
   } catch (error) {
     // Log del error con el sistema de logs
     await logApp(
-      `[createPlayerPaginationEmbed] ❌ ERROR al generar lista de jugadores: ${error instanceof Error ? error.message : String(error)}`
+      `[createPlayerPaginationEmbed] ❌ ERROR al generar lista de jugadores: ${
+        error instanceof Error ? error.message : String(error)
+      }`
     );
     await logApp(
-      `[createPlayerPaginationEmbed] Stack trace: ${error instanceof Error ? error.stack : 'N/A'}`
+      `[createPlayerPaginationEmbed] Stack trace: ${
+        error instanceof Error ? error.stack : 'N/A'
+      }`
     );
 
     // Retornar un embed de error básico

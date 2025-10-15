@@ -34,6 +34,15 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     return null;
   }
 
+  // Detectar si es servidor grande (igual que en online-embed-helper.ts)
+  const isLargeServer = playerData.length >= 1000;
+  logCanvas(
+    `Servidor ${isLargeServer ? 'GRANDE' : 'PEQUEÑO'} detectado (${
+      playerData.length
+    } jugadores) - ` +
+      `Nombres se mostrarán ${isLargeServer ? 'copiables' : 'con menciones'}`
+  );
+
   // Ordena y selecciona los 5 registros más recientes
   const recent = [...playerData]
     .sort(
@@ -119,17 +128,19 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       try {
         // Intentar primero desde caché
         member = guild.members.cache.get(r.userId);
-        
+
         // Si no está en caché, intentar fetch individual
         if (!member) {
           try {
             member = await guild.members.fetch(r.userId);
           } catch (fetchError) {
             // Si falla el fetch del miembro, intentar solo el usuario
-            logCanvas(`No se pudo hacer fetch del miembro ${r.userId}, usando fallback de usuario`);
+            logCanvas(
+              `No se pudo hacer fetch del miembro ${r.userId}, usando fallback de usuario`
+            );
           }
         }
-        
+
         if (member) {
           const user = member.user;
           avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
@@ -153,7 +164,9 @@ export async function buildRecentAvatarsCard(guild: Guild) {
           if (user) {
             avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
             displayName = user.displayName || user.username; // Usar displayName global del usuario
-            logCanvas(`Usuario ${r.userId} obtenido sin datos de miembro (displayName: ${displayName})`);
+            logCanvas(
+              `Usuario ${r.userId} obtenido sin datos de miembro (displayName: ${displayName})`
+            );
           }
         }
       } catch (error) {
@@ -161,8 +174,12 @@ export async function buildRecentAvatarsCard(guild: Guild) {
         logCanvas(`Error al obtener datos del usuario ${r.userId}: ${error}`);
       }
 
-      // Usar displayName en lugar de mención para evitar menciones sin resolver
-      const playerName = `**${displayName}**`;
+      // TEMPORAL: Mostrar mención + nombre copiable para comparar
+      // - Si member existe: mención + nombre copiable (ambos)
+      // - Si member NO existe: solo nombre copiable
+      const playerName = member
+        ? `<@${r.userId}> \`${displayName}\`` // Mención + nombre copiable
+        : `\`${displayName}\``; // Solo nombre copiable (fallback)
 
       // Solo ícono de rango (si existe)
       const parts = [`${i + 1}. ${platformIcon} ${playerName}`];

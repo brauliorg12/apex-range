@@ -5,9 +5,7 @@ import {
   GuildMember,
   PresenceStatus,
 } from 'discord.js';
-import {
-  PC_ONLY_EMOGI,
-} from '../models/constants';
+import { PC_ONLY_EMOGI } from '../models/constants';
 import { getRankEmoji } from './emoji-helper';
 import { getStatusIcon } from '../interfaces/status-icon';
 import { filterAllowedRoles } from './role-filter';
@@ -80,6 +78,18 @@ export async function buildOnlineEmbedForRank(
   }
 
   if (count > 0) {
+    // 🔥 Intentar hacer fetch de miembros no en caché para resolver menciones
+    const fetchPromises = members.map(async (member: any) => {
+      if (!guild.members.cache.has(member.id)) {
+        try {
+          await guild.members.fetch(member.id);
+        } catch {
+          // Ignorar errores (miembro pudo haberse ido del servidor)
+        }
+      }
+    });
+    await Promise.all(fetchPromises);
+
     // Genera la lista de jugadores con numeración, estado, plataforma y roles/banderas
     const memberLines = await Promise.all(
       members.map(async (member: any, idx: number) => {
@@ -94,6 +104,11 @@ export async function buildOnlineEmbedForRank(
         const platformInfo = platforms.find((p) => p.apiName === platform);
         // Siendo id el icono en la constante // TODO mejorar
         const platformIcon = platformInfo?.id || PC_ONLY_EMOGI;
+
+        // Verificar si el miembro está en caché después del fetch
+        const cachedMember = guild.members.cache.get(member.id);
+        const displayName =
+          cachedMember?.displayName || member.displayName || 'Usuario';
 
         // Filtrar roles permitidos y mostrar banderas o nombres
         const allowedRoles = member.roles?.cache
@@ -116,10 +131,15 @@ export async function buildOnlineEmbedForRank(
               .join(', ')})`
           : '';
 
+        // TEMPORAL: Mostrar AMBOS (mención + nombre copiable) para comparar
+        const userDisplay = cachedMember
+          ? `<@${member.id}> \`${displayName}\`` // Mención + nombre copiable
+          : `\`${displayName}\``; // Solo nombre copiable (fallback)
+
         // Solo numerar si showNumbers es true
         return showNumbers
-          ? `${numero}. ${icon} ${platformIcon} <@${member.id}>${rolesDisplay}`
-          : `${icon} ${platformIcon} <@${member.id}>${rolesDisplay}`;
+          ? `${numero}. ${icon} ${platformIcon} ${userDisplay}${rolesDisplay}`
+          : `${icon} ${platformIcon} ${userDisplay}${rolesDisplay}`;
       })
     );
 

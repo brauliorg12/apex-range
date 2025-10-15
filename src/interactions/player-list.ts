@@ -5,7 +5,7 @@ import {
   Guild,
   GuildMember,
 } from 'discord.js';
-import { ALL_PLAYERS_EMOGI } from '../models/constants';
+import { ALL_PLAYERS_EMOGI, MAX_PLAYERS_PER_PAGE } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
@@ -86,11 +86,12 @@ export async function handleShowAllPlayersMenu(
   page: number = 1
 ) {
   if (!interaction.guild) return;
-  
+
   // Si es navegación de páginas (prev/next), actualizar el mensaje actual
-  const isPageNavigation = interaction.customId.startsWith('all_players_prev_') || 
-                          interaction.customId.startsWith('all_players_next_');
-  
+  const isPageNavigation =
+    interaction.customId.startsWith('all_players_prev_') ||
+    interaction.customId.startsWith('all_players_next_');
+
   if (isPageNavigation) {
     await interaction.deferUpdate();
   } else {
@@ -139,7 +140,6 @@ export async function handleShowAllPlayersMenu(
 
     // Detectar si es un servidor grande (1000+ jugadores registrados)
     const isLargeServer = players.length >= 1000;
-    const PLAYERS_PER_PAGE = 25; // Jugadores por página en servidores grandes (ajustado para límite de 4096 chars)
 
     const baseTitle = onlyOnline
       ? 'Filtra los jugadores 🟢 en línea por rango'
@@ -172,7 +172,7 @@ export async function handleShowAllPlayersMenu(
         {
           members: allMembers,
           page: page,
-          playersPerPage: PLAYERS_PER_PAGE,
+          playersPerPage: MAX_PLAYERS_PER_PAGE,
           buttonIdPrefix: 'all_players',
           color: '#3498db',
           title: baseTitle,
@@ -214,7 +214,9 @@ export async function handleShowAllPlayersMenu(
                     new Date(assignedAt).getTime() / 1000
                   )}:D>_`
                 : '';
-              return `${index + 1}. \`${m.displayName}\`${dateString}`;
+              // TEMPORAL: Mostrar mención + nombre copiable (doble)
+              const displayName = m.displayName || 'Usuario';
+              return `${index + 1}. <@${m.id}> \`${displayName}\`${dateString}`;
             })
             .join('\n');
           rankSection += membersList;
