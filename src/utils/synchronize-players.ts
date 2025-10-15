@@ -12,11 +12,23 @@ import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
  * @param guild - El guild a sincronizar.
  */
 export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
+  logApp(
+    `[synchronizePlayersWithRoles] 🔄 INICIANDO sincronización para guild ${guild.name} (${guild.id})`
+  );
+
   const players = await getAllRankedPlayers(guild);
   const playerData = await getPlayerData(guild);
 
+  logApp(
+    `[synchronizePlayersWithRoles] Guild: ${guild.name} | ` +
+    `Jugadores con roles detectados: ${players.length} | ` +
+    `Registros actuales en JSON: ${playerData.length}`
+  );
+
   const playerIdsWithRank = new Set(players.map((p) => p.member.id));
   let updated = false;
+  let newPlayers = 0;
+  let removedPlayers = 0;
 
   // Agregar jugadores con rol que no están en el JSON
   // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
@@ -35,6 +47,7 @@ export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
         rank: rankShortId,
         platform: (await getPlayerPlatform(guild.id, player.member.id)) || 'PC',
       });
+      newPlayers++;
       updated = true;
     }
   }
@@ -44,6 +57,7 @@ export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
   const filteredPlayerData = playerData.filter((p) =>
     playerIdsWithRank.has(p.userId)
   );
+  removedPlayers = originalLength - filteredPlayerData.length;
   if (filteredPlayerData.length !== originalLength) {
     updated = true;
   }
@@ -51,7 +65,13 @@ export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
   if (updated) {
     await writePlayers(guild.id, filteredPlayerData);
     logApp(
-      `Sincronización de jugadores con roles ejecutada en guild ${guild.name} (${guild.id})`
+      `[synchronizePlayersWithRoles] ✅ SINCRONIZACIÓN COMPLETADA para guild ${guild.name} (${guild.id}) | ` +
+      `Nuevos: ${newPlayers} | Eliminados: ${removedPlayers} | Total final: ${filteredPlayerData.length}`
+    );
+  } else {
+    logApp(
+      `[synchronizePlayersWithRoles] ℹ️ Sin cambios en guild ${guild.name} (${guild.id}). ` +
+      `Total de jugadores: ${playerData.length}`
     );
   }
 }

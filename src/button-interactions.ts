@@ -73,6 +73,16 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleRemoveRank(interaction);
     } else if (customId === 'show_all_players_menu') {
       await handleShowAllPlayersMenu(interaction);
+    } else if (
+      customId.startsWith('all_players_prev_') ||
+      customId.startsWith('all_players_next_')
+    ) {
+      // Manejar navegación de páginas en "Ver todos los jugadores"
+      const pageMatch = customId.match(/all_players_(prev|next)_(\d+)/);
+      if (pageMatch) {
+        const pageNum = parseInt(pageMatch[2], 10);
+        await handleShowAllPlayersMenu(interaction, undefined, false, pageNum);
+      }
     } else if (customId === 'show_help_menu') {
       await handleHelpMenu(interaction);
     } else if (customId === 'close_help_menu') {

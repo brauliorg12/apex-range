@@ -5,20 +5,7 @@ import {
   PLAYSTATION_EMOGI,
   XBOX_EMOGI,
 } from '../../models/constants';
-
-/**
- * Formatea la antigüedad de los datos en cache en minutos.
- *
- * @param ts - Timestamp en milisegundos (opcional).
- * @returns Cadena indicando hace cuánto tiempo se cargaron los datos, o cadena vacía si no hay timestamp.
- */
-function formatCacheAge(ts?: number) {
-  if (!ts) return '';
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return 'hace menos de 1 minuto';
-  if (mins === 1) return 'hace 1 minuto';
-  return `hace ${mins} minutos`;
-}
+import { formatCacheAge } from './formatters';
 
 /**
  * Construye un embed de Discord con el RP necesario para Predator (Top global) en Apex Legends.

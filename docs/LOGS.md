@@ -8,20 +8,25 @@ El bot implementa un **sistema avanzado de logging** con organización automáti
 logs/
 ├── app/
 │   └── 2025-09-20/
-│       └── app-2025-09-20.log
+│       ├── app-2025-09-20_part1.log
+│       └── app-2025-09-20_part2.log (si supera 5MB)
 ├── interactions/
 │   └── 2025-09-20/
-│       └── interactions-2025-09-20.log
+│       ├── interactions-2025-09-20_part1.log
+│       └── interactions-2025-09-20_part2.log (si supera 5MB)
 ├── canvas/
 │   └── 2025-09-20/
-│       └── canvas-2025-09-20.log
+│       ├── canvas-2025-09-20_part1.log
+│       └── canvas-2025-09-20_part2.log (si supera 5MB)
 ├── guilds/
 │   └── 2025-09-20/
-│       ├── guild_123456789_Server1.log
-│       └── guild_987654321_Server2.log
+│       ├── guild_123456789_Server1_part1.log
+│       ├── guild_123456789_Server1_part2.log (si supera 5MB)
+│       └── guild_987654321_Server2_part1.log
 └── global/
     └── 2025-09-20/
-        └── global-2025-09-20.log
+        ├── global-2025-09-20_part1.log
+        └── global-2025-09-20_part2.log (si supera 5MB)
 ```
 
 ## 🔍 Tipos de Log
@@ -62,7 +67,9 @@ logs/
 ### Rotación Automática
 
 - **Archivos diarios**: Cada día se crea automáticamente un nuevo archivo
-- **Fecha en nombre**: `tipo-YYYY-MM-DD.log`
+- **Fecha en nombre**: `tipo-YYYY-MM-DD_partN.log`
+- **Rotación por tamaño**: Cuando un archivo alcanza 5MB, automáticamente se crea una nueva parte
+- **Numeración incremental**: Los archivos se numeran secuencialmente (_part1, _part2, etc.)
 - **Sin intervención manual**: El sistema maneja la rotación automáticamente
 
 ### Organización Jerárquica
@@ -79,9 +86,11 @@ logs/
 
 ### Optimización de Rendimiento
 
-- **Archivos más pequeños**: Los logs diarios son más manejables
-- **Búsqueda rápida**: `grep` y herramientas de búsqueda funcionan mejor
-- **Menos I/O**: Rotación automática previene archivos gigantes
+- **Archivos más pequeños**: Los logs diarios son más manejables y se dividen automáticamente
+- **Límite de 5MB por archivo**: Cada archivo se limita a 5MB antes de crear una nueva parte
+- **Búsqueda rápida**: `grep` y herramientas de búsqueda funcionan mejor con archivos más pequeños
+- **Menos I/O**: Rotación automática previene archivos gigantes que afectan el rendimiento
+- **Prevención de problemas**: Servidores con mucha actividad no generan archivos inmanejables
 
 ### Consistencia Horaria
 
@@ -94,14 +103,17 @@ logs/
 ### Ver Logs en Tiempo Real
 
 ```bash
-# Ver logs de app del día actual
-tail -f logs/app/2025-09-20/app-2025-09-20.log
+# Ver logs de app del día actual (última parte)
+tail -f logs/app/2025-09-20/app-2025-09-20_part*.log
 
-# Ver interacciones de un servidor específico
-tail -f logs/guilds/2025-09-20/guild_335236834621652994_Shooters_Forever.log
+# Ver interacciones de un servidor específico (todas las partes)
+tail -f logs/guilds/2025-09-20/guild_335236834621652994_Shooters_Forever_part*.log
 
-# Ver todos los errores de hoy
+# Ver todos los errores de hoy (en todas las partes)
 grep "ERROR" logs/*/2025-09-20/*.log
+
+# Ver solo la última parte de logs de un guild
+tail -f $(ls -t logs/guilds/2025-09-20/guild_335236834621652994_* | head -1)
 ```
 
 ### Buscar Eventos Específicos

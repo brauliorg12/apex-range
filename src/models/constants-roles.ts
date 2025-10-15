@@ -14,7 +14,7 @@ export const RANK_ALIASES: Record<string, string[]> = {
   platinum: ['Platino', 'Platinum'],
   gold: ['Oro', 'Gold'],
   silver: ['Plata', 'Silver'],
-  bronze: ['Bronce', 'Bronze'],
+  bronze: ['Bronce', 'Bronze', 'bronce'],
   rookie: ['Rookie'],
 };
 

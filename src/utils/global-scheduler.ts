@@ -4,6 +4,7 @@ import { updateBotPresence } from './presence-helper';
 import { updateInitRoleSelectionImage } from '../helpers/update-role-selection-image';
 import { logApp } from './logger';
 import { updateApexInfoMessage } from '../helpers/update-apex-info-message';
+import { synchronizePlayersWithRoles } from './synchronize-players';
 
 type ScheduledTask = {
   guildId: string;
@@ -182,6 +183,7 @@ export function registerGuildPeriodicTasks(guild: Guild, client: Client): void {
     'roles-presence',
     2 * 60 * 1000, // 2 minutos
     async (guild, client) => {
+      await synchronizePlayersWithRoles(guild); // Sincronizar jugadores con roles PRIMERO
       await updateRoleCountMessage(guild);
       await updateBotPresence(client);
       logApp(

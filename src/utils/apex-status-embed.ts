@@ -61,7 +61,8 @@ export async function createApexStatusEmbeds(
         await writeApiCache(key, data, guildId, channelId);
         cacheInfo[key] = false;
         cacheTimestamps[key] = Date.now();
-        await logApp(`${key}: Datos actualizados correctamente.`);
+        // Log reducido: solo en caso de error se loggea
+        // await logApp(`${key}: Datos actualizados correctamente.`);
         return data;
       } else {
         throw new Error(`[ApexStatus] ${key}: Respuesta inválida de la API`);

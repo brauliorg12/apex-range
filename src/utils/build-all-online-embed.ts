@@ -148,19 +148,90 @@ export async function buildAllOnlineEmbeds(
 }
 
 /**
- * Obtiene todos los miembros del rango, incluyendo desconectados, usando playerData.
+ * Obtiene todos los miembros del rango, incluyendo desconectados, usando el caché de Discord.
+ * Verifica directamente si el miembro tiene el rol asignado en Discord.
+ * 
+ * @param guild - El guild de Discord
+ * @param role - El rol de rango a buscar
+ * @param playerData - Array de datos de jugadores sincronizados (usado solo para obtener IDs)
  */
 export function getAllMembersByRole(
   guild: Guild,
   role: Role,
   playerData: any[]
 ) {
+  // Obtener IDs de todos los jugadores registrados que tienen el rol en Discord
   const userIds = playerData
     .filter((p) => {
       const member = guild.members.cache.get(p.userId);
+      // Verificar directamente si el miembro tiene el ROL de Discord asignado
       return member && member.roles.cache.has(role.id);
     })
     .map((p) => p.userId);
 
-  return userIds.map((id) => guild.members.cache.get(id) || { id });
+  // Retornar solo los miembros que están en caché con el rol
+  return userIds.map((id) => guild.members.cache.get(id)).filter((m) => m);
+}
+
+/**
+ * Obtiene todos los miembros del rango por shortId, incluyendo proxies para usuarios no en caché.
+ * Esta función es para el botón "Ver más" en servidores grandes (4000+).
+ * Soporta AMBOS formatos: shortId ("gold") y nombres mapeados ("Oro").
+ * 
+ * @param guild - El guild de Discord
+ * @param role - El rol de rango a buscar
+ * @param playerData - Array de datos de jugadores sincronizados
+ */
+export function getAllMembersByRoleWithProxies(
+  guild: Guild,
+  role: Role,
+  playerData: any[]
+) {
+  const { getApexRanksForGuild } = require('../helpers/get-apex-ranks-for-guild');
+  const ranks = getApexRanksForGuild(guild.id, guild);
+  
+  // Encontrar el shortId del rango basado en el nombre del rol
+  const rankInfo = ranks.find((r: any) => r.roleName === role.name);
+  const rankShortId = rankInfo ? rankInfo.shortId : null;
+
+  // Filtrar playerData por AMBOS: shortId Y roleName (para compatibilidad con formato antiguo)
+  // Ejemplo: busca tanto "gold" como "Oro"
+  const filteredPlayers = playerData.filter((p) => {
+    // Coincidir por shortId (formato nuevo)
+    if (p.rank === rankShortId) return true;
+    
+    // Coincidir por roleName mapeado (formato antiguo en español)
+    if (p.rank === role.name) return true;
+    
+    return false;
+  });
+  
+  const userIds = filteredPlayers.map((p) => p.userId);
+
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  // Obtener miembros del caché o crear proxies
+  const members: any[] = [];
+  
+  for (const id of userIds) {
+    const cached = guild.members.cache.get(id);
+    
+    if (cached) {
+      members.push(cached);
+    } else {
+      // Crear objeto proxy para miembros no en caché
+      members.push({
+        id,
+        user: { id, username: 'Usuario', discriminator: '0000' },
+        displayName: 'Usuario',
+        presence: null,
+        roles: { cache: new Map([[role.id, role]]) },
+        guild,
+      } as any);
+    }
+  }
+
+  return members;
 }

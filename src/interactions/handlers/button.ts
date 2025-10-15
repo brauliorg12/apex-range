@@ -76,6 +76,13 @@ export async function handleButton(interaction: ButtonInteraction) {
     const match = interaction.customId.match(/^rank_(\w+)_vermas$/);
     if (match) {
       const rankId = match[1];
+      
+      // LOG: Debug del botón "Ver más"
+      await logApp(
+        `[Button Ver más] Guild: ${interaction.guild!.name} (${interaction.guild!.id}) | ` +
+        `RankId: ${rankId} | Usuario: ${interaction.user.tag}`
+      );
+      
       const pageResult = await getRankPageEmbed(
         interaction.guild!,
         rankId,
@@ -83,11 +90,23 @@ export async function handleButton(interaction: ButtonInteraction) {
         MAX_PLAYERS_PER_PAGE, // cantidad por página efímera
         true
       );
-      if (!pageResult)
+      
+      if (!pageResult) {
+        // LOG: Por qué no hay datos
+        await logApp(
+          `[Button Ver más] ⚠️ NO HAY DATOS para rankId: ${rankId} en guild ${interaction.guild!.id}. ` +
+          `Posibles causas: 1) playerData vacío, 2) rol no encontrado, 3) no hay jugadores con ese rango.`
+        );
+        
         return await interaction.reply({
-          content: 'No hay datos.',
+          content: '⚠️ No hay datos disponibles. Puede que la sincronización aún no se haya ejecutado (espera 2 minutos) o no hay jugadores con este rango.',
           ephemeral: true,
         });
+      }
+
+      await logApp(
+        `[Button Ver más] ✅ Mostrando página con ${pageResult.page}/${pageResult.totalPages} páginas`
+      );
 
       await interaction.reply({
         embeds: [pageResult.embed],
@@ -98,29 +117,18 @@ export async function handleButton(interaction: ButtonInteraction) {
       return;
     }
 
-    // Handler para paginación efímera
-    const pagMatch = interaction.customId.match(/^rank_(\w+)_(prev|next)$/);
+    // Handler para paginación efímera (nuevo formato con número de página en el ID)
+    const pagMatch = interaction.customId.match(/^rank_(\w+)_(prev|next)_(\d+)$/);
     if (pagMatch) {
       const rankId = pagMatch[1];
-      const action = pagMatch[2];
-      // Obtener página actual del mensaje
-      const footer = interaction.message.embeds[0]?.footer?.text;
-
-      // Expresion regular para paginado
-      const pageMatch = footer?.match(/Página (\d+)\s*(?:de|\/)\s*(\d+)/i);
-
-      let page = pageMatch ? parseInt(pageMatch[1]) : 1;
-      const totalPages = pageMatch ? parseInt(pageMatch[2]) : 1;
-
-      // Actualiza el número de página según la acción del botón ("Siguiente" o "Anterior")
-      if (action === 'next' && page < totalPages) page++;
-      if (action === 'prev' && page > 1) page--;
+      const page = parseInt(pagMatch[3], 10);
 
       const pageResult = await getRankPageEmbed(
         interaction.guild!,
         rankId,
         page,
-        MAX_PLAYERS_PER_PAGE // cantidad por pagina
+        MAX_PLAYERS_PER_PAGE, // cantidad por pagina
+        true
       );
       if (!pageResult)
         return await interaction.reply({

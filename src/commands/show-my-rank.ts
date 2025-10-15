@@ -11,6 +11,14 @@ import {
 } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getPlayerData } from '../utils/player-data-manager';
+import { PlayerRecord } from '../interfaces/player';
+import {
+  PC_ONLY_EMOGI,
+  PLAYSTATION_EMOGI,
+  XBOX_EMOGI,
+  NINTENDO_SWITCH_EMOGI,
+} from '../models/constants';
 
 /**
  * Definición del comando contextual "Ver mi rango en Apex Range" para Discord.
@@ -56,6 +64,12 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       member.roles.cache.some((role) => role.name === rank.roleName)
     );
 
+    // Obtener datos del jugador para mostrar plataforma
+    const playerData = await getPlayerData(interaction.guild);
+    const playerRecord = (playerData as PlayerRecord[]).find(
+      (p) => p.userId === interaction.targetId
+    );
+
     // Usa el botón cerrar global del helper
     const closeButton = createCloseButtonRow();
 
@@ -64,6 +78,29 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       const isSelf = interaction.user.id === interaction.targetId;
       const displayName = member.displayName || member.user.username;
 
+      // Mapeo de plataformas a emojis personalizados de Discord
+      const platformEmojis: Record<string, string> = {
+        PC: PC_ONLY_EMOGI,
+        PS4: PLAYSTATION_EMOGI,
+        PS5: PLAYSTATION_EMOGI,
+        X1: XBOX_EMOGI,
+        SWITCH: NINTENDO_SWITCH_EMOGI,
+      };
+      const platformNames: Record<string, string> = {
+        PC: 'PC',
+        PS4: 'PlayStation',
+        PS5: 'PlayStation',
+        X1: 'Xbox',
+        SWITCH: 'Nintendo Switch',
+      };
+
+      const platformIcon = playerRecord?.platform
+        ? platformEmojis[playerRecord.platform] || PLAYSTATION_EMOGI
+        : '';
+      const platformName = playerRecord?.platform
+        ? platformNames[playerRecord.platform] || playerRecord.platform
+        : 'No especificada';
+
       const embed = new EmbedBuilder()
         .setColor((userRank.color as any) || '#95a5a6')
         .setTitle(
@@ -71,8 +108,8 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
         )
         .setDescription(
           isSelf
-            ? `Actualmente tienes el rango: ${emoji} **${userRank.label}**`
-            : `El rango de <@${member.id}> es: ${emoji} **${userRank.label}**`
+            ? `Actualmente tienes el rango: ${emoji} **${userRank.label}**\nPlataforma: ${platformIcon} **${platformName}**`
+            : `El rango de <@${member.id}> es: ${emoji} **${userRank.label}**\nPlataforma: ${platformIcon} **${platformName}**`
         );
 
       await interaction.reply({

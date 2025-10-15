@@ -117,9 +117,19 @@ export async function buildRecentAvatarsCard(guild: Guild) {
       let member: any = null; // <-- Declaración aquí
 
       try {
-        member =
-          guild.members.cache.get(r.userId) ||
-          (await guild.members.fetch(r.userId).catch(() => null));
+        // Intentar primero desde caché
+        member = guild.members.cache.get(r.userId);
+        
+        // Si no está en caché, intentar fetch individual
+        if (!member) {
+          try {
+            member = await guild.members.fetch(r.userId);
+          } catch (fetchError) {
+            // Si falla el fetch del miembro, intentar solo el usuario
+            logCanvas(`No se pudo hacer fetch del miembro ${r.userId}, usando fallback de usuario`);
+          }
+        }
+        
         if (member) {
           const user = member.user;
           avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
@@ -136,24 +146,26 @@ export async function buildRecentAvatarsCard(guild: Guild) {
             }
           }
         } else {
-          // Fallback al usuario global si no es miembro en cache
+          // Fallback: obtener solo el usuario (sin displayName del servidor)
           const user = await guild.client.users
             .fetch(r.userId)
             .catch(() => null);
           if (user) {
             avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
-            displayName = user.username;
+            displayName = user.displayName || user.username; // Usar displayName global del usuario
+            logCanvas(`Usuario ${r.userId} obtenido sin datos de miembro (displayName: ${displayName})`);
           }
         }
-      } catch {
+      } catch (error) {
         // Ignorar errores por usuario no disponible
+        logCanvas(`Error al obtener datos del usuario ${r.userId}: ${error}`);
       }
 
-      // Actualizar el enlace con el displayName correcto
-      const mention = `<@${r.userId}>`;
+      // Usar displayName en lugar de mención para evitar menciones sin resolver
+      const playerName = `**${displayName}**`;
 
       // Solo ícono de rango (si existe)
-      const parts = [`${i + 1}. ${platformIcon} ${mention}`];
+      const parts = [`${i + 1}. ${platformIcon} ${playerName}`];
       if (emoji) parts.push(emoji);
       parts.push(`<t:${ts}:R>`);
       descriptions.push(parts.join(' — '));

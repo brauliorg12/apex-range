@@ -36,12 +36,14 @@ export async function handlePresenceUpdate(
       1
     ); // Prioridad normal para presencia
 
-    logApp(
-      `PresenceUpdate: ${newPresence.user?.tag ?? ''} (${
-        newPresence.user?.id ?? ''
-      }) cambió de ${oldStatus} a ${newStatus} en guild ${
-        newPresence.guild.name
-      } (${newPresence.guild.id})`
-    );
+    // Log deshabilitado para evitar spam en servidores grandes
+    // Si necesitas debuggear, descomenta temporalmente:
+    // logApp(
+    //   `PresenceUpdate: ${newPresence.user?.tag ?? ''} (${
+    //     newPresence.user?.id ?? ''
+    //   }) cambió de ${oldStatus} a ${newStatus} en guild ${
+    //     newPresence.guild.name
+    //   } (${newPresence.guild.id})`
+    // );
   }
 }

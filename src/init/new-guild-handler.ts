@@ -95,12 +95,18 @@ async function handleExistingConfiguredGuild(
  * @param guild - El nuevo guild sin configurar.
  */
 async function handleNewUnconfiguredGuild(guild: Guild): Promise<void> {
-  const channel =
-    guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0);
-  if (channel && 'send' in channel) {
-    await channel.send({
-      content: `¡Hola! Soy Apex Range Bot. Para configurar el panel de rangos, un administrador debe ejecutar el comando \`/setup-roles\` en este canal. ¡Gracias por añadirme!`,
-    });
+  try {
+    const channel =
+      guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0);
+    if (channel && 'send' in channel) {
+      await channel.send({
+        content: `¡Hola! Soy Apex Range Bot. Para configurar el panel de rangos, un administrador debe ejecutar el comando \`/setup-roles\` en este canal. ¡Gracias por añadirme!`,
+      });
+    }
+  } catch (error) {
+    logApp(
+      `No se pudo enviar mensaje de bienvenida en ${guild.name} (${guild.id}): ${error}`
+    );
   }
 }
 
@@ -110,11 +116,17 @@ async function handleNewUnconfiguredGuild(guild: Guild): Promise<void> {
  * @param guild - El guild al que se reconectó.
  */
 async function sendReconnectionMessage(guild: Guild): Promise<void> {
-  const channel =
-    guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0);
-  if (channel && 'send' in channel) {
-    await channel.send({
-      content: `✅ **¡Bot reconectado exitosamente!**\n\nEl panel de rangos ya estaba configurado. Todas las funciones están activas y la presencia global se ha actualizado.\n\n💡 **¿Necesitas resetear la configuración?** Un administrador puede ejecutar \`/setup-roles\` para recrear el panel desde cero.`,
-    });
+  try {
+    const channel =
+      guild.systemChannel || guild.channels.cache.find((ch) => ch.type === 0);
+    if (channel && 'send' in channel) {
+      await channel.send({
+        content: `✅ **¡Bot reconectado exitosamente!**\n\nEl panel de rangos ya estaba configurado. Todas las funciones están activas y la presencia global se ha actualizado.\n\n💡 **¿Necesitas resetear la configuración?** Un administrador puede ejecutar \`/setup-roles\` para recrear el panel desde cero.`,
+      });
+    }
+  } catch (error) {
+    logApp(
+      `No se pudo enviar mensaje de reconexión en ${guild.name} (${guild.id}): ${error}`
+    );
   }
 }

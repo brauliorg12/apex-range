@@ -84,7 +84,8 @@ export async function getMapRotation(): Promise<any | null> {
       await logApp(`[API][getMapRotation] status: ERROR | url: ${url}`);
       return null;
     }
-    await logApp(`[API][getMapRotation] status: OK | url: ${url}`);
+    // Log reducido: solo loggear errores
+    // await logApp(`[API][getMapRotation] status: OK | url: ${url}`);
     return data;
   } catch (error) {
     await logApp(`[API][getMapRotation] status: ERROR | url: ${url}`);
@@ -109,7 +110,8 @@ export async function getPredatorRank(): Promise<any | null> {
       await logApp(`[API][getPredatorRank] status: ERROR | url: ${url}`);
       return null;
     }
-    await logApp(`[API][getPredatorRank] status: OK | url: ${url}`);
+    // Log reducido: solo loggear errores
+    // await logApp(`[API][getPredatorRank] status: OK | url: ${url}`);
     return data;
   } catch (error) {
     await logApp(`[API][getPredatorRank] status: ERROR | url: ${url}`);
@@ -134,7 +136,8 @@ export async function getServerStatus(): Promise<any | null> {
       await logApp(`[API][getServerStatus] status: ERROR | url: ${url}`);
       return null;
     }
-    await logApp(`[API][getServerStatus] status: OK | url: ${url}`);
+    // Log reducido: solo loggear errores
+    // await logApp(`[API][getServerStatus] status: OK | url: ${url}`);
     return data;
   } catch (error) {
     await logApp(`[API][getServerStatus] status: ERROR | url: ${url}`);

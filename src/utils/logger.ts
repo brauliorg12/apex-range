@@ -1,10 +1,12 @@
-import { appendFile } from 'fs/promises';
+import { appendFile, readdir, unlink } from 'fs/promises';
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, statSync } from 'fs';
 
 // Obtiene la raíz del proyecto (ajusta si usas otra estructura)
 const ROOT_PATH = join(__dirname, '../../');
 const LOG_DIR = join(ROOT_PATH, 'logs');
+const MAX_LOG_SIZE_BYTES = 5 * 1024 * 1024; // 5MB en bytes
+const LOG_RETENTION_DAYS = 2; // Mantener logs de los últimos 2 días
 
 /**
  * Obtiene la fecha actual en formato YYYY-MM-DD para nombrar archivos de log
@@ -15,7 +17,42 @@ function getCurrentDateString(): string {
 }
 
 /**
+ * Limpia archivos de log antiguos (más de LOG_RETENTION_DAYS días)
+ * Se ejecuta de forma asíncrona sin bloquear la aplicación
+ */
+async function cleanOldLogs(): Promise<void> {
+  try {
+    const now = Date.now();
+    const maxAgeMs = LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+    
+    // Limpiar logs de app, canvas e interactions
+    const logTypes = ['app', 'canvas', 'interactions'];
+    
+    for (const logType of logTypes) {
+      const typeDir = join(LOG_DIR, logType);
+      if (!existsSync(typeDir)) continue;
+      
+      const files = await readdir(typeDir);
+      
+      for (const file of files) {
+        const filePath = join(typeDir, file);
+        const stats = statSync(filePath);
+        const fileAge = now - stats.mtimeMs;
+        
+        if (fileAge > maxAgeMs) {
+          await unlink(filePath);
+          console.log(`[Logger] Archivo de log eliminado: ${file}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[Logger] Error al limpiar logs antiguos:', error);
+  }
+}
+
+/**
  * Obtiene la ruta del archivo de log para un tipo específico y fecha
+ * Implementa rotación automática cuando el archivo supera MAX_LOG_SIZE_BYTES
  */
 function getLogFilePath(logType: string, dateString?: string): string {
   const date = dateString || getCurrentDateString();
@@ -26,7 +63,23 @@ function getLogFilePath(logType: string, dateString?: string): string {
     mkdirSync(typeDir, { recursive: true });
   }
 
-  return join(typeDir, `${logType}-${date}.log`);
+  const baseFileName = `${logType}-${date}`;
+  let partNumber = 1;
+  let testFile = join(typeDir, `${baseFileName}_part${partNumber}.log`);
+
+  // Buscar el último archivo de parte que existe
+  while (existsSync(testFile)) {
+    const stats = statSync(testFile);
+    if (stats.size < MAX_LOG_SIZE_BYTES) {
+      // Este archivo aún tiene espacio, usarlo
+      return testFile;
+    }
+    partNumber++;
+    testFile = join(typeDir, `${baseFileName}_part${partNumber}.log`);
+  }
+
+  // Si llegamos aquí, necesitamos crear un nuevo archivo de parte
+  return testFile;
 }
 
 /**
@@ -141,3 +194,11 @@ export async function logApp(message: string, ...args: any[]): Promise<void> {
 
   await appendFile(logPath, line).catch(() => {});
 }
+
+// Ejecutar limpieza de logs antiguos cada 6 horas
+setInterval(() => {
+  cleanOldLogs().catch(() => {});
+}, 6 * 60 * 60 * 1000);
+
+// Ejecutar limpieza al iniciar la aplicación
+cleanOldLogs().catch(() => {});

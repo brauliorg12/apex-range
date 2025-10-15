@@ -99,15 +99,15 @@ Un bot profesional para comunidades de Apex Legends que permite:
 
 Para información detallada sobre instalación, uso y configuración avanzada, consulta los siguientes archivos:
 
-- **[INSTALL.md](INSTALL.md)** - Instalación y configuración básica
-- **[USAGE.md](USAGE.md)** - Comandos y uso del bot
-- **[PERMISSIONS.md](PERMISSIONS.md)** - Permisos requeridos y configuración de Discord
-- **[ROLE-MAPPING.md](ROLE-MAPPING.md)** - Sistema inteligente de mapeo de roles personalizados
-- **[MULTI-SERVER.md](MULTI-SERVER.md)** - Funcionalidades multi-servidor e inicialización
-- **[PLATFORMS.md](PLATFORMS.md)** - Soporte para múltiples plataformas
-- **[API.md](API.md)** - Panel de estado y detalles de API
-- **[LOGS.md](LOGS.md)** - Sistema de logs organizado por días
-- **[ADVANCED.md](ADVANCED.md)** - Configuraciones avanzadas, optimizaciones y producción
+- **[INSTALL.md](docs/INSTALL.md)** - Instalación y configuración básica
+- **[USAGE.md](docs/USAGE.md)** - Comandos y uso del bot
+- **[PERMISSIONS.md](docs/PERMISSIONS.md)** - Permisos requeridos y configuración de Discord
+- **[ROLE-MAPPING.md](docs/ROLE-MAPPING.md)** - Sistema inteligente de mapeo de roles personalizados
+- **[MULTI-SERVER.md](docs/MULTI-SERVER.md)** - Funcionalidades multi-servidor e inicialización
+- **[PLATFORMS.md](docs/PLATFORMS.md)** - Soporte para múltiples plataformas
+- **[API.md](docs/API.md)** - Panel de estado y detalles de API
+- **[LOGS.md](docs/LOGS.md)** - Sistema de logs organizado por días
+- **[ADVANCED.md](docs/ADVANCED.md)** - Configuraciones avanzadas, optimizaciones y producción
 
 ---
 

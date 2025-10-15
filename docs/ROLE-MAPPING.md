@@ -46,7 +46,7 @@ const RANK_ALIASES = {
   platinum: ['Platino', 'Platinum'],
   gold: ['Oro', 'Gold'],
   silver: ['Plata', 'Silver'],
-  bronze: ['Bronce', 'Bronze'],
+  bronze: ['Bronce', 'Bronze', 'bronce'],
   rookie: ['Rookie'],
 };
 ```
