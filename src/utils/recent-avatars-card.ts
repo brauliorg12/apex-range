@@ -174,11 +174,11 @@ export async function buildRecentAvatarsCard(guild: Guild) {
         logCanvas(`Error al obtener datos del usuario ${r.userId}: ${error}`);
       }
 
-      // TEMPORAL: Mostrar mención + nombre copiable para comparar
-      // - Si member existe: mención + nombre copiable (ambos)
+      // Mostrar nombre copiable + mención para comparar
+      // - Si member existe: nombre copiable + mención (ambos)
       // - Si member NO existe: solo nombre copiable
       const playerName = member
-        ? `<@${r.userId}> \`${displayName}\`` // Mención + nombre copiable
+        ? `\`${displayName}\` <@${r.userId}>` // Nombre copiable + mención
         : `\`${displayName}\``; // Solo nombre copiable (fallback)
 
       // Solo ícono de rango (si existe)

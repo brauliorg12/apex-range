@@ -8,6 +8,7 @@ import {
 import {
   ALL_PLAYERS_EMOGI,
   APEX_LOGO_EMOJI,
+  FILTER_LIST_EMOGI,
   GAME_PLATFORMS_EMOGI,
   HELP_EMOGI,
   LOGO_APP_EMOGI,
@@ -31,7 +32,7 @@ export function createRankButtons(
 ): ActionRowBuilder<ButtonBuilder>[] {
   // Obtener los rangos mapeados del servidor (soporta roles personalizados)
   const ranks = getApexRanksForGuild(guild.id, guild);
-  
+
   // Mapea los rangos de Apex a botones con emoji y nombre
   const buttons = ranks.map((rank) =>
     new ButtonBuilder()
@@ -81,6 +82,11 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
       .setEmoji(APEX_LOGO_EMOJI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
+      .setCustomId('open_player_search')
+      .setLabel('Buscar Jugador')
+      .setEmoji(SEARCH_EMOGI)
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId('manage_rank_menu')
       .setLabel('Gestionar mi Rango')
       .setEmoji(LOGO_APP_EMOGI)
@@ -101,7 +107,7 @@ export function createManagementButtons(): ActionRowBuilder<ButtonBuilder>[] {
     new ButtonBuilder()
       .setCustomId('show_more_options')
       .setLabel('Filtrar jugadores en línea')
-      .setEmoji(SEARCH_EMOGI)
+      .setEmoji(FILTER_LIST_EMOGI)
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('show_help_menu')

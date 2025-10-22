@@ -39,6 +39,7 @@ export const NINTENDO_SWITCH_EMOGI = '<:nintendo_switch:1418625902685720737>';
 
 export const STATS_LOGO_EMOGI = '<:stats_bars:1418626722852765898>';
 export const SEARCH_EMOGI = '<:search:1418628214049472606>';
+export const FILTER_LIST_EMOGI = '<:filter:1430656194590019754>';
 export const HELP_EMOGI = '<:help:1418628581822566400>';
 export const ALL_PLAYERS_EMOGI = '<:all_players:1418628948165791964>';
 export const NEW_EMOGI = '<:new:1418629366581166232>';

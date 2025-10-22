@@ -29,6 +29,10 @@ import { handleModoExistente } from './interactions/handlers/setup-modes-existen
 import { handleRoleSelection } from './configs/handlers/role-selection-handlers';
 import { createRoleSelectionMenu } from './interactions/role-selection-menu';
 import { getExcludedRolesForGuild } from './utils/role-filter';
+import {
+  handleOpenPlayerSearchModal,
+  handlePlayerSearchResults,
+} from './interactions/player-search';
 
 /**
  * Asynchronously handles button interactions initiated by users.
@@ -87,6 +91,19 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleHelpMenu(interaction);
     } else if (customId === 'close_help_menu') {
       await handleCloseHelpMenu(interaction);
+    } else if (customId === 'open_player_search') {
+      // Abrir modal para buscar jugador por nombre
+      await handleOpenPlayerSearchModal(interaction);
+      return;
+    } else if (
+      customId.startsWith('player_search_prev_') ||
+      customId.startsWith('player_search_next_')
+    ) {
+      const pageMatch = customId.match(/player_search_(prev|next)_(\d+)/);
+      if (pageMatch) {
+        const pageNum = parseInt(pageMatch[2], 10);
+        await handlePlayerSearchResults(interaction, undefined, pageNum);
+      }
     } else if (customId === 'modo_auto') {
       await handleModoAuto(interaction);
     } else if (customId === 'modo_manual') {

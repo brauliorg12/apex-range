@@ -214,9 +214,9 @@ export async function handleShowAllPlayersMenu(
                     new Date(assignedAt).getTime() / 1000
                   )}:D>_`
                 : '';
-              // TEMPORAL: Mostrar mención + nombre copiable (doble)
+              // Mostrar nombre copiable + mención (doble)
               const displayName = m.displayName || 'Usuario';
-              return `${index + 1}. <@${m.id}> \`${displayName}\`${dateString}`;
+              return `${index + 1}. \`${displayName}\` <@${m.id}>${dateString}`;
             })
             .join('\n');
           rankSection += membersList;

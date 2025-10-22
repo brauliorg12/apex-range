@@ -1,8 +1,5 @@
 import { Guild, EmbedBuilder, Message } from 'discord.js';
-import {
-  APEX_LOGO_EMOJI,
-  SETTINGS_ALL_EMOGI,
-} from '../models/constants';
+import { APEX_LOGO_EMOJI, SETTINGS_ALL_EMOGI } from '../models/constants';
 import { readRolesState, writeRolesState } from './state-manager';
 import { createManagementButtons } from './button-helper';
 import { buildAllOnlineEmbeds } from './build-all-online-embed';

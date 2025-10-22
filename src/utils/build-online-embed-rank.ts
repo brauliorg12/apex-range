@@ -131,9 +131,9 @@ export async function buildOnlineEmbedForRank(
               .join(', ')})`
           : '';
 
-        // TEMPORAL: Mostrar AMBOS (mención + nombre copiable) para comparar
+        // Mostrar AMBOS (nombre copiable + mención) para comparar
         const userDisplay = cachedMember
-          ? `<@${member.id}> \`${displayName}\`` // Mención + nombre copiable
+          ? `\`${displayName}\` <@${member.id}>` // Nombre copiable + mención
           : `\`${displayName}\``; // Solo nombre copiable (fallback)
 
         // Solo numerar si showNumbers es true

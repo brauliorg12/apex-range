@@ -191,10 +191,10 @@ export async function createPlayerPaginationEmbed(
               }
             }
 
-            // Nombre del jugador: TEMPORAL - mostrar mención + nombre copiable (doble)
+            // Nombre del jugador: Mostrar nombre copiable + mención (doble)
             // Esto ayuda a diagnosticar problemas de caché en servidores grandes
             const displayName = member.displayName || 'Usuario';
-            line += `<@${member.id}> \`${displayName}\``;
+            line += `\`${displayName}\` <@${member.id}>`;
 
             // Roles/banderas
             if (showRoles) {

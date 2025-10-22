@@ -127,17 +127,16 @@ export async function handleButton(interaction: ButtonInteraction) {
     );
     if (pagMatch) {
       const rankId = pagMatch[1];
-      const direction = pagMatch[2]; // 'prev' o 'next'
-      const currentPage = parseInt(pagMatch[3], 10);
-
-      // Calcular la nueva página según la dirección
-      const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+      // El tercer grupo contiene LA PÁGINA OBJETIVO que viene embebida en el customId.
+      // Antes se trataba como "current page" y se le sumaba/restaba 1, lo que
+      // provocaba saltos (ej: 1 -> 3). Usar directamente el número embebido.
+      const targetPage = parseInt(pagMatch[3], 10);
 
       const pageResult = await getRankPageEmbed(
         interaction.guild!,
         rankId,
-        newPage, // ✅ Usar la página calculada
-        MAX_PLAYERS_PER_PAGE, // cantidad por pagina
+        targetPage, // usar la página objetivo indicada por el botón
+        MAX_PLAYERS_PER_PAGE,
         true
       );
       if (!pageResult)
