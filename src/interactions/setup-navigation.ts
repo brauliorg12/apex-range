@@ -61,7 +61,20 @@ export function createMainMenuEmbed(guildName: string) {
       .setEmoji('🚫')
   );
 
-  return { embeds: [modeEmbed], components: [modeButtons, extraButtons] };
+  // Botón para re-ejecutar el panel de gestión en el canal actual
+  const managementButtonRow =
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId('modo_panel_gestion')
+        .setLabel('Panel de Gestión')
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji('🛠️')
+    );
+
+  return {
+    embeds: [modeEmbed],
+    components: [modeButtons, extraButtons, managementButtonRow],
+  };
 }
 
 /**

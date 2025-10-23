@@ -14,6 +14,44 @@ import { logApp } from '../utils/logger';
 
 const MIN_QUERY_LENGTH = 3;
 
+// Caché en memoria para mapear messageId -> { query, timeout }
+// Se usa para recuperar la query cuando el usuario navega páginas usando botones
+const SEARCH_QUERY_BY_MESSAGE_ID: Map<
+  string,
+  { query: string; timeout: ReturnType<typeof setTimeout> }
+> = new Map();
+
+// Tiempo de vida de la entrada en ms (10 minutos)
+const QUERY_CACHE_TTL = 10 * 60 * 1000;
+
+function storeQueryForMessage(messageId: string, query: string) {
+  // Si ya existía, limpiar el timeout anterior
+  const existing = SEARCH_QUERY_BY_MESSAGE_ID.get(messageId);
+  if (existing) clearTimeout(existing.timeout);
+
+  const timeout = setTimeout(() => {
+    SEARCH_QUERY_BY_MESSAGE_ID.delete(messageId);
+  }, QUERY_CACHE_TTL);
+
+  SEARCH_QUERY_BY_MESSAGE_ID.set(messageId, { query, timeout });
+  // Log para depuración: almacenar query
+  try {
+    void logApp(
+      `[player-search] Cached query for message ${messageId}: ${query}`
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function deleteQueryForMessage(messageId: string) {
+  const existing = SEARCH_QUERY_BY_MESSAGE_ID.get(messageId);
+  if (existing) {
+    clearTimeout(existing.timeout);
+    SEARCH_QUERY_BY_MESSAGE_ID.delete(messageId);
+  }
+}
+
 /** Abre un modal para que el usuario escriba el nombre a buscar (mínimo 3 caracteres) */
 export async function handleOpenPlayerSearchModal(
   interaction: ButtonInteraction
@@ -74,14 +112,60 @@ export async function handlePlayerSearchResults(
   page: number = 1
 ) {
   try {
+    // Determinar si es navegación de páginas (prev/next) o una sumisión de modal
+    let isPageNavigation = false;
+    if (!(interaction as ModalSubmitInteraction).fields) {
+      const bi = interaction as ButtonInteraction;
+      isPageNavigation =
+        bi.customId.startsWith('player_search_prev_') ||
+        bi.customId.startsWith('player_search_next_');
+    }
+
     // Si la llamada viene desde un ModalSubmitInteraction, extraer la query
     if ((interaction as ModalSubmitInteraction).fields) {
       const modal = interaction as ModalSubmitInteraction;
       await modal.deferReply({ ephemeral: true });
       query = modal.fields.getTextInputValue('player_search_query');
-    } else {
-      // Si viene de ButtonInteraction (navegación), ya se pasó query opcionalmente
-      await (interaction as ButtonInteraction).deferUpdate();
+    } else if (isPageNavigation) {
+      // Si viene de ButtonInteraction y es navegación de página, deferir update para ACK
+      const bi = interaction as ButtonInteraction;
+      await bi.deferUpdate();
+
+      // Primero intentar recuperar la query desde la caché por message.id
+      try {
+        const messageId = (bi.message as any)?.id as string | undefined;
+        if (messageId) {
+          const cached = SEARCH_QUERY_BY_MESSAGE_ID.get(messageId);
+          if (cached) {
+            query = cached.query;
+            try {
+              void logApp(
+                `[player-search] Recovered cached query for message ${messageId}`
+              );
+            } catch {}
+          }
+        }
+      } catch (err) {
+        // Ignorar errores de acceso
+      }
+
+      // Si no está en caché, intentar extraer la query desde el embed del mensaje actual (título)
+      // Formato esperado: 'Resultados de búsqueda: <query>' (establecido cuando se creó el embed)
+      if (!query) {
+        try {
+          const message = bi.message as any;
+          const embed = message?.embeds?.[0];
+          const title = embed?.title as string | undefined;
+          if (title) {
+            const m = title.match(/^Resultados de búsqueda:\s*(.+)$/i);
+            if (m) {
+              query = m[1].trim();
+            }
+          }
+        } catch (err) {
+          // No bloquear: si no se puede extraer la query, se tratará más abajo
+        }
+      }
     }
 
     if (!query || query.trim().length < MIN_QUERY_LENGTH) {
@@ -136,9 +220,11 @@ export async function handlePlayerSearchResults(
           components: [createCloseButtonRow()],
         });
       } else {
-        await (interaction as ButtonInteraction).followUp({
+        // Para consistencia con el resto de paginaciones, usar editReply tras deferUpdate
+        await (interaction as ButtonInteraction).editReply({
           content: `No se encontraron resultados para **${query}**.`,
-          ephemeral: true,
+          embeds: [],
+          components: [createCloseButtonRow()],
         });
       }
       return;
@@ -174,12 +260,36 @@ export async function handlePlayerSearchResults(
         embeds: [paginationResult.embed],
         components: paginationResult.components,
       });
+
+      // Guardar la query en la caché asociada al mensaje enviado para soportar paginado
+      try {
+        const sent = (await (
+          interaction as ModalSubmitInteraction
+        ).fetchReply()) as any;
+        if (sent && sent.id) {
+          storeQueryForMessage(sent.id, query!);
+        }
+      } catch {
+        // Ignorar fallos de fetchReply
+      }
     } else {
-      // ButtonInteraction: editar mensaje original
+      // Para consistencia con player-list y demás paginaciones, usar editReply tras deferUpdate
       await (interaction as ButtonInteraction).editReply({
         embeds: [paginationResult.embed],
         components: paginationResult.components,
       });
+
+      // Guardar la query en la caché asociada al mensaje (obtenido tras el editReply)
+      try {
+        const sent = (await (
+          interaction as ButtonInteraction
+        ).fetchReply()) as any;
+        if (sent && sent.id) {
+          storeQueryForMessage(sent.id, query!);
+        }
+      } catch {
+        // Ignorar fallos de fetchReply
+      }
     }
   } catch (error) {
     const stack = (error && (error as any).stack) || String(error);

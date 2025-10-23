@@ -137,3 +137,49 @@ export async function finalizeSetup(
 
   return { statsUpdated, elapsed };
 }
+
+/**
+ * Re-ejecuta el panel de gestión completo en el canal actual.
+ * Ejecuta sendOnlinePanel, updateRoleCountMessage y updateBotPresence.
+ * Diseñado para ser usado desde el botón 'Panel de Gestión' en el menú de setup.
+ */
+export async function rerunManagementPanel(
+  channel: TextChannel,
+  guild: any,
+  client: any,
+  logger: any
+): Promise<{ success: boolean; elapsed: string }> {
+  const start = Date.now();
+
+  logger.info('Ejecutando PANEL DE GESTIÓN en canal actual...');
+
+  try {
+    // Re-ejecutar panel online
+    await sendOnlinePanel(channel, guild);
+    // Actualizar estadísticas
+    await updateRoleCountMessage(guild);
+    // Actualizar presencia global
+    await updateBotPresence(client);
+
+    const elapsed = ((Date.now() - start) / 1000).toFixed(2);
+    logger.info(`PANEL DE GESTIÓN ejecutado correctamente en ${elapsed}s`);
+    return { success: true, elapsed };
+  } catch (error) {
+    logger.error('Error ejecutando panel de gestión', error);
+    try {
+      await channel.send({
+        content: `❌ Error ejecutando panel de gestión: ${
+          error instanceof Error ? error.message : 'Error desconocido'
+        }`,
+      });
+    } catch (notifyError) {
+      logger.error(
+        'No se pudo notificar en el canal sobre el error del panel de gestión',
+        notifyError
+      );
+    }
+
+    const elapsed = ((Date.now() - start) / 1000).toFixed(2);
+    return { success: false, elapsed };
+  }
+}

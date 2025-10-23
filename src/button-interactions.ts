@@ -4,6 +4,7 @@ import {
   StringSelectMenuBuilder,
 } from 'discord.js';
 import { createCloseButtonRow } from './utils/button-helper';
+import { TextChannel } from 'discord.js';
 import { getApexRanksForGuild } from './helpers/get-apex-ranks-for-guild';
 import {
   handleManageRankMenu,
@@ -15,6 +16,8 @@ import { handleShowAllPlayersMenu } from './interactions/player-list';
 import { handleHelpMenu, handleCloseHelpMenu } from './interactions/help-menu';
 import { handleRemoveRank } from './helpers/handle-remove-rank';
 import { logInteraction } from './utils/logger';
+import { getServerLogger } from './utils/server-logger';
+import { rerunManagementPanel } from './helpers/setup-roles/setup-roles-setup';
 import { handleSetupConfirmation } from './interactions/setup-confirmation-handler';
 import {
   handleBackToModes,
@@ -112,6 +115,28 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleOpenManualModal(interaction);
     } else if (customId === 'modo_existente') {
       await handleModoExistente(interaction);
+    } else if (customId === 'modo_panel_gestion') {
+      // Re-ejecutar todo el panel de gestión en el canal actual
+      await interaction.deferReply({ ephemeral: true });
+      const logger = getServerLogger(
+        interaction.guild?.id || 'unknown',
+        interaction.guild?.name || 'Desconocido'
+      );
+
+      try {
+        const channel = interaction.channel as TextChannel;
+        const result = await rerunManagementPanel(channel, interaction.guild, interaction.client, logger);
+        if (result.success) {
+          await interaction.editReply({ content: `✅ Panel de gestión re-ejecutado en ${result.elapsed}s` });
+        } else {
+          await interaction.editReply({ content: `❌ Falló al re-ejecutar el panel (ver logs). Tiempo: ${result.elapsed}s` });
+        }
+      } catch (err) {
+        logger.error('Error en modo_panel_gestion', err);
+        if (!interaction.replied) {
+          await interaction.editReply({ content: '❌ Error inesperado al ejecutar panel de gestión.' });
+        }
+      }
     } else if (customId === 'confirm_auto') {
       await handleSetupConfirmation(interaction, 'auto');
     } else if (customId === 'confirm_manual') {
