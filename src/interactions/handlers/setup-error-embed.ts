@@ -26,8 +26,8 @@ export function createSetupErrorEmbed(mode: string): EmbedBuilder {
     mode === 'auto'
       ? 'automática'
       : mode === 'manual'
-      ? 'manual'
-      : 'con canales existentes';
+        ? 'manual'
+        : 'con canales existentes';
 
   return new EmbedBuilder()
     .setTitle('❌ Error en la Configuración')

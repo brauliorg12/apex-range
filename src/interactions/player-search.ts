@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ButtonInteraction,
   ModalBuilder,
   TextInputBuilder,
@@ -92,7 +93,7 @@ export async function handleOpenPlayerSearchModal(
         await interaction.reply({
           content:
             'No se pudo abrir el modal de búsqueda. Intenta usar el panel de gestión directamente o ejecuta `/setup-roles` para recrear el panel si fue modificado.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     } catch (replyError) {
@@ -124,7 +125,7 @@ export async function handlePlayerSearchResults(
     // Si la llamada viene desde un ModalSubmitInteraction, extraer la query
     if ((interaction as ModalSubmitInteraction).fields) {
       const modal = interaction as ModalSubmitInteraction;
-      await modal.deferReply({ ephemeral: true });
+      await modal.deferReply({ flags: MessageFlags.Ephemeral });
       query = modal.fields.getTextInputValue('player_search_query');
     } else if (isPageNavigation) {
       // Si viene de ButtonInteraction y es navegación de página, deferir update para ACK
@@ -256,39 +257,33 @@ export async function handlePlayerSearchResults(
     });
 
     if ((interaction as ModalSubmitInteraction).fields) {
-      await (interaction as ModalSubmitInteraction).editReply({
+      const sent = await (interaction as ModalSubmitInteraction).editReply({
         embeds: [paginationResult.embed],
         components: paginationResult.components,
       });
 
-      // Guardar la query en la caché asociada al mensaje enviado para soportar paginado
+      // Guardar la query en la caché asociada al mensaje enviado (editReply devuelve el Message)
       try {
-        const sent = (await (
-          interaction as ModalSubmitInteraction
-        ).fetchReply()) as any;
         if (sent && sent.id) {
           storeQueryForMessage(sent.id, query!);
         }
       } catch {
-        // Ignorar fallos de fetchReply
+        // Ignorar fallos al guardar la caché
       }
     } else {
       // Para consistencia con player-list y demás paginaciones, usar editReply tras deferUpdate
-      await (interaction as ButtonInteraction).editReply({
+      const sent = await (interaction as ButtonInteraction).editReply({
         embeds: [paginationResult.embed],
         components: paginationResult.components,
       });
 
-      // Guardar la query en la caché asociada al mensaje (obtenido tras el editReply)
+      // Guardar la query en la caché asociada al mensaje (editReply devuelve el Message)
       try {
-        const sent = (await (
-          interaction as ButtonInteraction
-        ).fetchReply()) as any;
         if (sent && sent.id) {
           storeQueryForMessage(sent.id, query!);
         }
       } catch {
-        // Ignorar fallos de fetchReply
+        // Ignorar fallos al guardar la caché
       }
     }
   } catch (error) {
@@ -304,7 +299,7 @@ export async function handlePlayerSearchResults(
         if (!interaction.replied && !interaction.deferred) {
           await (interaction as ButtonInteraction).reply({
             content: 'Error al procesar la navegación de la búsqueda.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       }

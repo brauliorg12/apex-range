@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ActionRowBuilder,
   ModalBuilder,
   StringSelectMenuInteraction,
@@ -66,7 +67,7 @@ export async function handleSelectMenuInteraction(
     }
     // ------------------------------------------------
     else if (customId === 'select_channels_existente') {
-      // await interaction.deferReply({ ephemeral: true });
+      // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await interaction.deferUpdate(); // Cambia deferReply a deferUpdate para editar el mensaje público
 
       if (interaction.values.length !== 2) {
@@ -178,7 +179,7 @@ export async function handleSelectMenuInteraction(
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: 'Ocurrió un error al procesar el menú.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

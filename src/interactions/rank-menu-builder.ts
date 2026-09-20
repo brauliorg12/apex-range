@@ -6,10 +6,7 @@ import {
   EmbedBuilder,
   Guild,
 } from 'discord.js';
-import {
-  GAME_PLATFORMS_EMOGI,
-  PC_ONLY_EMOGI,
-} from '../models/constants';
+import { GAME_PLATFORMS_EMOGI, PC_ONLY_EMOGI } from '../models/constants';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { getPlayerPlatform } from '../utils/player-data-manager';
@@ -31,7 +28,7 @@ export async function buildManageRankPayload(
   // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
   const ranks = getApexRanksForGuild(guild.id, guild);
   const platforms = getApexPlatformsForGuild(guild.id, guild);
-  
+
   const memberRankRoles = member.roles.cache.filter((role) =>
     ranks.some((rank) => rank.roleName === role.name)
   );
@@ -43,9 +40,7 @@ export async function buildManageRankPayload(
 
   // Obtener plataforma actual del usuario
   const currentPlatform = await getPlayerPlatform(guild.id, member.id);
-  const platformInfo = platforms.find(
-    (p) => p.apiName === currentPlatform
-  );
+  const platformInfo = platforms.find((p) => p.apiName === currentPlatform);
 
   const title = currentRank
     ? `Rango actual: ${getRankEmoji(guild.client, currentRank)} **${

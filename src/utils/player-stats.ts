@@ -23,7 +23,10 @@ async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
     try {
       await guild.members.fetch();
     } catch (error: any) {
-      console.warn('No se pudieron obtener todos los miembros del servidor, usando caché disponible:', error.message);
+      console.warn(
+        'No se pudieron obtener todos los miembros del servidor, usando caché disponible:',
+        error.message
+      );
       // Continuar con los miembros que ya están en caché
     }
 
@@ -64,12 +67,14 @@ export async function getPlayerStats(guild: Guild) {
     };
   } catch (error: any) {
     console.error('Error en getPlayerStats:', error);
-    
+
     // Proporcionar mensaje más específico según el tipo de error
     if (error.message?.includes("Members didn't arrive in time")) {
-      throw new Error("Members didn't arrive in time. El servidor puede ser muy grande o tener problemas de conexión.");
+      throw new Error(
+        "Members didn't arrive in time. El servidor puede ser muy grande o tener problemas de conexión."
+      );
     }
-    
+
     throw error;
   }
 }

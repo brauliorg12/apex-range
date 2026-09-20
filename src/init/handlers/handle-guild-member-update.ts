@@ -77,7 +77,10 @@ export async function handleGuildMemberUpdate(
   // Paso 3: Filtrado de roles Apex - Identificar cambios en roles de rango y plataforma
   // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
   const ranks = getApexRanksForGuild(newMember.guild.id, newMember.guild);
-  const platforms = getApexPlatformsForGuild(newMember.guild.id, newMember.guild);
+  const platforms = getApexPlatformsForGuild(
+    newMember.guild.id,
+    newMember.guild
+  );
   const apexRoleNames = ranks.map((rank) => rank.roleName);
   const platformRoleNames = platforms.map((platform) => platform.roleName);
   const allApexRoleNames = [...apexRoleNames, ...platformRoleNames];
@@ -122,9 +125,7 @@ export async function handleGuildMemberUpdate(
       if (newRankRoles.size > 0) {
         const newRankRole = newRankRoles.first();
         // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
-        const rankInfo = ranks.find(
-          (r) => r.roleName === newRankRole.name
-        );
+        const rankInfo = ranks.find((r) => r.roleName === newRankRole.name);
         newRank = rankInfo?.shortId;
       } else {
         // Rank removido
@@ -184,7 +185,10 @@ export async function handleGuildMemberUpdate(
       if (channel) {
         // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
         // Actualizar todos los rangos que podrían haber cambiado
-        const ranksForUpdate = getApexRanksForGuild(newMember.guild.id, newMember.guild);
+        const ranksForUpdate = getApexRanksForGuild(
+          newMember.guild.id,
+          newMember.guild
+        );
         for (const rank of ranksForUpdate) {
           const rankMessageId = rolesState.rankCardMessageIds?.[rank.shortId];
           if (rankMessageId) {

@@ -1,4 +1,9 @@
-import { ButtonInteraction, TextChannel, EmbedBuilder } from 'discord.js';
+import {
+  MessageFlags,
+  ButtonInteraction,
+  TextChannel,
+  EmbedBuilder,
+} from 'discord.js';
 import { verifyBotPermissionsForButton } from '../../helpers/button-verifications';
 
 /**
@@ -29,7 +34,7 @@ export async function validateBotPermissions(
           .setColor(0xff0000),
       ],
       components: [],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }

@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ButtonInteraction,
   ActionRowBuilder,
   StringSelectMenuBuilder,
@@ -117,7 +118,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await handleModoExistente(interaction);
     } else if (customId === 'modo_panel_gestion') {
       // Re-ejecutar todo el panel de gestión en el canal actual
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const logger = getServerLogger(
         interaction.guild?.id || 'unknown',
         interaction.guild?.name || 'Desconocido'
@@ -125,16 +126,27 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
 
       try {
         const channel = interaction.channel as TextChannel;
-        const result = await rerunManagementPanel(channel, interaction.guild, interaction.client, logger);
+        const result = await rerunManagementPanel(
+          channel,
+          interaction.guild,
+          interaction.client,
+          logger
+        );
         if (result.success) {
-          await interaction.editReply({ content: `✅ Panel de gestión re-ejecutado en ${result.elapsed}s` });
+          await interaction.editReply({
+            content: `✅ Panel de gestión re-ejecutado en ${result.elapsed}s`,
+          });
         } else {
-          await interaction.editReply({ content: `❌ Falló al re-ejecutar el panel (ver logs). Tiempo: ${result.elapsed}s` });
+          await interaction.editReply({
+            content: `❌ Falló al re-ejecutar el panel (ver logs). Tiempo: ${result.elapsed}s`,
+          });
         }
       } catch (err) {
         logger.error('Error en modo_panel_gestion', err);
         if (!interaction.replied) {
-          await interaction.editReply({ content: '❌ Error inesperado al ejecutar panel de gestión.' });
+          await interaction.editReply({
+            content: '❌ Error inesperado al ejecutar panel de gestión.',
+          });
         }
       }
     } else if (customId === 'confirm_auto') {
@@ -174,7 +186,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
         if (!adminChannel || !panelChannel) {
           await interaction.reply({
             content: '❌ Uno o ambos canales seleccionados ya no existen.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -219,7 +231,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await interaction.reply({
         content: 'Filtra los jugadores 🟢 en línea por rango:',
         components: [rankFilterRow, closeButtonRow],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     } else if (customId === 'show_apex_profile_modal') {
@@ -248,7 +260,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       await interaction.reply({
         content: 'Por favor, selecciona tu plataforma para continuar.',
         components: [platformSelectRow, closeButtonRow],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     } else if (customId === 'configure_excluded_roles') {
@@ -271,7 +283,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: 'Ocurrió un error al procesar el botón.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

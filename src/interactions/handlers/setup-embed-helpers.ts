@@ -64,8 +64,8 @@ export function createSuccessEmbed(
           mode === 'manual'
             ? 'Personalizado (nombres definidos por el usuario)'
             : mode === 'existente'
-            ? 'Configurado con canales existentes'
-            : 'Estándar de rangos (creado automáticamente)',
+              ? 'Configurado con canales existentes'
+              : 'Estándar de rangos (creado automáticamente)',
         inline: false,
       },
       {
@@ -76,15 +76,15 @@ export function createSuccessEmbed(
             controlChannel
               ? `<#${controlChannel.id}>`
               : mode === 'existente'
-              ? `<#${setupOptions.controlChannelId}>`
-              : `Canal no encontrado`
+                ? `<#${setupOptions.controlChannelId}>`
+                : `Canal no encontrado`
           } *(Administración)*\n` +
           `• ${
             panelChannel
               ? `<#${panelChannel.id}>`
               : mode === 'existente'
-              ? `<#${setupOptions.panelChannelId}>`
-              : `Canal no encontrado`
+                ? `<#${setupOptions.panelChannelId}>`
+                : `Canal no encontrado`
           } *(Panel de Rangos)*`,
         inline: false,
       },

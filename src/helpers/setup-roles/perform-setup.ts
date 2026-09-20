@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   TextChannel,
   ChatInputCommandInteraction,
   ButtonInteraction,
@@ -194,7 +195,7 @@ export async function performSetup(
     await interaction.followUp({
       content:
         '⚠️ No se pudo crear/verificar el canal de control. El bot funcionara, pero algunas operaciones podrian tener problemas de permisos.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -219,7 +220,7 @@ export async function performSetup(
       content:
         '❌ **Error crítico**: No se pudo crear el canal del panel. ' +
         'Verifica que el bot tenga permisos de **ManageChannels** en el servidor.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     throw error; // Detener el setup
   }

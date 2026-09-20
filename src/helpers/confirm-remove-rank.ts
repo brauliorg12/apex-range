@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ButtonInteraction,
   GuildMember,
   EmbedBuilder,
@@ -40,7 +41,7 @@ export async function confirmRemoveRank(interaction: ButtonInteraction) {
     `[Interacción] ${interaction.user.tag} está intentando eliminar su rango.`
   );
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     // Usar roles mapeados del servidor (soporta roles personalizados)

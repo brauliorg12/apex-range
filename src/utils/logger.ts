@@ -24,21 +24,21 @@ async function cleanOldLogs(): Promise<void> {
   try {
     const now = Date.now();
     const maxAgeMs = LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-    
+
     // Limpiar logs de app, canvas e interactions
     const logTypes = ['app', 'canvas', 'interactions'];
-    
+
     for (const logType of logTypes) {
       const typeDir = join(LOG_DIR, logType);
       if (!existsSync(typeDir)) continue;
-      
+
       const files = await readdir(typeDir);
-      
+
       for (const file of files) {
         const filePath = join(typeDir, file);
         const stats = statSync(filePath);
         const fileAge = now - stats.mtimeMs;
-        
+
         if (fileAge > maxAgeMs) {
           await unlink(filePath);
           console.log(`[Logger] Archivo de log eliminado: ${file}`);
@@ -196,9 +196,12 @@ export async function logApp(message: string, ...args: any[]): Promise<void> {
 }
 
 // Ejecutar limpieza de logs antiguos cada 6 horas
-setInterval(() => {
-  cleanOldLogs().catch(() => {});
-}, 6 * 60 * 60 * 1000);
+setInterval(
+  () => {
+    cleanOldLogs().catch(() => {});
+  },
+  6 * 60 * 60 * 1000
+);
 
 // Ejecutar limpieza al iniciar la aplicación
 cleanOldLogs().catch(() => {});

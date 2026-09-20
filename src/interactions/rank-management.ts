@@ -12,7 +12,5 @@ export { handlePlatformAssignment } from './platform-handlers';
 
 // Re-exportar handlers de rangos
 export { handleManageRankMenu } from './rank-menu';
-export {
-  handleRoleAssignment,
-} from './rank-assignment';
+export { handleRoleAssignment } from './rank-assignment';
 export { handleManagePlatform, handleSetPlatform } from './platform-management';

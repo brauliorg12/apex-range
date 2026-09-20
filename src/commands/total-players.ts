@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, CommandInteraction } from 'discord.js';
+import {
+  MessageFlags,
+  SlashCommandBuilder,
+  CommandInteraction,
+} from 'discord.js';
 import { getPlayerStats } from '../utils/player-stats';
 
 /**
@@ -28,12 +32,12 @@ export async function execute(interaction: CommandInteraction) {
   if (!interaction.guild) {
     await interaction.reply({
       content: 'Este comando solo puede ser usado en un servidor.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const stats = await getPlayerStats(interaction.guild);

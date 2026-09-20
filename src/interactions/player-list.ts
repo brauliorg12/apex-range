@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ButtonInteraction,
   StringSelectMenuInteraction,
   EmbedBuilder,
@@ -95,7 +96,7 @@ export async function handleShowAllPlayersMenu(
   if (isPageNavigation) {
     await interaction.deferUpdate();
   } else {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   }
 
   try {

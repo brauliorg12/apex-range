@@ -33,19 +33,19 @@ async function cleanOldLogs(): Promise<void> {
   try {
     const now = Date.now();
     const maxAgeMs = LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-    
+
     // Limpiar logs de guilds (por carpeta de fecha)
     if (fs.existsSync(GUILDS_DIR)) {
       const dateDirs = await readdir(GUILDS_DIR);
-      
+
       for (const dateDir of dateDirs) {
         const dateDirPath = path.join(GUILDS_DIR, dateDir);
         const stats = fs.statSync(dateDirPath);
-        
+
         // Verificar si es un directorio
         if (stats.isDirectory()) {
           const dirAge = now - stats.mtimeMs;
-          
+
           if (dirAge > maxAgeMs) {
             // Eliminar todos los archivos dentro del directorio
             const files = await readdir(dateDirPath);
@@ -54,25 +54,29 @@ async function cleanOldLogs(): Promise<void> {
             }
             // Eliminar el directorio vacío
             fs.rmdirSync(dateDirPath);
-            console.log(`[ServerLogger] Directorio de logs eliminado: ${dateDir}`);
+            console.log(
+              `[ServerLogger] Directorio de logs eliminado: ${dateDir}`
+            );
           }
         }
       }
     }
-    
+
     // Limpiar logs globales
     const globalDir = path.join(LOGS_DIR, 'global');
     if (fs.existsSync(globalDir)) {
       const files = await readdir(globalDir);
-      
+
       for (const file of files) {
         const filePath = path.join(globalDir, file);
         const stats = fs.statSync(filePath);
         const fileAge = now - stats.mtimeMs;
-        
+
         if (fileAge > maxAgeMs) {
           await unlink(filePath);
-          console.log(`[ServerLogger] Archivo de log global eliminado: ${file}`);
+          console.log(
+            `[ServerLogger] Archivo de log global eliminado: ${file}`
+          );
         }
       }
     }
@@ -328,9 +332,12 @@ export const globalLogger = {
 };
 
 // Ejecutar limpieza de logs antiguos cada 6 horas
-setInterval(() => {
-  cleanOldLogs().catch(() => {});
-}, 6 * 60 * 60 * 1000);
+setInterval(
+  () => {
+    cleanOldLogs().catch(() => {});
+  },
+  6 * 60 * 60 * 1000
+);
 
 // Ejecutar limpieza al iniciar la aplicación
 cleanOldLogs().catch(() => {});

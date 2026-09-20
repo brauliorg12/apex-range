@@ -1,4 +1,4 @@
-import { ButtonInteraction, EmbedBuilder } from 'discord.js';
+import { MessageFlags, ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { logApp } from '../utils/logger';
 
@@ -17,7 +17,7 @@ export async function handleHelpMenu(interaction: ButtonInteraction) {
     `[Interacción] ${interaction.user.tag} ha solicitado el menú de ayuda general.`
   );
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // Embed principal - Rangos y Plataformas
   const embed1 = new EmbedBuilder()

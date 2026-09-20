@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ContextMenuCommandBuilder,
   ApplicationCommandType,
   UserContextMenuCommandInteraction,
@@ -53,7 +54,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
     if (member.user.bot) {
       await interaction.reply({
         content: 'Este comando no está disponible para bots.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -115,7 +116,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       await interaction.reply({
         embeds: [embed],
         components: [...createManagementButtons(), closeButton],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       // Si no tiene rango, muestra los botones para seleccionar rango
@@ -138,7 +139,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
               closeButton,
             ]
           : [closeButton],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   } catch (error) {
@@ -146,7 +147,7 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: 'Ocurrió un error al mostrar el rango.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

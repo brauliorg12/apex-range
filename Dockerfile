@@ -1,5 +1,5 @@
 # Etapa 1: Build (compilación)
-FROM node:18-alpine AS build
+FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 # Etapa 2: Producción (solo dependencias necesarias y código compilado)
-FROM node:18-alpine
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 

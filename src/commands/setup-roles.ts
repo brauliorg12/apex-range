@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  MessageFlags,
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+} from 'discord.js';
 import { getServerLogger } from '../utils/server-logger';
 import { cleanupInvalidMessageReferences } from '../utils/message-cleanup';
 import {
@@ -38,7 +42,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!(await verifyAdminPermissions(interaction, logger))) return;
 
   // PASO 2: Deferir respuesta inmediatamente para evitar timeout
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   logger.info('Respuesta diferida correctamente');
 
   // Log detallado para debugging

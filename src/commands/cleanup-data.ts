@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   EmbedBuilder,
@@ -36,7 +37,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.reply({
       content:
         'Este comando solo puede ser usado por el administrador del bot.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -46,12 +47,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!confirm) {
     await interaction.reply({
       content: 'Operación cancelada. Los archivos no serán eliminados.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const client = interaction.client;

@@ -150,7 +150,7 @@ export async function buildAllOnlineEmbeds(
 /**
  * Obtiene todos los miembros del rango, incluyendo desconectados, usando el caché de Discord.
  * Verifica directamente si el miembro tiene el rol asignado en Discord.
- * 
+ *
  * @param guild - El guild de Discord
  * @param role - El rol de rango a buscar
  * @param playerData - Array de datos de jugadores sincronizados (usado solo para obtener IDs)
@@ -177,7 +177,7 @@ export function getAllMembersByRole(
  * Obtiene todos los miembros del rango por shortId, incluyendo proxies para usuarios no en caché.
  * Esta función es para el botón "Ver más" en servidores grandes (4000+).
  * Soporta AMBOS formatos: shortId ("gold") y nombres mapeados ("Oro").
- * 
+ *
  * @param guild - El guild de Discord
  * @param role - El rol de rango a buscar
  * @param playerData - Array de datos de jugadores sincronizados
@@ -187,9 +187,11 @@ export function getAllMembersByRoleWithProxies(
   role: Role,
   playerData: any[]
 ) {
-  const { getApexRanksForGuild } = require('../helpers/get-apex-ranks-for-guild');
+  const {
+    getApexRanksForGuild,
+  } = require('../helpers/get-apex-ranks-for-guild');
   const ranks = getApexRanksForGuild(guild.id, guild);
-  
+
   // Encontrar el shortId del rango basado en el nombre del rol
   const rankInfo = ranks.find((r: any) => r.roleName === role.name);
   const rankShortId = rankInfo ? rankInfo.shortId : null;
@@ -199,13 +201,13 @@ export function getAllMembersByRoleWithProxies(
   const filteredPlayers = playerData.filter((p) => {
     // Coincidir por shortId (formato nuevo)
     if (p.rank === rankShortId) return true;
-    
+
     // Coincidir por roleName mapeado (formato antiguo en español)
     if (p.rank === role.name) return true;
-    
+
     return false;
   });
-  
+
   const userIds = filteredPlayers.map((p) => p.userId);
 
   if (userIds.length === 0) {
@@ -214,10 +216,10 @@ export function getAllMembersByRoleWithProxies(
 
   // Obtener miembros del caché o crear proxies
   const members: any[] = [];
-  
+
   for (const id of userIds) {
     const cached = guild.members.cache.get(id);
-    
+
     if (cached) {
       members.push(cached);
     } else {

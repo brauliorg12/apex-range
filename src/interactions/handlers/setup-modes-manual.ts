@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ButtonInteraction,
   EmbedBuilder,
   ActionRowBuilder,
@@ -170,7 +171,7 @@ export async function handleOpenManualModal(interaction: ButtonInteraction) {
           await interaction.reply({
             content:
               'Ocurrió un error al abrir el formulario. Por favor intenta nuevamente.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       } catch (replyError) {

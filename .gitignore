@@ -37,3 +37,18 @@ logs/
 .kiro/steering/byterover-rules.md
 .qoder/rules/byterover-rules.md
 .augment/rules/byterover-rules.md
+
+# Lock files
+.bot-lock
+
+# SSH keys
+key_ssh_public.pub
+
+# Development
+/dev
+
+# Documentation Plans
+/docs/plans
+
+# Local config (no versionar)
+server-config.md

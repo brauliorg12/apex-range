@@ -1,4 +1,4 @@
-import { ButtonInteraction } from 'discord.js';
+import { MessageFlags, ButtonInteraction } from 'discord.js';
 import { handleServerStatusInfo } from '../../commands/apex-status';
 import {
   handleCreateMissingRoles,
@@ -104,7 +104,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         return await interaction.reply({
           content:
             '⚠️ No hay datos disponibles. Puede que la sincronización aún no se haya ejecutado (espera 2 minutos) o no hay jugadores con este rango.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -116,7 +116,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         embeds: [pageResult.embed],
         files: pageResult.files,
         components: pageResult.components,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -142,7 +142,7 @@ export async function handleButton(interaction: ButtonInteraction) {
       if (!pageResult)
         return await interaction.reply({
           content: 'No hay datos.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
 
       await interaction.update({
@@ -166,12 +166,12 @@ export async function handleButton(interaction: ButtonInteraction) {
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         content: '¡Hubo un error al procesar este botón!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       await interaction.reply({
         content: '¡Hubo un error al procesar este botón!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

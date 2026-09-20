@@ -1,4 +1,8 @@
-import { UserContextMenuCommandInteraction, Client } from 'discord.js';
+import {
+  MessageFlags,
+  UserContextMenuCommandInteraction,
+  Client,
+} from 'discord.js';
 import { logInteraction, logApp } from '../../utils/logger';
 
 /**
@@ -42,12 +46,12 @@ export async function handleUserContextMenuCommand(
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         content: '¡Hubo un error al ejecutar este comando!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       await interaction.reply({
         content: '¡Hubo un error al ejecutar este comando!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }
