@@ -560,10 +560,10 @@ JWT_SECRET=tu_jwt_secret
 #### Docker Production
 
 ```dockerfile
-FROM node:18-alpine
+FROM node:22-bookworm-slim
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 COPY . .
 RUN npm run build
 EXPOSE 3001

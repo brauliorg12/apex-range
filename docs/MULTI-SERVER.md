@@ -172,7 +172,7 @@ export async function initBot(client: Client): Promise<void> {
 {
   "pid": 12345,
   "timestamp": 1697123456789,
-  "version": "1.10.6"
+  "version": "1.19.0"
 }
 ```
 
