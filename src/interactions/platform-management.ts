@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ButtonInteraction,
   GuildMember,
   EmbedBuilder,
@@ -6,10 +7,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from 'discord.js';
-import {
-  GAME_PLATFORMS_EMOGI,
-  PC_ONLY_EMOGI,
-} from '../models/constants';
+import { GAME_PLATFORMS_EMOGI, PC_ONLY_EMOGI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import {
   updatePlayerRankDate,
@@ -39,12 +37,15 @@ export async function handleManagePlatform(
     `[Interacción] ${interaction.user.tag} abrió gestión de plataforma.`
   );
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     // Obtener plataformas mapeadas del servidor (soporta roles personalizados)
-    const platforms = getApexPlatformsForGuild(interaction.guild.id, interaction.guild);
-    
+    const platforms = getApexPlatformsForGuild(
+      interaction.guild.id,
+      interaction.guild
+    );
+
     // Obtener la plataforma actual del usuario desde la base de datos
     const currentPlatform = await getPlayerPlatform(
       interaction.guild.id,
@@ -127,9 +128,7 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
   const platformShortId = parts[1];
   const rankShortId = isWithRank ? parts[2] : undefined;
 
-  const selectedPlatform = platforms.find(
-    (p) => p.shortId === platformShortId
-  );
+  const selectedPlatform = platforms.find((p) => p.shortId === platformShortId);
 
   if (!selectedPlatform) return;
 
@@ -143,7 +142,7 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
     }'${selectedRank ? ` y rango '${selectedRank.label}'` : ''}.`
   );
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     // Actualizar la plataforma en la base de datos (y rango si aplica)
@@ -168,14 +167,14 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
     const platformRole = guild.roles.cache.find(
       (role) => role.name === selectedPlatform.roleName
     );
-      if (platformRole) {
+    if (platformRole) {
       if (botMember.roles.highest.position <= platformRole.position) {
         throw new Error('Bot role hierarchy too low for platform role');
       }
       // Remover roles de plataforma anteriores (usar roles mapeados)
-      const otherPlatformRoles = platforms.filter(
-        (p) => p.shortId !== platformShortId
-      ).map((p) => p.roleName);
+      const otherPlatformRoles = platforms
+        .filter((p) => p.shortId !== platformShortId)
+        .map((p) => p.roleName);
 
       const rolesToRemove = member.roles.cache.filter((role) =>
         otherPlatformRoles.includes(role.name)
@@ -193,7 +192,8 @@ export async function handleSetPlatform(interaction: ButtonInteraction) {
           (rank) =>
             rank.roleName === role.name && rank.shortId !== selectedRank.shortId
         )
-      );      if (rankRolesToRemove.size > 0) {
+      );
+      if (rankRolesToRemove.size > 0) {
         await member.roles.remove(rankRolesToRemove);
       }
 

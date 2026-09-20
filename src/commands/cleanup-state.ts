@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  MessageFlags,
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+} from 'discord.js';
 import { cleanupInvalidMessageReferences } from '../utils/message-cleanup';
 import { getServerLogger } from '../utils/server-logger';
 
@@ -26,7 +30,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   logger.info('=== INICIANDO CLEANUP-STATE ===');
   logger.info(`Usuario: ${interaction.user.tag} (${interaction.user.id})`);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     // Ejecutar limpieza de referencias inválidas

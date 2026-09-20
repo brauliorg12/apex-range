@@ -21,8 +21,8 @@ export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
 
   logApp(
     `[synchronizePlayersWithRoles] Guild: ${guild.name} | ` +
-    `Jugadores con roles detectados: ${players.length} | ` +
-    `Registros actuales en JSON: ${playerData.length}`
+      `Jugadores con roles detectados: ${players.length} | ` +
+      `Registros actuales en JSON: ${playerData.length}`
   );
 
   const playerIdsWithRank = new Set(players.map((p) => p.member.id));
@@ -33,7 +33,7 @@ export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
   // Agregar jugadores con rol que no están en el JSON
   // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
   const ranks = getApexRanksForGuild(guild.id, guild);
-  
+
   for (const player of players) {
     // Convertir el nombre del rol al shortId correcto usando roles mapeados
     const rankInfo = ranks.find((r) => r.roleName === player.rankName);
@@ -66,12 +66,12 @@ export async function synchronizePlayersWithRoles(guild: Guild): Promise<void> {
     await writePlayers(guild.id, filteredPlayerData);
     logApp(
       `[synchronizePlayersWithRoles] ✅ SINCRONIZACIÓN COMPLETADA para guild ${guild.name} (${guild.id}) | ` +
-      `Nuevos: ${newPlayers} | Eliminados: ${removedPlayers} | Total final: ${filteredPlayerData.length}`
+        `Nuevos: ${newPlayers} | Eliminados: ${removedPlayers} | Total final: ${filteredPlayerData.length}`
     );
   } else {
     logApp(
       `[synchronizePlayersWithRoles] ℹ️ Sin cambios en guild ${guild.name} (${guild.id}). ` +
-      `Total de jugadores: ${playerData.length}`
+        `Total de jugadores: ${playerData.length}`
     );
   }
 }

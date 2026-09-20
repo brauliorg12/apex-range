@@ -1,4 +1,4 @@
-import { StringSelectMenuInteraction } from 'discord.js';
+import { MessageFlags, StringSelectMenuInteraction } from 'discord.js';
 import { logInteraction } from '../../utils/logger';
 import { handleSelectMenuInteraction } from './select-menu-interaction';
 
@@ -27,12 +27,12 @@ export async function handleStringSelectMenu(
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
         content: '¡Hubo un error al procesar tu selección!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       await interaction.reply({
         content: '¡Hubo un error al procesar tu selección!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

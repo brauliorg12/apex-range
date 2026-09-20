@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ChatInputCommandInteraction,
   EmbedBuilder,
   ActionRowBuilder,
@@ -125,7 +126,7 @@ export async function handleMissingRoles(
     try {
       await interaction.followUp({
         content: `❌ Error al mostrar roles faltantes. Revisa los permisos del bot.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch (followUpError) {
       await logApp(`Error en followUp: ${followUpError}`);

@@ -51,11 +51,15 @@ export async function updateRankCardMessage(
     (r): r is Role => r.name === rank.roleName
   );
   if (!role) {
-    serverLogger.warn(`Role de Discord no encontrado: ${rank.roleName} para ${rankShortId}`);
+    serverLogger.warn(
+      `Role de Discord no encontrado: ${rank.roleName} para ${rankShortId}`
+    );
     return;
   }
-  
-  serverLogger.debug(`Actualizando card para ${rank.label} (${rank.roleName}) - Role ID: ${role.id}`);
+
+  serverLogger.debug(
+    `Actualizando card para ${rank.label} (${rank.roleName}) - Role ID: ${role.id}`
+  );
 
   // Obtén todos los jugadores del rango usando playerData
   const { getPlayerData } = await import('../utils/player-data-manager');

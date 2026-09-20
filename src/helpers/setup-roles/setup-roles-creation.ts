@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   TextChannel,
   EmbedBuilder,
   Message,
@@ -131,7 +132,7 @@ export async function pinSetupMessages(
     await interaction.followUp({
       content:
         "⚠️ No pude fijar los mensajes. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }

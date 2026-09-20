@@ -1,4 +1,9 @@
-import { ButtonInteraction, GuildMember, EmbedBuilder } from 'discord.js';
+import {
+  MessageFlags,
+  ButtonInteraction,
+  GuildMember,
+  EmbedBuilder,
+} from 'discord.js';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { logApp } from '../utils/logger';
 
@@ -14,7 +19,7 @@ export async function handleManageRankMenu(interaction: ButtonInteraction) {
     `[Interacción] ${interaction.user.tag} abrió el menú de gestión de rango.`
   );
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const { buildManageRankPayload } = await import('./rank-menu-builder');

@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Client } from 'discord.js';
+import { MessageFlags, ChatInputCommandInteraction, Client } from 'discord.js';
 import { logInteraction, logApp } from '../../utils/logger';
 
 /**
@@ -42,12 +42,12 @@ export async function handleChatInputCommand(
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         content: '¡Hubo un error al ejecutar este comando!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       await interaction.reply({
         content: '¡Hubo un error al ejecutar este comando!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

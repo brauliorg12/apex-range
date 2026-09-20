@@ -1,4 +1,4 @@
-import { ModalSubmitInteraction } from 'discord.js';
+import { MessageFlags, ModalSubmitInteraction } from 'discord.js';
 import { logInteraction } from '../../utils/logger';
 import { handleModalInteraction } from '../../modal-interactions';
 
@@ -7,9 +7,7 @@ import { handleModalInteraction } from '../../modal-interactions';
  * @param interaction La interacción del modal
  * @returns Promise<void>
  */
-export async function handleModalSubmit(
-  interaction: ModalSubmitInteraction
-) {
+export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
   await logInteraction({
     type: 'ModalSubmit',
     userTag: interaction.user.tag,
@@ -26,12 +24,12 @@ export async function handleModalSubmit(
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
         content: '¡Hubo un error al procesar tu solicitud!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       await interaction.reply({
         content: '¡Hubo un error al procesar tu solicitud!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

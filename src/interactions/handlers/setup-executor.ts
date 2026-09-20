@@ -1,4 +1,9 @@
-import { ButtonInteraction, TextChannel, EmbedBuilder } from 'discord.js';
+import {
+  MessageFlags,
+  ButtonInteraction,
+  TextChannel,
+  EmbedBuilder,
+} from 'discord.js';
 import { performSetup } from '../../helpers/setup-roles/perform-setup';
 import { createSuccessEmbed } from './setup-embed-helpers';
 import { readPlayers } from '../../utils/state-manager';
@@ -86,7 +91,7 @@ export async function executeSetup(
       await interaction.followUp({
         embeds: [successEmbed],
         components: [],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       logger.info('Respuesta de éxito enviada via followUp');
     }
@@ -127,7 +132,7 @@ export async function executeSetup(
         await interaction.followUp({
           embeds: [successEmbed],
           components: [],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         logger.info('Embed de éxito enviado exitosamente en fallback');
         return;
@@ -166,7 +171,7 @@ export async function executeSetup(
       await interaction.followUp({
         embeds: [errorEmbed],
         components: [],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       logger.info('Nuevo mensaje de error enviado correctamente');
     }

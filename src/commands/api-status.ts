@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   EmbedBuilder,
@@ -40,5 +41,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       { name: 'Última verificación', value: lastChecked, inline: true }
     );
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

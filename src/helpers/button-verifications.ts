@@ -1,4 +1,4 @@
-import { ButtonInteraction, EmbedBuilder } from 'discord.js';
+import { MessageFlags, ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { REQUIRED_PERMISSIONS } from '../models/required-permissions';
 
 /**
@@ -33,7 +33,7 @@ export async function verifyChannelAccessForButton(
     await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }
@@ -51,7 +51,7 @@ export async function verifyChannelAccessForButton(
     await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }
@@ -90,7 +90,7 @@ export async function verifyBotPermissionsForButton(
     await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }
@@ -118,7 +118,7 @@ export async function verifyBotPermissionsForButton(
     await interaction.followUp({
       embeds: [errorEmbed],
       components: [],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }

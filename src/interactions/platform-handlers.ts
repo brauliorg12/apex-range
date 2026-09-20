@@ -1,4 +1,9 @@
-import { ButtonInteraction, GuildMember, EmbedBuilder } from 'discord.js';
+import {
+  MessageFlags,
+  ButtonInteraction,
+  GuildMember,
+  EmbedBuilder,
+} from 'discord.js';
 import { APEX_PLATFORMS, PC_ONLY_EMOGI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
 import { updatePlayerRankDate } from '../utils/player-data-manager';
@@ -23,7 +28,7 @@ export async function handlePlatformAssignment(interaction: ButtonInteraction) {
     `[Interacción] ${interaction.user.tag} cambió a plataforma '${selectedPlatform.label}'.`
   );
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     // Actualizar la plataforma en la base de datos

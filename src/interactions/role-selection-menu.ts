@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
@@ -118,7 +119,7 @@ export async function createRoleSelectionMenu(
       await interaction.reply({
         embeds: [embed],
         components: rows,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   } else {

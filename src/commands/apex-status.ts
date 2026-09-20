@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   ActionRowBuilder,
@@ -88,7 +89,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.followUp({
         content:
           "No pude fijar el mensaje de estado. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -102,7 +103,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.followUp({
       content:
         'El estado de Apex Legends se actualizará automáticamente cada 5 minutos.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   } catch (error) {
     console.error('Error en /apex-status:', error);
@@ -159,6 +160,6 @@ export async function handleServerStatusInfo(interaction: Interaction) {
   await interaction.reply({
     embeds: [embed],
     components: [createCloseButtonRow()], // Botón cerrar reutilizable
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

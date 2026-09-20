@@ -1,4 +1,9 @@
-import { ButtonInteraction, EmbedBuilder, TextChannel } from 'discord.js';
+import {
+  MessageFlags,
+  ButtonInteraction,
+  EmbedBuilder,
+  TextChannel,
+} from 'discord.js';
 import { getServerLogger } from '../utils/server-logger';
 import { extractChannelsForExistingMode } from './handlers/setup-channels-extractor';
 import { validateChannelAccess } from './handlers/setup-channel-access-validator';
@@ -67,7 +72,7 @@ export async function handleSetupConfirmation(
             ),
           ],
           components: [],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -92,7 +97,7 @@ export async function handleSetupConfirmation(
             ),
           ],
           components: [],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -112,7 +117,7 @@ export async function handleSetupConfirmation(
         ),
       ],
       components: [],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

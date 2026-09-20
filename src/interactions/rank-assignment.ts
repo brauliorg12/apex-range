@@ -1,4 +1,9 @@
-import { ButtonInteraction, GuildMember, EmbedBuilder } from 'discord.js';
+import {
+  MessageFlags,
+  ButtonInteraction,
+  GuildMember,
+  EmbedBuilder,
+} from 'discord.js';
 import { PC_ONLY_EMOGI } from '../models/constants';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { createCloseButtonRow } from '../utils/button-helper';
@@ -43,7 +48,7 @@ export async function handleRoleAssignment(interaction: ButtonInteraction) {
     }
 
     // Si ya tiene plataforma, proceder con la asignación normal
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     await assignRankAndPlatform(interaction, selectedRank, currentPlatform);
   } catch (error) {
     await logApp(`Error al asignar rango a ${member.user.tag}: ${error}`);
@@ -117,21 +122,23 @@ async function assignRankAndPlatform(
   const rankRole = guild.roles.cache.find(
     (role) => role.name === selectedRank.roleName
   );
-  
+
   if (!rankRole) {
     await logApp(
       `Rol "${selectedRank.roleName}" no encontrado en servidor ${guild.name}`
     );
-    throw new Error(`El rol "${selectedRank.roleName}" no existe en este servidor`);
+    throw new Error(
+      `El rol "${selectedRank.roleName}" no existe en este servidor`
+    );
   }
-  
+
   if (botMember.roles.highest.position <= rankRole.position) {
     await logApp(
       `Jerarquía de roles insuficiente: Bot (${botMember.roles.highest.position}) <= Rol (${rankRole.position})`
     );
     throw new Error('Bot role hierarchy too low for rank role');
   }
-  
+
   await member.roles.add(rankRole);
   await logApp(
     `Rol "${rankRole.name}" asignado exitosamente a ${member.user.tag}`
@@ -148,9 +155,9 @@ async function assignRankAndPlatform(
         throw new Error('Bot role hierarchy too low for platform role');
       }
       // Remover otros roles de plataforma (usar roles mapeados)
-      const otherPlatformRoles = platforms.filter(
-        (p) => p.apiName !== platform
-      ).map((p) => p.roleName);
+      const otherPlatformRoles = platforms
+        .filter((p) => p.apiName !== platform)
+        .map((p) => p.roleName);
 
       const rolesToRemove = member.roles.cache.filter((role) =>
         otherPlatformRoles.includes(role.name)

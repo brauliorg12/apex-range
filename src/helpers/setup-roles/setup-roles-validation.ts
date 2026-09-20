@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, PermissionsBitField } from 'discord.js';
+import {
+  MessageFlags,
+  ChatInputCommandInteraction,
+  PermissionsBitField,
+} from 'discord.js';
 import { handleMissingRoles } from '../../utils/setup-config-handler';
 
 /**
@@ -25,7 +29,7 @@ export async function verifyAdminPermissions(
     );
     await interaction.reply({
       content: 'Este comando solo puede ser usado por administradores.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }

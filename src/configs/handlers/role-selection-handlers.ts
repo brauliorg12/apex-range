@@ -1,4 +1,4 @@
-import { ButtonInteraction } from 'discord.js';
+import { MessageFlags, ButtonInteraction } from 'discord.js';
 import { getServerLogger } from '../../utils/server-logger';
 import {
   getExcludedRolesForGuild,
@@ -34,7 +34,7 @@ export async function handleRoleSelection(interaction: ButtonInteraction) {
         logger.warn(`Role ${roleId} not found for toggle`);
         await interaction.followUp({
           content: 'Rol no encontrado.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

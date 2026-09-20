@@ -16,9 +16,9 @@ export function resolveRankRole(
 ): Role | undefined {
   const ranks = getApexRanksForGuild(guild.id, guild);
   const rank = ranks.find((r) => r.shortId === rankShortId);
-  
+
   if (!rank) return undefined;
-  
+
   return guild.roles.cache.find((r) => r.name === rank.roleName);
 }
 
@@ -34,9 +34,9 @@ export function resolvePlatformRole(
 ): Role | undefined {
   const platforms = getApexPlatformsForGuild(guild.id, guild);
   const platform = platforms.find((p) => p.shortId === platformShortId);
-  
+
   if (!platform) return undefined;
-  
+
   return guild.roles.cache.find((r) => r.name === platform.roleName);
 }
 
@@ -110,15 +110,17 @@ export function validateServerRoleMappings(guild: Guild): {
 } {
   const ranks = getApexRanksForGuild(guild.id, guild);
   const platforms = getApexPlatformsForGuild(guild.id, guild);
-  
+
   const missingRanks = ranks
     .filter((rank) => !guild.roles.cache.some((r) => r.name === rank.roleName))
     .map((rank) => rank.shortId);
-  
+
   const missingPlatforms = platforms
-    .filter((platform) => !guild.roles.cache.some((r) => r.name === platform.roleName))
+    .filter(
+      (platform) => !guild.roles.cache.some((r) => r.name === platform.roleName)
+    )
     .map((platform) => platform.shortId);
-  
+
   return {
     valid: missingRanks.length === 0 && missingPlatforms.length === 0,
     missingRanks,
@@ -132,10 +134,7 @@ export function validateServerRoleMappings(guild: Guild): {
  * @param memberRoles - Collection de roles del miembro
  * @returns Array de ApexRank que tiene el miembro
  */
-export function getMemberRanks(
-  guild: Guild,
-  memberRoles: Role[]
-): ApexRank[] {
+export function getMemberRanks(guild: Guild, memberRoles: Role[]): ApexRank[] {
   const ranks = getApexRanksForGuild(guild.id, guild);
   return ranks.filter((rank) =>
     memberRoles.some((role) => role.name === rank.roleName)

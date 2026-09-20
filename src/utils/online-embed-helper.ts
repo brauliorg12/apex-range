@@ -105,9 +105,8 @@ export async function getRankPageEmbed(
   );
 
   // Buscar el rol usando mapeo del servidor o aliases
-  const { getApexRanksForGuild } = await import(
-    '../helpers/get-apex-ranks-for-guild'
-  );
+  const { getApexRanksForGuild } =
+    await import('../helpers/get-apex-ranks-for-guild');
   const serverRanks = getApexRanksForGuild(guild.id, guild);
   const serverRankInfo = serverRanks.find((r: any) => r.shortId === rankId);
   const roleNameToFind = serverRankInfo
@@ -139,9 +138,8 @@ export async function getRankPageEmbed(
   );
 
   // Obtener miembros según el tamaño del servidor
-  const { getAllMembersByRole, getAllMembersByRoleWithProxies } = await import(
-    './build-all-online-embed'
-  );
+  const { getAllMembersByRole, getAllMembersByRoleWithProxies } =
+    await import('./build-all-online-embed');
   const allMembers = isLargeServer
     ? getAllMembersByRoleWithProxies(guild, role, playerData) // Servidores grandes: usa proxies
     : getAllMembersByRole(guild, role, playerData); // Servidores pequeños: verifica caché real

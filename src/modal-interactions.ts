@@ -1,4 +1,4 @@
-import { ModalSubmitInteraction } from 'discord.js';
+import { MessageFlags, ModalSubmitInteraction } from 'discord.js';
 import { createCloseButtonRow } from './utils/button-helper';
 import { getApexProfileByName } from './services/apex-api';
 import { buildApexProfileEmbed } from './utils/apex-profile-embed'; // Nuevo import
@@ -20,7 +20,7 @@ export async function handleModalInteraction(
       // Delegar al handler de búsqueda que reutiliza paginación
       await handlePlayerSearchResults(interaction);
     } else if (interaction.customId.startsWith('apex_profile_modal_')) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       // Obtiene datos del modal
       const playerName = interaction.fields.getTextInputValue('apex_name');
@@ -79,7 +79,7 @@ export async function handleModalInteraction(
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: 'Ocurrió un error al procesar el modal.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         components: [createCloseButtonRow()],
       });
     }
