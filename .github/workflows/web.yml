@@ -1,7 +1,7 @@
 # Workflow independiente del sitio web.
 # No modifica ci-cd.yml ni main.yml: el bot sigue publicandose igual.
-# Solo construye y publica la imagen del sitio cuando cambian website/ o este
-# mismo workflow.
+# Construye la imagen cuando cambian website/ o este mismo workflow.
+# Publica en main/tag; en PR solo valida (no publica).
 
 name: Web CI/CD
 

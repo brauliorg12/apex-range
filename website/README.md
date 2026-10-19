@@ -54,7 +54,11 @@ Esperado: 200 en las rutas validas, `image/png` en la imagen, 404 en
 
 - Push a `main` que toque `website/**` o `.github/workflows/web.yml`.
 - Tambien se puede correr manualmente con `workflow_dispatch`.
-- El workflow publica `latest` + `sha-<largo>`.
+- En PR, y en `workflow_dispatch` sobre una rama feature, solo compila:
+  **no publica**.
+- Un push a una rama feature no dispara el workflow.
+- El workflow publica `latest` + `sha-<largo>` cuando corre sobre `main`
+  (push o `workflow_dispatch`).
 
 ## Despliegue
 
