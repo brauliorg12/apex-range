@@ -129,6 +129,40 @@ grep "ERROR" logs/guilds/2025-09-20/guild_335236834621652994_*.log
 grep "Usuario:" logs/interactions/2025-09-20/interactions-2025-09-20.log | sort | uniq -c | sort -nr
 ```
 
+### Recuperación del panel de Apex
+
+El panel de `/apex-status` se auto-recupera si el mensaje es eliminado. Estos
+son los eventos a buscar en los logs de guild:
+
+```bash
+# Borrado detectado y recreacion
+grep -RniE "Mensaje de Apex no encontrado|Panel de Apex recreado|Panel de Apex existente recuperado" logs/guilds | tail -50
+
+# Recuperacion suspendida o sin permisos
+grep -RniE "Recuperación de Apex suspendida|Falta de permisos|Canal de Apex no encontrado" logs/guilds | tail -50
+
+# Avisos omitidos por cooldown (no es un error)
+grep -Rni "omitido por cooldown" logs/guilds | tail -20
+
+# Limpieza de paneles duplicados
+grep -RniE "Panel de Apex duplicado eliminado|No se pudo eliminar un panel de Apex duplicado" logs/guilds | tail -20
+```
+
+Mensajes esperados:
+
+- `Mensaje de Apex no encontrado; se recreará el panel`
+- `Panel de Apex recreado y registrado`
+- `Panel de Apex existente recuperado y registrado`
+- `Panel de Apex duplicado eliminado`
+- `No se pudo eliminar un panel de Apex duplicado`
+- `Recuperación de Apex suspendida hasta ...`
+- `Falta de permisos para editar/recrear el panel de Apex`
+- `Canal de Apex no encontrado`
+- `Aviso de recuperación de Apex omitido por cooldown`
+- `Aviso de setup-roles omitido por cooldown`
+- `Notificación de /apex-status enviada al canal de control`
+- `Notificación de /apex-status enviada por DM al owner`
+
 ### Análisis de Logs
 
 ```bash

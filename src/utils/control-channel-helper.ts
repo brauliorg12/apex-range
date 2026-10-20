@@ -39,27 +39,30 @@ export async function getControlChannel(
 
 /**
  * Envía un mensaje al canal de control del bot.
- * Si no hay canal de control o hay error, el mensaje se ignora silenciosamente.
+ * Si no hay canal de control o hay error, no lanza excepcion.
  *
  * @param guild El servidor de Discord
  * @param content El contenido del mensaje
  * @param options Opciones adicionales para el mensaje (embeds, etc.)
+ * @returns true si el mensaje se envio; false si no hay canal o fallo el envio.
  */
 export async function sendToControlChannel(
   guild: Guild,
   content: string,
   options?: any
-): Promise<void> {
+): Promise<boolean> {
   try {
     const controlChannel = await getControlChannel(guild);
     if (!controlChannel) {
-      return; // Silenciosamente ignorar si no hay canal
+      return false;
     }
 
     await controlChannel.send({ content, ...options });
+    return true;
   } catch (error) {
     console.error('Error enviando mensaje al canal de control:', error);
     // No lanzar error para no interrumpir operaciones principales
+    return false;
   }
 }
 
@@ -71,19 +74,22 @@ export async function sendToControlChannel(
  * @param event El tipo de evento (ej: 'setup-completed', 'error-occurred')
  * @param details Detalles del evento
  * @param logger Logger opcional para registro adicional
+ * @returns true si el mensaje se envio; false si no hay canal o fallo el envio.
  */
 export async function logToControlChannel(
   guild: Guild,
   event: string,
   details: string,
   logger?: any
-): Promise<void> {
+): Promise<boolean> {
   const timestamp = new Date().toISOString();
   const message = `📋 **${event.toUpperCase()}** - ${timestamp}\n${details}`;
 
-  await sendToControlChannel(guild, message);
+  const sent = await sendToControlChannel(guild, message);
 
-  if (logger) {
+  if (logger && sent) {
     logger.info(`Log enviado al canal de control: ${event}`);
   }
+
+  return sent;
 }

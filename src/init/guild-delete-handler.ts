@@ -1,4 +1,6 @@
 import { Client, Events } from 'discord.js';
+import { clearApexPanelMemory } from '../helpers/apex-panel/memory';
+import { forgetSetupErrorNotifications } from '../utils/error-notifier';
 import { logApp } from '../utils/logger';
 
 /**
@@ -21,6 +23,10 @@ export function setupGuildDeleteHandler(client: Client): void {
  */
 async function handleGuildDelete(guild: any): Promise<void> {
   logApp(`Bot removido de servidor: ${guild.name} (${guild.id})`);
+
+  // Liberar solo estado en memoria; los JSON historicos se preservan.
+  clearApexPanelMemory(guild.id);
+  forgetSetupErrorNotifications(guild.id);
 
   // Los archivos JSON se conservan para preservar datos históricos
   // Si deseas limpiar automáticamente, descomenta el código siguiente en el comentario

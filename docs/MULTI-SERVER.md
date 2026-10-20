@@ -156,7 +156,7 @@ export async function initBot(client: Client): Promise<void> {
 
 - **Reintentos Automáticos**: Hasta 3 intentos por operación
 - **Cache Inteligente**: Uso de datos anteriores si API falla
-- **Notificaciones**: Alertas a owners sobre problemas
+- **Notificaciones**: Alertas al canal de control o al owner sobre problemas
 - **Recuperación Transparente**: Continúa funcionando con datos cacheados
 
 #### Durante Mantenimiento de APIs
@@ -301,7 +301,7 @@ async function checkDuplicateInstance(): Promise<boolean> {
 
 #### Alertas de Problemas
 
-- **Notificaciones por DM**: Owners reciben alertas si hay problemas durante recuperación
+- **Notificaciones**: Alertas al canal de control o al owner si hay problemas durante la recuperación
 - **Fallback Automático**: El bot continúa funcionando con configuración mínima si hay errores
 - **Logging Detallado**: Todos los pasos se registran para debugging
 

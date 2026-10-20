@@ -11,7 +11,8 @@ import { logApp } from '../utils/logger';
 export function printBanner(client: Client, guild: Guild, channelInfo: string) {
   // Obtener la fecha y hora actual
   const now = new Date();
-  const fechaLocal = now.toLocaleString();
+  // Formato 24h para evitar ambiguedad entre 00:05 y 12:05.
+  const fechaLocal = now.toLocaleString('es-AR', { hour12: false });
   const fechaUTC = now.toISOString();
 
   // Imprimir el banner con colores ANSI

@@ -70,6 +70,7 @@ Un bot profesional para comunidades de Apex Legends que permite:
 ## ✨ Características principales
 
 - Panel persistente y auto-actualizable.
+- **Auto-recuperación del panel `/apex-status`**: si el mensaje se elimina, el bot lo recrea, limpia paneles viejos duplicados y avisa solo al canal de control, con límites y backoff. Los errores del panel nunca se publican en canales públicos.
 - Cards generadas con @napi-rs/canvas para máxima calidad.
 - Filtros por rango y gestión desde el propio canal.
 - Comandos slash y menú contextual profesional.

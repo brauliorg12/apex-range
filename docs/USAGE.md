@@ -7,11 +7,11 @@ Esta guía explica cómo usar Apex Legends Rank Bot una vez instalado y configur
 | Comando / Acción   | Descripción                                                                                                                                                                                 | Permisos                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo. **4 opciones disponibles:** Automático, Manual, Canales Existentes, **Configurar Roles Excluidos** | Administrador (excepto roles excluidos) |
-| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                              | Todos                                   |
+| `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                              | Gestionar canales o Gestionar servidor  |
 | `/total-jugadores` | Muestra el número total de jugadores con rango                                                                                                                                              | Todos                                   |
 | `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                                                                                        | Owner del Bot                           |
 
-> **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. El comando de contexto aparece al hacer click derecho sobre un usuario.
+> **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. `/apex-status` define el canal canónico del panel; exige **Gestionar canales** en el canal o **Gestionar servidor** a nivel del servidor. La visibilidad puede restringirse además en **Configuración del servidor → Integraciones → Apex Range**. Cada ejecución exitosa intenta notificar al canal de control o al owner; si ambos fallan, queda el registro en logs. El comando de contexto aparece al hacer click derecho sobre un usuario.
 
 ## 🎛️ **Menú Interactivo de Configuración**
 
@@ -300,7 +300,7 @@ Debajo del embed de estado, encontrarás el botón:
 
 #### Detalles técnicos
 
-- El panel y el botón se generan automáticamente al ejecutar `/setup-roles`.
+- El panel de estado de Apex y sus botones se generan al ejecutar `/apex-status`. El panel de roles y estadísticas se genera con `/setup-roles`.
 - El estado de la API se obtiene usando la [API de Mozambique](https://apexlegendsapi.com/).
 - El botón utiliza componentes interactivos de Discord para una experiencia moderna y fluida.
 - El código es modular y fácil de mantener.
@@ -333,3 +333,6 @@ Cuando uses `/apex-status` o veas el panel de estado, ten en cuenta:
 - **Roles y presencia**: Se actualizan cada 2 minutos para mantener la información al día.
 - **Imágenes del embed**: Se refrescan cada 10 minutos para optimizar rendimiento.
 - Los emojis de estado de servidor indican si cada región está operativa, lenta o caída.
+- Si el panel de Apex es eliminado, el bot lo recrea automáticamente y limpia paneles viejos duplicados.
+- Los errores del panel se avisan solo al canal de control/admin o al owner. No se publican tarjetas de error en canales públicos.
+- `/apex-status` responde de forma efímera al usuario; el panel público se publica como mensaje aparte.
