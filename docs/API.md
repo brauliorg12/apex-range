@@ -40,7 +40,7 @@ Debajo del embed de estado, encontrarás el botón:
 
 #### Detalles técnicos
 
-- El panel y el botón se generan automáticamente al ejecutar `/setup-roles`.
+- El panel de estado de Apex y sus botones se generan al ejecutar `/apex-status`. El panel de roles y estadísticas se genera con `/setup-roles`.
 - El estado de la API se obtiene usando la [API de Mozambique](https://apexlegendsapi.com/).
 - El botón utiliza componentes interactivos de Discord para una experiencia moderna y fluida.
 - El código es modular y fácil de mantener.
@@ -84,6 +84,9 @@ Cuando uses `/apex-status` o veas el panel de estado, ten en cuenta:
 - **Roles y presencia**: Se actualizan cada 2 minutos para mantener la información al día.
 - **Imágenes del embed**: Se refrescan cada 10 minutos para optimizar rendimiento.
 - Los emojis de estado de servidor indican si cada región está operativa, lenta o caída.
+- Si el panel de Apex es eliminado, el bot lo recrea automáticamente y limpia paneles viejos duplicados.
+- Los errores del panel se avisan solo al canal de control/admin o al owner. No se publican tarjetas de error en canales públicos.
+- `/apex-status` responde de forma efímera al usuario; el panel público se publica como mensaje aparte.
 
 ## ⏱️ Detalles de Intervalos, Reintentos y Tiempos de Consulta
 

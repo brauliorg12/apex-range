@@ -2,17 +2,27 @@ import {
   MessageFlags,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   Interaction,
   EmbedBuilder,
+  PermissionFlagsBits,
+  TextChannel,
 } from 'discord.js';
 import { createApexStatusEmbeds } from '../utils/apex-status-embed';
-import { writeApexStatusState } from '../utils/state-manager';
+import { createApexStatusComponents } from '../utils/apex-status-components';
+import {
+  readApexStatusState,
+  writeApexStatusState,
+} from '../utils/state-manager';
 import { clearApiCache } from '../utils/apex-api-cache';
-import { APEX_LOGO_EMOJI, HELP_EMOGI } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
+import { getServerLogger } from '../utils/server-logger';
+import {
+  cleanupDuplicateApexPanels,
+  deletePreviousApexPanel,
+  notifyApexPanelCommand,
+  rememberApexPanelMessage,
+  withApexPanelLock,
+} from '../helpers/update-apex-info-message';
 
 /**
  * Definición del comando /apex-status para Discord.
@@ -30,86 +40,181 @@ export const data = new SlashCommandBuilder()
 /**
  * Ejecuta el comando /apex-status.
  *
- * - Limpia la caché de la API antes de consultar el estado actual de Apex Legends.
- * - Obtiene y muestra los embeds con la rotación de mapas y el RP de Predator.
- * - Añade botones para ver el perfil global de Apex y para mostrar información sobre los colores de estado.
- * - Fija el mensaje principal en el canal (si tiene permisos).
- * - Registra el mensaje para futuras actualizaciones automáticas.
- * - Informa al usuario que el estado se actualizará cada 5 minutos.
- * - Maneja errores mostrando mensajes claros al usuario.
+ * - Serializa la operación con el scheduler mediante un lock por guild.
+ * - Limpia la caché de la API antes de consultar el estado actual.
+ * - Publica el panel como mensaje independiente en el canal, con sus botones.
+ * - Fija el mensaje si el bot tiene permisos.
+ * - Guarda el ID en `.bot-state` y en memoria para las actualizaciones.
+ * - Elimina paneles de Apex duplicados para mantener un único panel vigente.
+ * - Notifica la ejecución al canal de control o al owner.
+ * - Responde de forma efímera; el canal solo muestra el panel.
+ *
+ * El comando exige Gestionar canales o Gestionar servidor en el canal. La
+ * visibilidad puede restringirse además en Discord → Integraciones.
  *
  * @param interaction Interacción del comando recibida desde Discord.
  */
 export async function execute(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply();
-  try {
-    // Limpiar cache antes de consultar la API
-    await clearApiCache(
-      interaction.guildId ?? undefined,
-      interaction.channelId ?? undefined
-    );
+  const guild = interaction.guild;
 
-    const embeds = await createApexStatusEmbeds(
-      interaction.guildId ?? undefined,
-      interaction.channelId ?? undefined
-    );
-
-    // Botón "Ver perfil Apex Global" y "Más info"
-    const apexProfileButton = new ButtonBuilder()
-      .setCustomId('show_apex_profile_modal')
-      .setLabel('Ver perfil Apex Global')
-      .setEmoji(APEX_LOGO_EMOJI)
-      .setStyle(ButtonStyle.Secondary);
-
-    const moreInfoButton = new ButtonBuilder()
-      .setCustomId('server_status_info')
-      .setLabel('Ayuda')
-      .setEmoji(HELP_EMOGI)
-      .setStyle(ButtonStyle.Secondary);
-
-    const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      apexProfileButton,
-      moreInfoButton
-    );
-
-    const reply = await interaction.editReply({
-      embeds,
-      components: [buttonRow],
-    });
-
-    // Fijar el mensaje principal de estado
-    try {
-      const channel = await interaction.channel?.fetch();
-      if (channel && 'messages' in channel) {
-        const msg = await channel.messages.fetch(reply.id);
-        await msg.pin();
-      }
-    } catch (err) {
-      console.error('No se pudo fijar el mensaje de estado.', err);
-      await interaction.followUp({
-        content:
-          "No pude fijar el mensaje de estado. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
-    // Registrar el mensaje para actualización automática
-    await writeApexStatusState({
-      apexInfoMessageId: reply.id,
-      channelId: interaction.channelId,
-      guildId: interaction.guildId!,
-    });
-
-    await interaction.followUp({
-      content:
-        'El estado de Apex Legends se actualizará automáticamente cada 5 minutos.',
+  if (!guild) {
+    await interaction.reply({
+      content: 'Este comando solo se puede usar en un servidor.',
       flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const member =
+    guild.members.resolve(interaction.user.id) ??
+    (await guild.members.fetch(interaction.user.id).catch(() => null));
+
+  const permissionChannel = interaction.channel;
+  const channelPermissions =
+    permissionChannel &&
+    'permissionsFor' in permissionChannel &&
+    member
+      ? permissionChannel.permissionsFor(member)
+      : null;
+
+  const canManageChannel =
+    channelPermissions?.has(PermissionFlagsBits.ManageChannels) ||
+    channelPermissions?.has(PermissionFlagsBits.ManageGuild);
+
+  if (!canManageChannel) {
+    await interaction.reply({
+      content:
+        'Necesitás "Gestionar canales" en este canal o "Gestionar servidor" para ejecutar `/apex-status`.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const guildId = guild.id;
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  try {
+    await withApexPanelLock(guildId, async () => {
+      // Limpiar caché antes de consultar la API.
+      await clearApiCache(guildId, interaction.channelId ?? undefined);
+
+      // Estado anterior: permite eliminar el panel canónico si el comando se
+      // ejecuta en otro canal.
+      const previousState = await readApexStatusState(guildId);
+
+      const embeds = await createApexStatusEmbeds(
+        guildId,
+        interaction.channelId ?? undefined
+      );
+
+      const channel = interaction.channel;
+      if (!channel || !channel.isTextBased() || !('send' in channel)) {
+        await interaction.editReply({
+          content: 'No puedo publicar el panel de Apex en este canal.',
+        });
+        return;
+      }
+
+      const textChannel = channel as TextChannel;
+      const panelMessage = await textChannel.send({
+        embeds,
+        components: createApexStatusComponents(),
+      });
+
+      // Fijar el mensaje principal de estado
+      try {
+        await panelMessage.pin();
+      } catch (err) {
+        console.error('No se pudo fijar el mensaje de estado.', err);
+        await interaction
+          .followUp({
+            content:
+              "No pude fijar el mensaje de estado. Por favor, asegúrate de que tengo permisos para 'Gestionar Mensajes'.",
+            flags: MessageFlags.Ephemeral,
+          })
+          .catch(() => {});
+      }
+
+      // Registrar el mensaje para actualización automática
+      rememberApexPanelMessage(guildId, panelMessage.id, textChannel.id);
+
+      let statePersisted = true;
+
+      try {
+        await writeApexStatusState({
+          apexInfoMessageId: panelMessage.id,
+          channelId: interaction.channelId,
+          guildId,
+          recoveryAttempts: 0,
+          lastRecoveryAt: undefined,
+          recoverySuspendedUntil: undefined,
+        });
+      } catch (stateError) {
+        statePersisted = false;
+        console.error(
+          'No se pudo guardar el estado de Apex; se usará el ID en memoria:',
+          stateError
+        );
+        await interaction
+          .followUp({
+            content:
+              'El panel se creó, pero no se pudo guardar el estado. El bot intentará mantenerlo actualizado y avisará si necesita recrearlo.',
+            flags: MessageFlags.Ephemeral,
+          })
+          .catch(() => {});
+      }
+
+      const serverLogger = getServerLogger(guildId, guild.name);
+
+      // Mantener un único panel vigente: eliminar paneles anteriores del bot.
+      await cleanupDuplicateApexPanels(
+        textChannel,
+        panelMessage.id,
+        interaction.client.user?.id,
+        serverLogger
+      );
+
+      const moved =
+        !!previousState?.channelId && previousState.channelId !== textChannel.id;
+
+      // Si el panel cambia de canal, eliminar el mensaje canónico anterior.
+      if (previousState?.channelId && previousState.apexInfoMessageId) {
+        await deletePreviousApexPanel(
+          guild,
+          previousState.channelId,
+          previousState.apexInfoMessageId,
+          textChannel.id,
+          serverLogger
+        );
+      }
+
+      await notifyApexPanelCommand(
+        {
+          guild,
+          userTag: interaction.user.tag,
+          userId: interaction.user.id,
+          newChannelId: textChannel.id,
+          newMessageId: panelMessage.id,
+          previousChannelId: previousState?.channelId,
+          previousMessageId: previousState?.apexInfoMessageId,
+          moved,
+          statePersisted,
+        },
+        serverLogger
+      );
+
+      await interaction.editReply({
+        content:
+          'Panel de Apex publicado. Se actualizará automáticamente cada 5 minutos.',
+      });
     });
   } catch (error) {
     console.error('Error en /apex-status:', error);
-    await interaction.editReply({
-      content: 'No se pudo obtener el estado de Apex Legends.',
-    });
+    await interaction
+      .editReply({
+        content: 'No se pudo obtener el estado de Apex Legends.',
+      })
+      .catch(() => {});
   }
 }
 

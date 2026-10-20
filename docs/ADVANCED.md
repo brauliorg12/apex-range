@@ -193,6 +193,117 @@ async function retryWithBackoff(fn: Function, maxRetries = 3) {
 }
 ```
 
+#### Recuperación automática del panel `/apex-status`
+
+El panel de estado de Apex se actualiza cada 5 minutos editando un mensaje
+persistente. Si ese mensaje se elimina, Discord devuelve `Unknown Message`
+(`10008`).
+
+La recuperación automática se basa en el `apexStatus.channelId` persistido en
+`.bot-state`; no infiere el canal desde otros mensajes. Si el estado apunta a
+otro canal o no hay panel registrado, un administrador debe ejecutar
+`/apex-status` una vez en el canal correcto (o corregir el estado manualmente).
+Después de ese registro, los borrados futuros se recuperan automáticamente.
+
+`/apex-status` valida en runtime que el usuario tenga **Gestionar canales** en
+el canal o **Gestionar servidor** a nivel del servidor. La visibilidad puede
+restringirse además en **Discord → Integraciones**, donde se recomienda
+habilitarlo solo para el rol de staff y el canal del panel. Después de modificar
+el comando, volver a registrar los slash commands con `npm run deploy-commands`.
+
+Comportamiento de recuperación:
+
+1. Intenta recuperar el panel más reciente del bot en el mismo canal (últimos
+   100 mensajes y, si no aparece, los fijados).
+2. Si no lo encuentra, crea un mensaje nuevo en **el canal configurado** en
+   `apexStatus.channelId`, lo fija si tiene permisos, restaura los botones del
+   panel (`Ver perfil Apex Global` y `Ayuda`) y guarda el nuevo
+   `apexInfoMessageId`.
+3. Elimina paneles de Apex duplicados del bot en ese canal, conservando solo el
+   canónico. No toca los mensajes de setup-roles ni otros embeds. En
+   actualizaciones exitosas, la limpieza se reintenta como máximo una vez por
+   hora.
+4. Si la creación falla, aplica backoff y suspende la recuperación para evitar
+   reintentos innecesarios.
+
+El ID nuevo se guarda **después** de confirmar que el mensaje existe en Discord.
+Si la creación falla, el estado anterior no se modifica. Si falla la escritura
+de `.bot-state`, el ID confirmado queda en memoria y se sigue actualizando ese
+panel; no se reutiliza el mensaje anterior.
+
+`/apex-status` responde de forma **efímera** al usuario y publica el panel como
+un mensaje independiente en el canal. Antes de terminar, elimina paneles
+anteriores para mantener un único panel vigente. Si el comando se ejecuta en un
+canal distinto al anterior, también elimina el mensaje canónico del canal
+anterior.
+
+Cada ejecución exitosa intenta notificar al canal de control o, si no existe,
+por DM al owner. La notificación incluye el usuario, el canal nuevo, el canal
+anterior, los IDs de los mensajes y si el estado se persistió. No se publica en
+canales públicos; si el control y el DM fallan, queda el registro en logs.
+
+Límites:
+
+- Máximo **3 intentos por hora** por servidor.
+- Backoff exponencial de **5 y 10 minutos** entre los intentos (tope 30).
+- Tras 3 fallos, la recuperación se suspende **6 horas**.
+- Los avisos al canal de control tienen cooldown de **1 hora** para errores
+  transitorios.
+- Los errores de permisos (`50013`/`50001`) o canal inexistente (`10003`)
+  suspenden directamente para evitar reintentos innecesarios en cada ciclo.
+- Un lock por guild serializa las actualizaciones y evita carreras entre el
+  scheduler y `/apex-status`.
+
+Estado persistido en `.bot-state/<guildId>.json`:
+
+```json
+"apexStatus": {
+  "channelId": "...",
+  "guildId": "...",
+  "apexInfoMessageId": "...",
+  "recoveryAttempts": 0
+}
+```
+
+`recoveryAttempts`, `lastRecoveryAt` y `recoverySuspendedUntil` son opcionales y
+solo aparecen cuando hubo fallos de recuperación. Ejecutar `/apex-status`
+manualmente resetea el contador y la suspensión.
+
+Notificaciones:
+
+- Primero al **canal de control** del servidor
+  (`botControl.controlChannelId`, creado por el setup). Ese canal es privado
+  para admins y el bot.
+- Si no existe o falla, DM al owner.
+- **No se envian tarjetas de error a canales publicos.** Si no se puede avisar
+  al control ni al owner, solo queda el log.
+- Los mensajes de error de `/apex-status` son efimeros y solo los ve quien
+  ejecuta el comando.
+
+Eventos notificados: panel recreado, recuperación suspendida, permisos
+faltantes y canal no encontrado. La limpieza de paneles duplicados se registra
+en los logs del guild.
+
+Los errores de `setup-roles` siguen la misma política: canal de control,
+alternativa por DM al owner y **sin** canal público. Tienen un cooldown de
+**1 hora** por tipo de error para limitar la frecuencia de avisos.
+
+Implementación separada por responsabilidades en `src/helpers/apex-panel/`:
+
+- `state.ts`: ID confirmado en memoria y persistencia.
+- `recovery.ts`: intentos, backoff y suspensión.
+- `channel.ts`: resolución y validación del canal.
+- `search.ts`: búsqueda y limpieza de paneles duplicados.
+- `panel.ts`: creación, edición y manejo de errores de Discord.
+- `notifications.ts`: avisos al control/owner.
+- `lock.ts`: exclusión por guild.
+- `memory.ts`: liberación de estado en memoria al salir del guild.
+
+`src/helpers/update-apex-info-message.ts` queda como orquestador y facade de
+esas piezas. Al salir de un guild se libera el estado en memoria del panel y
+los cooldowns de avisos; los JSON historicos de `.bot-state` y `db` se
+preservan.
+
 ### Mejores Prácticas de Producción
 
 #### Configuración Recomendada

@@ -155,19 +155,40 @@ El bot necesita los siguientes permisos para funcionar correctamente:
 
 ### **Notificaciones Automáticas de Errores**
 
-El bot incluye un sistema avanzado de **notificaciones automáticas de errores** que informa directamente al owner del servidor cuando ocurren problemas críticos:
+El bot incluye un sistema de **notificaciones automáticas de errores** para
+informar problemas críticos sin publicar tarjetas de error en canales públicos.
 
 #### Funcionalidades del Sistema
 
-- **Notificación por DM**: Los errores se envían directamente al owner del servidor vía mensaje privado de Discord, evitando spamear canales públicos.
+- **Canal de control primero**: Si el servidor tiene un canal de control
+  configurado (`botControl.controlChannelId`), las notificaciones se envían
+  allí. Ese canal está restringido a administradores y al bot.
+- **DM al owner como alternativa**: Si no hay canal de control o el envío falla,
+  se intenta por mensaje privado al owner del servidor.
+- **Sin canal público**: Si el canal de control y el DM fallan, solo queda el
+  registro en los logs. No se envían errores al canal del panel ni a otros
+  canales públicos.
 - **Tipos de errores notificados**:
-  - **Falta de permisos**: Cuando el bot no puede editar mensajes por falta de permisos "Gestionar Mensajes".
-  - **Mensaje no encontrado**: Cuando el mensaje de Apex ha sido eliminado y no se puede actualizar.
-  - **Errores desconocidos**: Cualquier otro error inesperado durante la actualización.
-- **Información detallada**: Cada notificación incluye:
-  - Descripción clara del problema
-  - Canal afectado
-  - Servidor afectado
-  - Instrucciones específicas para solucionarlo
-- **Fallback inteligente**: Si no se puede enviar DM (ej. DMs bloqueados), intenta enviar al canal afectado como último recurso.
-- **Sin spam**: Solo se notifica cuando realmente ocurre un error, no en operaciones normales.
+  - **Falta de permisos**: El bot no puede editar o crear mensajes.
+  - **Mensaje o panel no encontrado**: El panel de Apex fue eliminado.
+  - **Panel recreado**: El bot creó un reemplazo y registró el nuevo ID.
+  - **Recuperación suspendida**: Se agotaron los intentos automáticos.
+  - **Canal no encontrado**: El canal configurado ya no existe o no es
+    accesible.
+  - **Errores desconocidos**: Otros problemas durante la actualización.
+- **Información detallada**: Cada notificación incluye descripción, canal,
+  servidor e instrucciones de recuperación.
+- **Frecuencia controlada**: Los errores transitorios tienen un cooldown de
+  **1 hora** por tipo para limitar la frecuencia de avisos.
+
+### **Permisos del comando `/apex-status`**
+
+El comando exige **Gestionar canales** en el canal o **Gestionar servidor** a
+nivel del servidor. La visibilidad y el uso pueden restringirse además en
+**Discord → Integraciones → Apex Range → /apex-status**. Se recomienda
+habilitarlo solo para el rol de staff y el canal del panel.
+
+Cada ejecución exitosa intenta notificar al canal de control o, si no existe,
+por DM al owner. La notificación incluye usuario, canal nuevo, canal anterior,
+IDs de los mensajes y si el estado se persistió. Si ambos canales fallan, queda
+el registro en logs.

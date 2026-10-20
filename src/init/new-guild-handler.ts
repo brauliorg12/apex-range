@@ -75,9 +75,9 @@ async function handleExistingConfiguredGuild(
     1
   );
 
-  // Actualizar mensaje de /apex-status si existe
+  // Actualizar o recuperar el mensaje de /apex-status si hay un canal configurado
   const apexStatusState = await readApexStatusState(guild.id);
-  if (apexStatusState?.apexInfoMessageId && apexStatusState.channelId) {
+  if (apexStatusState?.channelId) {
     await updateApexInfoMessage(guild);
   }
 
