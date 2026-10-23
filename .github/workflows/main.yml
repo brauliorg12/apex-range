@@ -1,6 +1,10 @@
-name: CI/CD Pipeline
+name: Manual Build
 
-on: [push]
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -13,27 +17,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24.22.1"
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
         run: npm run build
 
-      - name: Lint and Type Check
-        run: npm run lint # Assuming you have a lint script, e.g., 'eslint .', 'tsc --noEmit'
-        continue-on-error: true # Allow build to continue even if linting fails
-
       - name: Build Docker image
         run: docker build -t discord-apex-bot .
-
-    # Optional: Push Docker image to a registry (e.g., Docker Hub, GitHub Container Registry)
-    # Este paso está comentado. Si quieres publicar en Docker Hub, descomenta y configura tus credenciales.
-    # - name: Log in to Docker Hub
-    #   uses: docker/login-action@v3
-    #   with:
-    #     username: ${{ secrets.DOCKER_USERNAME }}
-    #     password: ${{ secrets.DOCKER_TOKEN }}
-    # - name: Push Docker image
-    #   run: docker push your-dockerhub-username/discord-apex-bot:latest
