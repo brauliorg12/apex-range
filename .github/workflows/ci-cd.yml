@@ -79,6 +79,10 @@ jobs:
           npm run release
           git push --follow-tags origin main
           VERSION=$(node -p "require('./package.json').version")
+          if [ -z "$VERSION" ]; then
+            echo "No se pudo determinar la version; se aborta."
+            exit 1
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -130,14 +134,21 @@ jobs:
 
   github-release:
     name: GitHub Release
-    needs: publish
+    needs: [release, publish]
     runs-on: ubuntu-latest
     steps:
+      - name: Validate version
+        run: |
+          if [ -z "${{ needs.release.outputs.version }}" ]; then
+            echo "No se obtuvo la version del release; se aborta."
+            exit 1
+          fi
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.release.outputs.version }}
-          name: Release v${{ needs.release.outputs.version }}
+          name: Version ${{ needs.release.outputs.version }}
           generate_release_notes: true
           draft: false
           prerelease: false
