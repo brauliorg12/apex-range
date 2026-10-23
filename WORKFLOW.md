@@ -1,49 +1,64 @@
-# 🚀 Flujo de trabajo profesional para commits y pushes
+# Flujo de trabajo
 
-1. **Haz tus cambios en el código.**
+## Ramas
 
-2. **Agrega y commitea tus cambios:**
+- `main`: rama estable. Solo recibe merges.
+- Ramas de trabajo: `feat/...`, `fix/...`, `docs/...`.
+- Un PR hacia `main` solo valida: `npm ci` + `npm run build`.
+- Un merge/push a `main` dispara el release automático.
 
-   ```bash
-   git add .
-   git commit -m "feat: descripción breve del cambio"
-   ```
+## Commits
 
-3. **Actualiza la versión del proyecto:**
+Usar Conventional Commits:
 
-   - Usa el comando adecuado según el tipo de cambio:
-     - Para correcciones menores:  
-       `npm version patch`
-     - Para nuevas funcionalidades:  
-       `npm version minor`
-     - Para cambios incompatibles:  
-       `npm version major`
-   - Esto actualizará `package.json`, creará un commit y un tag de versión.
+- `feat: ...` -> sube versión minor.
+- `fix: ...` -> sube versión patch.
+- `BREAKING CHANGE` -> sube versión major.
+- `docs: ...` / `chore: ...` -> no fuerzan un cambio de versión por sí solos.
 
-4. **Haz push al repositorio incluyendo los tags:**
+No usar `[skip ci]` en cambios normales. Solo para cambios de CI que no deban generar un release.
 
-   ```bash
-   git push --follow-tags
-   ```
+## Release automático
 
-   - El hook de Husky verificará que la versión fue actualizada antes de permitir el push.
+En cada push/merge a `main`, el workflow:
 
-5. **(Opcional) Crea el release en GitHub usando el tag creado automáticamente.**
+1. Instala dependencias y compila.
+2. Ejecuta `standard-version`:
+   - actualiza `package.json`, `package-lock.json` y `CHANGELOG.md`;
+   - crea el commit `chore(release): X.Y.Z [skip ci]`;
+   - crea el tag `vX.Y.Z`.
+3. Pushea el commit y el tag.
+4. Publica la imagen en GHCR con los tags:
+   - `latest`
+   - `vX.Y.Z`
+   - `sha-<commit>`
+5. Crea el GitHub Release `Version X.Y.Z`.
+6. Si están configuradas las variables de Portainer, actualiza el stack.
 
-6. **Para seguir trabajando, actualiza tu rama local:**
+El commit de release incluye `[skip ci]`, así que no vuelve a disparar el workflow.
 
-   ```bash
-   git pull
-   ```
+## No hacer a mano
 
----
+- No ejecutar `npm version`.
+- No crear tags manualmente.
+- No pushear tags manualmente.
+- No editar la versión de `package.json` a mano.
+- No usar `[skip ci]` en un cambio de aplicación.
 
-## 💡 Notas importantes
+La versión, el tag, el changelog y la imagen los genera el CI.
 
-- **No podrás hacer push si no actualizas la versión en `package.json`** (gracias al hook de Husky).
-- Usar `npm version` mantiene el versionado y los tags sincronizados con tus cambios.
-- Los tags son útiles para releases y changelogs en GitHub.
+## Rollback
 
----
+Para volver a una versión anterior, fijar en el stack de Portainer:
 
-**¡Así mantienes un flujo profesional y controlado en tu proyecto!**
+```yaml
+image: ghcr.io/brauliorg12/apex-range:vX.Y.Z
+```
+
+o:
+
+```yaml
+image: ghcr.io/brauliorg12/apex-range:sha-<commit>
+```
+
+Después, **Update the stack** con **Re-pull image**.
