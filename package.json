@@ -8,7 +8,10 @@
     "build": "tsc && copyfiles -u 1 assets/**/* dist/assets",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "deploy-commands": "node dist/deploy-commands.js"
+    "deploy-commands": "node dist/deploy-commands.js",
+    "release": "standard-version --message \"chore(release): %s [skip ci]\"",
+    "release:minor": "standard-version --release-as minor --message \"chore(release): %s [skip ci]\"",
+    "release:patch": "standard-version --release-as patch --message \"chore(release): %s [skip ci]\""
   },
   "keywords": [],
   "author": "Braulio Rodriguez",
@@ -25,6 +28,7 @@
     "@types/node": "^24.13.6",
     "copyfiles": "^2.4.1",
     "husky": "^9.1.7",
+    "standard-version": "^9.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
