@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.20.1](https://github.com/brauliorg12/apex-range/compare/v1.20.0...v1.20.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **ci:** use release version in release job [skip ci] ([874ca72](https://github.com/brauliorg12/apex-range/commit/874ca72ea66dadc2d675eb0c27e61e2d2a7c207e))
+* **docs:** align release workflow documentation ([6f1ec99](https://github.com/brauliorg12/apex-range/commit/6f1ec99f37d2797acb6ee7e98551b4da22777f3b))
+
 ## [1.20.0](https://github.com/brauliorg12/apex-range/compare/v1.19.0...v1.20.0) (2026-10-23)
 
 
