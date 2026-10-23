@@ -17,7 +17,7 @@ jobs:
       - name: Configura Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24.22.1
 
       - name: Instala dependencias
         run: npm ci
