@@ -1,5 +1,6 @@
 import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
-import { APEX_RANKS, APEX_LOGO_EMOJI } from '../models/constants';
+import { APEX_LOGO_EMOJI } from '../models/constants';
+import { getActiveRanks } from '../models/rank-catalog';
 import { renderPredatorBadge } from './predator-badge-canvas';
 import { ApexProfileEmbedResult } from '../interfaces/profile-embed';
 import { buildArenasEmbed } from './arenas-embed';
@@ -32,9 +33,9 @@ export async function buildApexProfileEmbed(
   if (legendBanner) legendBanner = encodeURI(legendBanner);
   if (rankImg) rankImg = encodeURI(rankImg);
 
-  // Traducción del rango usando APEX_RANKS
+  // Traducción del rango usando el catálogo activo
   let rankLabel = rankName;
-  const rankConst = APEX_RANKS.find(
+  const rankConst = getActiveRanks().find(
     (r) => r.apiName?.toLowerCase() === rankName.toLowerCase()
   );
   if (rankConst && rankConst.label) {

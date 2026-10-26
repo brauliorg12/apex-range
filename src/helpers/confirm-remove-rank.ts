@@ -17,6 +17,7 @@ import { removeCommonApexRoleIfNoRank } from '../utils/role-helper';
 import { logApp } from '../utils/logger';
 import { getApexRanksForGuild } from './get-apex-ranks-for-guild';
 import { getApexPlatformsForGuild } from './get-apex-platforms-for-guild';
+import { pickHighestRank } from './rank-priority';
 
 /**
  * Maneja la confirmación y eliminación completa de roles de rango y plataforma de Apex Legends.
@@ -25,7 +26,8 @@ import { getApexPlatformsForGuild } from './get-apex-platforms-for-guild';
  * 1. Verifica si el usuario tiene roles de rango asignados (usa roles mapeados del servidor)
  * 2. Muestra mensaje de confirmación con botones de aceptar/cancelar
  * 3. Espera respuesta del usuario (30 segundos timeout)
- * 4. Si confirma: elimina roles de Discord, limpia base de datos, actualiza mensajes de estado
+ * 4. Si confirma: elimina roles de Discord, limpia base de datos, actualiza estadísticas
+ *    y solo el card del rango afectado
  * 5. Si cancela o timeout: muestra mensaje correspondiente
  *
  * @param interaction Interacción del botón recibida desde Discord.
@@ -146,10 +148,17 @@ export async function confirmRemoveRank(interaction: ButtonInteraction) {
             components: [createCloseButtonRow()],
           });
 
-          // Actualizaciones
-          if (guild) {
-            await updateRoleCountMessage(guild);
+          // Actualizaciones: estadísticas y solo el card del rango más alto afectado
+          const affectedRanks = new Set<string>();
+          const removedRank = pickHighestRank(
+            ranks,
+            rolesToRemove.values()
+          );
+          if (removedRank) {
+            affectedRanks.add(removedRank.shortId);
           }
+
+          await updateRoleCountMessage(guild, affectedRanks);
 
           collector.stop();
         } else if (i.customId === 'cancel_remove') {

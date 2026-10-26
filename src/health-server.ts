@@ -1,5 +1,6 @@
 import express from 'express';
 import { getGlobalApiStatus } from './utils/global-api-status';
+import { getLastAdminAlert } from './utils/admin-alert';
 import { logApp } from './utils/logger';
 
 export function startHealthServer() {
@@ -18,11 +19,19 @@ export function startHealthServer() {
   });
 
   app.get('/instance', (req, res) => {
+    const lastAlert = getLastAdminAlert();
+
     res.json({
-      pid: process.pid,
       uptime: process.uptime(),
       version: process.env.npm_package_version || 'unknown',
       timestamp: new Date().toISOString(),
+      lastAdminAlert: lastAlert
+        ? {
+            emittedAt: lastAlert.emittedAt,
+            errorType: lastAlert.errorType,
+            webhookDelivered: lastAlert.webhookDelivered,
+          }
+        : null,
     });
   });
 

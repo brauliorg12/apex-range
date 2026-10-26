@@ -14,22 +14,35 @@ El bot implementa un **sistema de optimización avanzado** que mejora significat
 class GuildUpdateQueue {
   private queues: Map<string, UpdateTask[]> = new Map();
   private processing: Set<string> = new Set();
-  private maxConcurrency = 3; // Máximo de guilds procesando simultáneamente
+  private maxConcurrency = 1; // Prioriza estabilidad de CPU
 }
 ```
 
 - **Colas por Servidor**: Cada servidor tiene su propia cola independiente
-- **Procesamiento Concurrente Limitado**: Máximo 3 servidores procesando simultáneamente
-- **Eliminación de Duplicados**: Evita procesar la misma actualización múltiples veces
-- **Priorización Inteligente**: Alta, normal, baja según importancia
+- **Procesamiento Serial**: Un servidor a la vez para evitar picos de CPU
+- **Eliminación de Duplicados**: Usa una clave estable por tipo de actualización
+- **Priorización Inteligente**: Muy alta, alta, normal y baja según importancia
 
 #### Tipos de Prioridad
 
-| Prioridad | Valor | Uso                       | Ejemplos                                |
-| --------- | ----- | ------------------------- | --------------------------------------- |
-| Alta      | 2     | Eventos críticos          | Nuevos miembros, cambios de presencia   |
-| Normal    | 1     | Actualizaciones regulares | Estadísticas de roles, mensajes de Apex |
-| Baja      | 0     | Tareas opcionales         | Limpieza de datos antiguos              |
+| Prioridad | Valor | Uso                       | Ejemplos                                   |
+| --------- | ----- | ------------------------- | ------------------------------------------ |
+| Muy alta  | 3     | Cambios de rango          | Alta/baja de rango de un miembro           |
+| Alta      | 2     | Eventos críticos          | Nuevos miembros, cambios de presencia      |
+| Normal    | 1     | Actualizaciones regulares | Estadísticas de roles, mensajes de Apex    |
+| Baja      | 0     | Tareas opcionales         | Limpieza de datos antiguos                 |
+
+### Trabajo pesado de cards (`heavy-task-queue.ts`)
+
+La generación de cards, canvas y lecturas pesadas de jugadores pasa por una
+cola serial independiente. Así una card efímera, un refresco de panel y una
+actualización de fondo no compiten por CPU al mismo tiempo.
+
+- Las interacciones de “Ver más” y paginación se reconocen con `defer` antes de
+  entrar a la cola.
+- La card se completa con `editReply`; sigue siendo efímera y por usuario.
+- La cola no crea timers ni acumula tareas sin límite.
+- Si una tarea pesada está en curso, la siguiente espera su turno.
 
 ### Scheduler Global Optimizado (`global-scheduler.ts`)
 
@@ -38,7 +51,7 @@ class GuildUpdateQueue {
 **Antes**: Un timer por servidor por tarea
 
 ```typescript
-// Problema: 3 servidores × 3 tareas = 9 timers activos
+// Problema: N servidores × 3 tareas = N×3 timers activos
 setInterval(() => updateRoles(guild), 60000);
 setInterval(() => updatePresence(guild), 120000);
 setInterval(() => updateImages(guild), 600000);
@@ -120,7 +133,7 @@ globalScheduler.registerGuildTask(
   "guilds": 15,
   "queueStats": {
     "totalQueued": 5,
-    "processing": 2,
+    "processing": 1,
     "completedLastHour": 150
   },
   "schedulerStats": {
@@ -159,14 +172,15 @@ const endpoints = [
 | ------------------- | ------------------ | ----------- | ------------------------ |
 | Servidores          | Sin límite teórico | 100-500     | Recursos del VPS         |
 | Usuarios Totales    | Sin límite         | 100K+       | Arquitectura distribuida |
-| Tareas Concurrentes | 3 servidores       | 5-10        | Balance CPU/memoria      |
-| Cache Size          | 100MB              | 500MB       | Memoria disponible       |
+| Tareas Concurrentes | 1 servidor         | 1 por proceso | Protege CPU y latencia   |
+| Cache Size          | 100MB              | 500MB         | Memoria disponible       |
 
 #### Optimizaciones por Escala
 
 - **Pequeña Escala (1-10 servidores)**: Configuración por defecto
-- **Mediana Escala (10-50 servidores)**: Aumentar `maxConcurrency` a 5
-- **Grande Escala (50+ servidores)**: Implementar clustering o múltiples instancias
+- **Mediana Escala (10-50 servidores)**: Medir CPU antes de tocar la concurrencia
+- **Grande Escala (50+ servidores)**: Evaluar clustering o instancias separadas;
+  no alcanza con subir `maxConcurrency`
 
 ### Recuperación de Fallos
 
@@ -310,7 +324,7 @@ preservan.
 
 ```typescript
 const config = {
-  maxConcurrency: 5,
+  maxConcurrency: 1,
   checkInterval: 3000, // 3 segundos
   cacheTTL: 1800000, // 30 minutos
   maxRetries: 5,
@@ -449,15 +463,17 @@ enqueueGuildUpdate(
   async () => {
     await updateRoleCountMessage(guild);
   },
+  'roles-refresh',
   UpdatePriority.HIGH
 );
 ```
 
 #### Procesamiento Concurrente Controlado
 
-- **Máximo 3 servidores simultáneos**: Evita sobrecargar el sistema
-- **Eliminación de duplicados**: Una sola actualización por tipo/servidor
-- **Timeout inteligente**: Cancela actualizaciones que tardan demasiado
+- **Un servidor a la vez**: Evita sobrecargar la CPU
+- **Eliminación de duplicados**: Clave estable por tipo/servidor
+- **Sin timeout automático**: Las tareas se ejecutan en orden; un fallo no deja
+  el lock tomado
 
 ### Soporte para Cambios Dinámicos
 
@@ -607,7 +623,7 @@ const realtimeConfig = {
   cacheTTL: 300000, // 5 minutos
   maxRetries: 3,
   backoffMultiplier: 2,
-  maxConcurrency: 3,
+  maxConcurrency: 1,
 };
 ```
 
@@ -642,6 +658,9 @@ MOZA_URL=https://api.mozambiquehe.re
 NODE_ENV=production
 HEALTH_PORT=3001
 API_URL=http://localhost:3001/health
+
+# Imagen inicial del panel de rangos (opcional)
+INIT_IMAGE_PATH=/app/assets/imgs/init.png
 ```
 
 #### Configuración Avanzada
@@ -684,26 +703,46 @@ CMD ["npm", "run", "start"]
 #### Docker Compose para Producción
 
 ```yaml
-version: '3.8'
 services:
-  apex-bot:
-    image: ghcr.io/brauliorg12/discord-apex:latest
+  apex-range:
+    image: ghcr.io/brauliorg12/apex-range:latest
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - CLIENT_ID=${CLIENT_ID}
-      - MOZA_API_KEY=${MOZA_API_KEY}
+      NODE_ENV: production
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      CLIENT_ID: ${CLIENT_ID}
+      MOZA_API_KEY: ${MOZA_API_KEY}
+      INIT_IMAGE_PATH: /app/assets/imgs/init.png
     volumes:
       - ./db:/app/db
       - ./.bot-state:/app/.bot-state
       - ./logs:/app/logs
+      - ./.apex-cache:/app/.apex-cache
+      - ./assets/imgs:/app/assets/imgs:ro
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
+      test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:3001/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
 ```
+
+#### Imagen inicial del panel
+
+`INIT_IMAGE_PATH` apunta al archivo dentro del contenedor. El mount de
+`assets/imgs` debe ser de solo lectura y no se copia a la imagen Docker:
+
+```yaml
+environment:
+  INIT_IMAGE_PATH: /app/assets/imgs/init.png
+
+volumes:
+  - ./assets/imgs:/app/assets/imgs:ro
+```
+
+Si la variable no existe, el archivo falta o no es un PNG válido, el panel se
+muestra sin imagen. El bot envía el archivo como adjunto de Discord; no requiere
+URL pública. Para actualizar la imagen, reemplazala en el host y esperá el
+próximo refresco del panel; no hace falta reconstruir la imagen ni reiniciar.
 
 #### Systemd Service
 

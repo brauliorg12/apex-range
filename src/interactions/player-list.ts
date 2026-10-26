@@ -3,60 +3,21 @@ import {
   ButtonInteraction,
   StringSelectMenuInteraction,
   EmbedBuilder,
-  Guild,
   GuildMember,
 } from 'discord.js';
 import { ALL_PLAYERS_EMOGI, MAX_PLAYERS_PER_PAGE } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
-import { getRankEmoji } from '../utils/emoji-helper';
 import { getPlayerData } from '../utils/player-data-manager';
-import { Player, PlayerRecord } from '../interfaces/player';
+import { PlayerRecord } from '../interfaces/player';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { buildRankResolver } from '../helpers/rank-priority';
 import { logApp } from '../utils/logger';
 import { createPlayerPaginationEmbed } from '../utils/player-pagination-helper';
+import { getAllRankedPlayers } from './player-list-ranked';
+import { buildNormalRankEmbeds } from './player-list-normal';
+import type { ApexRank } from '../interfaces/apex-rank';
 
-/**
- * Obtiene todos los jugadores del servidor que tienen algún rol de rango de Apex Legends desde la caché.
- *
- * Utiliza el sistema de mapeo de roles para soportar roles personalizados del servidor.
- * Recorre todos los miembros en caché y verifica si tienen un rol de rango asignado.
- *
- * NOTA: Solo usa miembros en caché para evitar errores de rate limit en servidores grandes.
- * Esta función se usa principalmente para determinar el modo de visualización (normal/paginado)
- * basándose en la cantidad total de jugadores. Para servidores grandes (1000+), la lista
- * paginada usa playerData en lugar del caché para mayor estabilidad.
- *
- * @param guild Servidor de Discord donde buscar los jugadores.
- * @returns Lista de jugadores con su rango asignado encontrados en caché.
- */
-export async function getAllRankedPlayers(guild: Guild): Promise<Player[]> {
-  await logApp(
-    `[getAllRankedPlayers] Obteniendo jugadores en caché para guild ${guild.name} (${guild.id})`
-  );
-  await logApp(
-    `[getAllRankedPlayers] Miembros en caché: ${guild.members.cache.size}`
-  );
-
-  const players: Player[] = [];
-  // Usar roles mapeados del servidor para soportar roles personalizados
-  const ranks = getApexRanksForGuild(guild.id, guild);
-  const rankRoleNames = ranks.map((r) => r.roleName);
-
-  guild.members.cache.forEach((member) => {
-    const rankRole = member.roles.cache.find((role) =>
-      rankRoleNames.includes(role.name)
-    );
-    if (rankRole) {
-      players.push({ member, rankName: rankRole.name });
-    }
-  });
-
-  await logApp(
-    `[getAllRankedPlayers] Se encontraron ${players.length} jugadores con rangos`
-  );
-
-  return players;
-}
+export { getAllRankedPlayers };
 
 /**
  * Muestra el listado de jugadores registrados agrupados por rango con paginación inteligente.
@@ -100,8 +61,13 @@ export async function handleShowAllPlayersMenu(
   }
 
   try {
+    const allRanks = getApexRanksForGuild(
+      interaction.guild.id,
+      interaction.guild
+    );
+    const resolver = buildRankResolver(allRanks);
     const [players, playerData] = await Promise.all([
-      getAllRankedPlayers(interaction.guild),
+      getAllRankedPlayers(interaction.guild, resolver),
       getPlayerData(interaction.guild),
     ]);
 
@@ -109,11 +75,6 @@ export async function handleShowAllPlayersMenu(
       (playerData as PlayerRecord[]).map((p) => [p.userId, p.assignedAt])
     );
 
-    // Obtener rangos mapeados del servidor y filtrar si se especificó un rango
-    const allRanks = getApexRanksForGuild(
-      interaction.guild.id,
-      interaction.guild
-    );
     let filteredRanks = allRanks;
     if (rankShortId) {
       filteredRanks = allRanks.filter((r) => r.shortId === rankShortId);
@@ -153,7 +114,7 @@ export async function handleShowAllPlayersMenu(
       );
 
       // Aplanar la lista de jugadores con su rango
-      const allPlayersList: Array<{ member: GuildMember; rank: any }> = [];
+      const allPlayersList: Array<{ member: GuildMember; rank: ApexRank }> = [];
       for (const rank of filteredRanks) {
         const membersInRank = playersByRank[rank.roleName];
         membersInRank.forEach((member) => {
@@ -194,94 +155,14 @@ export async function handleShowAllPlayersMenu(
         components: paginationResult.components,
       });
     } else {
-      // MODO NORMAL para servidores pequeños
-      const embeds: EmbedBuilder[] = [];
-      const MAX_DESCRIPTION_LENGTH = 3900;
-      let currentDescription = '';
-      let currentEmbed = new EmbedBuilder().setColor('#3498db').setTimestamp();
-
-      for (const rank of filteredRanks) {
-        const membersInRank = playersByRank[rank.roleName];
-        const emoji = getRankEmoji(interaction.client, rank);
-
-        let rankSection = `\n**${emoji} ${rank.label} (${membersInRank.length})**\n`;
-
-        if (membersInRank.length > 0) {
-          const membersList = membersInRank
-            .map((m, index) => {
-              const assignedAt = playerDateById.get(m.id);
-              const dateString = assignedAt
-                ? ` - _<t:${Math.floor(
-                    new Date(assignedAt).getTime() / 1000
-                  )}:D>_`
-                : '';
-              // Mostrar nombre copiable + mención (doble)
-              const displayName = m.displayName || 'Usuario';
-              return `${index + 1}. \`${displayName}\` <@${m.id}>${dateString}`;
-            })
-            .join('\n');
-          rankSection += membersList;
-        } else {
-          rankSection += onlyOnline
-            ? `_...No hay jugadores registrados en línea en este rango._`
-            : `_...No hay jugadores registrados en este rango._`;
-        }
-        rankSection += '\n';
-
-        if (
-          currentDescription.length + rankSection.length >
-          MAX_DESCRIPTION_LENGTH
-        ) {
-          currentEmbed.setDescription(
-            currentDescription.trim().length > 0
-              ? currentDescription
-              : 'No se encontraron jugadores.'
-          );
-          embeds.push(currentEmbed);
-
-          currentEmbed = new EmbedBuilder().setColor('#3498db').setTimestamp();
-          currentDescription = rankSection;
-        } else {
-          currentDescription += rankSection;
-        }
-      }
-
-      if (currentDescription.trim().length > 0) {
-        currentEmbed.setDescription(currentDescription);
-        embeds.push(currentEmbed);
-      }
-
-      if (embeds.length === 0) {
-        embeds.push(
-          new EmbedBuilder()
-            .setColor('#3498db')
-            .setTitle(baseTitle)
-            .setDescription(
-              onlyOnline
-                ? 'No se encontraron jugadores registrados en línea.'
-                : 'No se encontraron jugadores registrados.'
-            )
-            .setTimestamp()
-        );
-      }
-
-      if (embeds.length > 1) {
-        embeds.forEach((embed, index) => {
-          embed.setTitle(`${baseTitle} - Parte ${index + 1}/${embeds.length}`);
-        });
-      } else {
-        embeds[0].setTitle(baseTitle);
-      }
-
-      if (embeds.length > 10) {
-        await logApp(
-          `[handleShowAllPlayersMenu] ADVERTENCIA: Se generaron ${embeds.length} embeds, enviando solo los primeros 10`
-        );
-        embeds.splice(10);
-        embeds[9].setFooter({
-          text: '⚠️ Lista truncada por límites de Discord. Usa los filtros por rango para ver más.',
-        });
-      }
+      const embeds = await buildNormalRankEmbeds({
+        client: interaction.client,
+        ranks: filteredRanks,
+        playersByRank,
+        playerDateById,
+        onlyOnline,
+        baseTitle,
+      });
 
       await interaction.editReply({
         embeds: embeds,

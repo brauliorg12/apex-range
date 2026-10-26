@@ -1,12 +1,16 @@
 import { Client, Guild, Events } from 'discord.js';
-import { readRolesState, readApexStatusState } from '../utils/state-manager';
+import {
+  readRolesStateStrict,
+  readApexStatusState,
+} from '../utils/state-manager';
+import { notifyCorruptStateAlert } from '../utils/admin-alert';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { updateBotPresence } from '../utils/presence-helper';
 import { logApp } from '../utils/logger';
 import { registerGuildPeriodicTasks } from '../utils/global-scheduler';
 import { enqueueGuildUpdate } from '../utils/guild-update-queue';
 import { updateApexInfoMessage } from '../helpers/update-apex-info-message';
-import { synchronizePlayersWithRoles } from '../utils/synchronize-players';
+import { synchronizePlayersAndEnqueueRankSync } from './guild-initializer';
 
 /**
  * Configura el evento para cuando el bot se une a un nuevo servidor.
@@ -25,6 +29,10 @@ export function setupNewGuildHandler(client: Client): void {
  * Maneja la lógica cuando el bot se une a un nuevo servidor.
  * Verifica configuración previa y configura actualizaciones si es necesario.
  *
+ * Un `.bot-state` ausente corresponde a un guild nuevo. Si el estado está
+ * corrupto o es ilegible, alerta al administrador de la app y no lo trata
+ * como guild nuevo ni envía el mensaje de bienvenida.
+ *
  * @param client - El cliente de Discord.
  * @param guild - El nuevo guild al que se unió el bot.
  */
@@ -32,13 +40,28 @@ async function handleNewGuild(client: Client, guild: Guild): Promise<void> {
   logApp(`Bot añadido a nuevo servidor: ${guild.name} (${guild.id})`);
 
   try {
-    // Verificar si el servidor ya tiene configuración previa
-    const rolesState = await readRolesState(guild.id);
-    if (rolesState?.guildId) {
-      await handleExistingConfiguredGuild(client, guild);
-    } else {
+    const stateResult = await readRolesStateStrict(guild.id);
+
+    if (stateResult.status === 'missing') {
       await handleNewUnconfiguredGuild(guild);
+      return;
     }
+
+    if (stateResult.status !== 'ok') {
+      await notifyCorruptStateAlert({
+        guildId: guild.id,
+        guildName: guild.name,
+        errorType: stateResult.status,
+      });
+      return;
+    }
+
+    if (stateResult.state.guildId) {
+      await handleExistingConfiguredGuild(client, guild);
+      return;
+    }
+
+    await handleNewUnconfiguredGuild(guild);
   } catch (error) {
     logApp(
       `Error procesando nuevo servidor ${guild.name} (${guild.id}): ${error}`
@@ -65,13 +88,14 @@ async function handleExistingConfiguredGuild(
   await enqueueGuildUpdate(
     guild,
     async () => {
-      await synchronizePlayersWithRoles(guild);
-      await updateRoleCountMessage(guild);
+      await synchronizePlayersAndEnqueueRankSync(guild, 'guild-rejoin');
+      await updateRoleCountMessage(guild, undefined, true);
       await updateBotPresence(client);
       logApp(
         `Actualización inicial de roles y presencia ejecutada en guild ${guild.name} (${guild.id})`
       );
     },
+    'guild-rejoin-refresh',
     1
   );
 

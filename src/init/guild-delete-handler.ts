@@ -1,6 +1,13 @@
 import { Client, Events } from 'discord.js';
 import { clearApexPanelMemory } from '../helpers/apex-panel/memory';
 import { forgetSetupErrorNotifications } from '../utils/error-notifier';
+import { forgetAdminAlerts } from '../utils/admin-alert';
+import { forgetRankSyncState } from '../services/rank-sync/rank-sync';
+import { forgetRankSyncEvents } from '../services/rank-sync/rank-events';
+import { forgetRankSyncNotifications } from '../services/rank-sync/rank-notify';
+import { forgetRankCardRefreshes } from '../helpers/rank-card-refresh-queue';
+import { forgetRankCardFingerprints } from '../helpers/rank-card-fingerprint';
+import { globalUpdateQueue } from '../utils/guild-update-queue';
 import { logApp } from '../utils/logger';
 
 /**
@@ -27,6 +34,13 @@ async function handleGuildDelete(guild: any): Promise<void> {
   // Liberar solo estado en memoria; los JSON historicos se preservan.
   clearApexPanelMemory(guild.id);
   forgetSetupErrorNotifications(guild.id);
+  forgetAdminAlerts(guild.id);
+  forgetRankSyncState(guild.id);
+  forgetRankSyncEvents(guild.id);
+  forgetRankSyncNotifications(guild.id);
+  forgetRankCardRefreshes(guild.id);
+  forgetRankCardFingerprints(guild.id);
+  globalUpdateQueue.cancelGuild(guild.id);
 
   // Los archivos JSON se conservan para preservar datos históricos
   // Si deseas limpiar automáticamente, descomenta el código siguiente en el comentario

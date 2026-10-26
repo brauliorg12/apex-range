@@ -1,159 +1,198 @@
-﻿# <img src="https://cdn.discordapp.com/emojis/1410729026410119269.webp?size=40&quality=lossless" alt="Apex Icon" width="32" style="vertical-align:middle"> Apex Legends Rank Bot
+﻿# Apex Legends Rank Bot
 
-Bot de Discord para gestionar y mostrar los rangos de los jugadores de Apex Legends en tu servidor, con panel interactivo, estadísticas y cards visuales.
+Bot de Discord para gestionar rangos de Apex Legends, mostrar jugadores por rango, publicar paneles de mapas y generar cards visuales.
 
-![Version](https://img.shields.io/github/v/release/brauliorg12/apex-range)
-![License](https://img.shields.io/github/license/brauliorg12/apex-range)
-![GHCR Pulls](https://img.shields.io/badge/GHCR-pulls-blue?logo=github)
+[![Version](https://img.shields.io/github/v/release/brauliorg12/apex-range)](https://github.com/brauliorg12/apex-range/releases)
+[![License](https://img.shields.io/github/license/brauliorg12/apex-range)](LICENSE)
+[![GHCR](https://img.shields.io/badge/GHCR-apex--range-blue?logo=github)](https://github.com/brauliorg12/apex-range/pkgs/container/apex-range)
 
-**🌐 Website: [https://apex-range.cubanova.com](https://apex-range.cubanova.com)**
+**Sitio web:** [apex-range.cubanova.com](https://apex-range.cubanova.com)
 
----
+**Invitar al bot:** [Abrir invitación de Discord](https://discord.com/oauth2/authorize?client_id=1406424026427031696&scope=bot+applications.commands&permissions=268560400)
 
-**[>> Invitar Apex Legends Rank Bot a tu Servidor <<](https://discord.com/oauth2/authorize?client_id=1406424026427031696&scope=bot+applications.commands&permissions=268560400)**
+## Características
 
-## 🎯 **Análisis Detallado de Permisos Pre-configurados**
+- Panel de rangos persistente con botones de autoservicio.
+- Cards de jugadores generadas con `@napi-rs/canvas`.
+- Búsqueda de jugadores, filtros y listados paginados.
+- Panel de estado de Apex: mapas, Ranked, Mixtape, Predator RP y estado de servidores.
+- Sincronización automática de roles y jugadores.
+- Soporte multi-servidor y multi-plataforma.
+- Persistencia por guild en archivos JSON con escrituras atómicas.
+- Recuperación automática del panel y limpieza de referencias inválidas.
+- Health server y logs organizados por día.
 
-¡Excelente configuración! El valor `268560400` incluye **exactamente** todos los permisos críticos necesarios para el funcionamiento óptimo del bot.
+## Requisitos
 
-### 📋 **Permisos Incluidos en el Enlace:**
+- Node.js 24 o superior para desarrollo local.
+- Un bot de Discord con los permisos indicados en [PERMISSIONS.md](docs/PERMISSIONS.md).
+- API key de [Mozambique](https://apexlegendsapi.com/) para los paneles de estado.
+- Docker y Docker Compose para despliegue en producción.
 
-| Permiso                    | Valor Binario | Estado      | Descripción                          |
-| -------------------------- | ------------- | ----------- | ------------------------------------ |
-| **ViewChannel**            | 1024          | ✅ Incluido | Ver canales y mensajes               |
-| **SendMessages**           | 2048          | ✅ Incluido | Enviar mensajes en canales           |
-| **ManageMessages**         | 8192          | ✅ Incluido | Gestionar mensajes (fijar, eliminar) |
-| **ManageChannels**         | 16            | ✅ Incluido | Crear y gestionar canales            |
-| **UseExternalEmojis**      | 262144        | ✅ Incluido | Usar emojis de otros servidores      |
-| **ReadMessageHistory**     | 65536         | ✅ Incluido | Leer historial de mensajes           |
-| **EmbedLinks**             | 16384         | ✅ Incluido | Insertar enlaces en embeds           |
-| **AttachFiles**            | 32768         | ✅ Incluido | Adjuntar archivos e imágenes         |
-| **ManageRoles**            | 268435456     | ✅ Incluido | Gestionar roles de rangos            |
-| **UseApplicationCommands** | 2147483648    | ✅ Incluido | Usar comandos slash y de contexto    |
+## Inicio rápido
 
-#### 🔢 **Verificación Matemática:**
+### Docker o Portainer
 
+La imagen se publica en GitHub Container Registry:
+
+```text
+ghcr.io/brauliorg12/apex-range:latest
 ```
-268560400 = 1024 + 2048 + 8192 + 16 + 16384 + 32768 + 65536 + 262144 + 268435456
+
+Ejemplo de stack con mounts persistentes:
+
+```yaml
+services:
+  apex-range:
+    image: ghcr.io/brauliorg12/apex-range:latest
+    container_name: apex-range
+    restart: unless-stopped
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      CLIENT_ID: ${CLIENT_ID}
+      MOZA_API_KEY: ${MOZA_API_KEY}
+      MOZA_URL: https://api.mozambiquehe.re
+      BOT_OWNER_ID: ${BOT_OWNER_ID}
+      HEALTH_PORT: "3001"
+      API_URL: http://localhost:3001/health
+      INIT_IMAGE_PATH: /app/assets/imgs/init.png
+    volumes:
+      - ${APEX_DATA_DIR}/db:/app/db
+      - ${APEX_DATA_DIR}/.bot-state:/app/.bot-state
+      - ${APEX_DATA_DIR}/logs:/app/logs
+      - ${APEX_DATA_DIR}/.apex-cache:/app/.apex-cache
+      - ${APEX_ASSETS_DIR}:/app/assets/imgs:ro
 ```
 
-**¡Cálculo perfecto! ✅**
+Definí `APEX_DATA_DIR` y `APEX_ASSETS_DIR` en el entorno del stack o reemplazalos por rutas de tu servidor. No es necesario usar las rutas de un despliegue ajeno.
 
-#### 📊 **Estado de la Configuración:**
+### Datos persistentes
 
-- 🟢 **Permisos Críticos**: **100% Cubiertos** (10/10)
-- 🟢 **Cobertura Total**: **100% de Compatibilidad**
-- 🟢 **Configuración Óptima**: Lista para usar
+Los datos del bot no viven en la imagen Docker. Los mounts recomendados son:
 
-#### 🚀 **Resultado Final:**
+| Ruta del contenedor | Contenido |
+| --- | --- |
+| `/app/db` | Jugadores y configuración por servidor. |
+| `/app/.bot-state` | Estado de paneles y referencias por guild. |
+| `/app/logs` | Logs de la aplicación y por servidor. |
+| `/app/.apex-cache` | Cache de respuestas de la API de Apex. |
+| `/app/assets/imgs` | Assets locales de solo lectura, como `init.png`. |
 
-🎉 \*\*Tu enlace de invitación está perfectamente configurado!
+Hacé backup de `db/` y `.bot-state/` antes de actualizar o mover el bot. Los mounts no se borran al recrear el contenedor, pero una actualización de imagen no reemplaza los datos del host.
 
-Los administradores solo necesitan hacer **un click** en el enlace y el bot tendrá automáticamente todos los permisos necesarios para funcionar de manera excepcional en cualquier servidor.
+### Imagen inicial del panel
 
-> 💡 **Consejo Pro**: Esta configuración pre-optimizada ahorra tiempo y evita problemas de permisos comunes.
+La imagen del panel de rangos se lee desde `INIT_IMAGE_PATH`:
 
----
+```env
+INIT_IMAGE_PATH=/app/assets/imgs/init.png
+```
 
-## 🚀 ¿Qué es Apex Legends Rank Bot?
+- Es opcional: si la variable no existe, está vacía o el archivo no está disponible, el panel se muestra sin imagen.
+- El archivo debe ser PNG y pesar menos de 8 MB.
+- El mount debe ser de solo lectura (`:ro`).
+- El bot envía la imagen como adjunto de Discord; no necesita una URL pública.
+- El archivo no se copia a la imagen Docker ni se versiona dentro de `dist/`. Para actualizarlo, reemplazalo en el host; el próximo refresco lo detecta.
+- Si usás el repositorio como origen del asset, `assets/imgs/init.png` puede montarse directamente.
 
-Un bot profesional para comunidades de Apex Legends que permite:
+### Variables de entorno
 
-- Asignar roles de rango mediante botones.
-- Mostrar estadísticas y cards visuales de jugadores.
-- Panel persistente y configurable.
-- Comandos slash y de contexto para gestión avanzada.
-- **Soporte completo para múltiples servidores** - funciona automáticamente en cualquier servidor donde se instale.
+| Variable | Obligatoria | Descripción |
+| --- | --- | --- |
+| `DISCORD_TOKEN` | Sí | Token del bot. Sin esto no inicia. |
+| `CLIENT_ID` | Para comandos | Application ID usado por `deploy-commands`. |
+| `MOZA_API_KEY` | Recomendada | API key de Mozambique. |
+| `MOZA_URL` | No | Default: `https://api.mozambiquehe.re`. |
+| `BOT_OWNER_ID` | No | ID con acceso a comandos administrativos. |
+| `HEALTH_PORT` | No | Puerto del health server. Default: `3001`. |
+| `API_URL` | No | URL interna del health check. |
+| `ADMIN_ALERT_WEBHOOK_URL` | No | Webhook para alertas de infraestructura. |
+| `INIT_IMAGE_PATH` | No | Ruta de `init.png` dentro del contenedor. Vacío = sin imagen. |
 
----
+Nunca commitees un `.env` real. Los secretos deben cargarse como variables de entorno del stack o del orquestador.
 
-## ✨ Características principales
+### Desarrollo local
 
-- Panel persistente y auto-actualizable.
-- **Auto-recuperación del panel `/apex-status`**: si el mensaje se elimina, el bot lo recrea, limpia paneles viejos duplicados y avisa solo al canal de control, con límites y backoff. Los errores del panel nunca se publican en canales públicos.
-- Cards generadas con @napi-rs/canvas para máxima calidad.
-- Filtros por rango y gestión desde el propio canal.
-- Comandos slash y menú contextual profesional.
-- Migración automática de datos antiguos.
-- Logs claros y monitoreo de estado/API.
-- **Soporte completo para múltiples servidores**.
-- **Detección automática de nuevos servidores**.
-- **Recuperación automática de configuración previa**.
-- **Sistema de lock para prevenir instancias duplicadas**.
-- **Archivos de datos separados por servidor**.
-- **Health server integrado con monitoreo avanzado**.
-- **Sistema de logs organizado por días** con estructura jerárquica automática.
-- **Presencia global con estadísticas combinadas de todos los servidores**.
-- **Soporte completo para múltiples plataformas de Apex Legends** (PC, PlayStation, Xbox, Nintendo Switch).
-- **Gestión inteligente de plataformas** con asignación automática de roles.
-- **Flujo inteligente de configuración**: Selección obligatoria de plataforma antes de rango para datos precisos.
-- **Consultas precisas de perfiles** basadas en la plataforma seleccionada.
-- **Integración completa con APIs oficiales** de Mozambique para datos precisos por plataforma.
-- **Configuración personalizable de roles excluidos**: Permite ocultar roles específicos en los cards de rangos para una visualización más limpia.
-- **Fechas adaptadas a la zona horaria del usuario**: Las fechas en embeds, listas de jugadores y actualizaciones se muestran automáticamente en la zona horaria de cada usuario de Discord.
-- **Sistema inteligente de mapeo de roles personalizados**: Soporta roles con nombres personalizados en tu servidor, con reconocimiento automático de variantes comunes (ej: "Predator" → "Apex Predator", "Switch" → "Nintendo Switch", "PS" → "PlayStation").
-- **Algoritmo de coincidencia fuzzy**: Utiliza distancia de Levenshtein para sugerir automáticamente mapeos de roles existentes durante el setup inicial.
+```bash
+git clone https://github.com/brauliorg12/apex-range.git
+cd apex-range
+npm ci
+cp .env.example .env
+```
 
----
+Completá `.env` con tus credenciales y, si querés la imagen local:
 
-## 📚 Documentación
+```env
+INIT_IMAGE_PATH=assets/imgs/init.png
+```
 
-Para información detallada sobre instalación, uso y configuración avanzada, consulta los siguientes archivos:
+Luego:
 
-- **[INSTALL.md](docs/INSTALL.md)** - Instalación y configuración básica
-- **[USAGE.md](docs/USAGE.md)** - Comandos y uso del bot
-- **[PERMISSIONS.md](docs/PERMISSIONS.md)** - Permisos requeridos y configuración de Discord
-- **[ROLE-MAPPING.md](docs/ROLE-MAPPING.md)** - Sistema inteligente de mapeo de roles personalizados
-- **[MULTI-SERVER.md](docs/MULTI-SERVER.md)** - Funcionalidades multi-servidor e inicialización
-- **[PLATFORMS.md](docs/PLATFORMS.md)** - Soporte para múltiples plataformas
-- **[API.md](docs/API.md)** - Panel de estado y detalles de API
-- **[LOGS.md](docs/LOGS.md)** - Sistema de logs organizado por días
-- **[ADVANCED.md](docs/ADVANCED.md)** - Configuraciones avanzadas, optimizaciones y producción
+```bash
+npm run deploy-commands
+npm run dev
+```
 
----
+Para compilar:
 
-## Tipografía utilizada
+```bash
+npm run build
+npm start
+```
 
-El bot utiliza la fuente **Montserrat Bold** para todos los cards visuales y textos generados con canvas, logrando un estilo moderno y profesional.
+## Comandos
 
-La fuente se encuentra en la carpeta:
+| Comando | Audiencia | Descripción |
+| --- | --- | --- |
+| `/setup-roles` | Staff | Configura roles, paneles y mensajes del servidor. |
+| `/apex-status` | Staff | Publica el panel de mapas en el canal actual. |
+| `/cleanup-state` | Mantenimiento | Limpia referencias inválidas de paneles. |
+| `/api-status` | Público | Muestra el estado de las APIs. |
+| `/total-jugadores` | Público | Muestra el total de jugadores registrados. |
+| `/cleanup-data` | Owner | Limpieza de datos y archivos obsoletos. |
+| Menú contextual | Público | Consulta el rango de un usuario. |
 
-`assets/fonts/Montserrat-Bold.ttf`
+La guía dentro del bot muestra solo las acciones disponibles para cada usuario. La sección de staff se oculta a quienes no tienen permisos de gestión.
 
----
+## Documentación
 
-## 🤝 Contribuir
+- [Instalación y configuración](docs/INSTALL.md)
+- [Uso y comandos](docs/USAGE.md)
+- [Permisos de Discord](docs/PERMISSIONS.md)
+- [Mapeo de roles](docs/ROLE-MAPPING.md)
+- [Sincronización de rangos](docs/RANK-SYNC.md)
+- [Plataformas](docs/PLATFORMS.md)
+- [Multi-servidor](docs/MULTI-SERVER.md)
+- [Logs](docs/LOGS.md)
+- [API y estado](docs/API.md)
+- [Configuración avanzada](docs/ADVANCED.md)
 
-1. Haz un fork y crea una rama para tu feature.
-2. Haz tus cambios y abre un Pull Request.
-3. Sigue la convención de commits: `Add:`, `Fix:`, `Update:`, etc.
+## Stack
 
----
+- TypeScript
+- discord.js
+- @napi-rs/canvas
+- Express para health checks
+- Docker y GitHub Actions
 
-## 📄 Licencia
+## Contribuir
 
-MIT License - Ver [LICENSE](LICENSE) para detalles.
+1. Creá una rama para tu cambio.
+2. Mantené el estilo y los tipos del proyecto.
+3. Abrí un Pull Request con una descripción clara.
 
----
+## Licencia
 
-## Términos y Privacidad
+MIT. Ver [LICENSE](LICENSE).
 
-El uso de este bot implica la aceptación de los [Términos y Condiciones](https://apex-range.cubanova.com/terms.html) y la [Política de Privacidad](https://apex-range.cubanova.com/privacy.html).
-
----
-
-## 👤 Autor
+## Autor
 
 **Braulio Rodriguez**
 
 - GitHub: [@brauliorg12](https://github.com/brauliorg12)
 - Discord: burlon23
-- Email: cubanovainfo@gmail.com
-- Company: CubaNova
+- CubaNova
 
 ---
 
-¿Te gusta este bot?  
-⭐ ¡Dale una estrella en GitHub! ⭐
-
-[Reportar Bug](https://github.com/brauliorg12/discord-apex/issues) • [Solicitar Feature](https://github.com/brauliorg12/discord-apex/issues) • [Discusiones](https://github.com/brauliorg12/discord-apex/discussions)
+Si el bot te resulta útil, podés darle una estrella al repositorio.

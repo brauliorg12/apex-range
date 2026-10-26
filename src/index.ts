@@ -7,6 +7,8 @@ import { loadCommands } from './command-loader';
 import { registerInteractionHandler } from './interaction-handler';
 import { initBot } from './init-bot';
 import { startHealthServer } from './health-server';
+import { getActiveRanks } from './models/rank-catalog';
+import { logApp } from './utils/logger';
 
 const LOCK_FILE = path.join(__dirname, '../.bot-lock');
 
@@ -24,6 +26,10 @@ async function checkDuplicateInstance(): Promise<boolean> {
       const age = Date.now() - timestamp;
       if (age < 300000) {
         // 5 minutos
+        await logApp(
+          `[App] Ya hay una instancia del bot corriendo (PID: ${pid}). ` +
+            'Saliendo sin iniciar otra.'
+        ).catch(() => {});
         console.error(
           `[ERROR] Ya hay una instancia del bot corriendo (PID: ${pid}). Saliendo...`
         );
@@ -95,13 +101,23 @@ const client = new Client({
   // Crear lock file
   await createLockFile();
 
+  const version = process.env.npm_package_version || 'unknown';
+  await logApp(`[App] Iniciando Apex Range v${version}`).catch(() => {});
+
+  const activeRanks = getActiveRanks();
+  await logApp(
+    `[App] Catálogo de rangos activo: ${activeRanks.length} rangos`
+  ).catch(() => {});
+
   // Cleanup al salir
   process.on('exit', cleanupLockFile);
   process.on('SIGINT', async () => {
+    await logApp('[App] SIGINT recibido; cerrando bot.').catch(() => {});
     await cleanupLockFile();
     process.exit(0);
   });
   process.on('SIGTERM', async () => {
+    await logApp('[App] SIGTERM recibido; cerrando bot.').catch(() => {});
     await cleanupLockFile();
     process.exit(0);
   });

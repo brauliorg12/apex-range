@@ -1,5 +1,6 @@
 import { Client, Guild } from 'discord.js';
-import { readRolesState } from '../utils/state-manager';
+import { readRolesStateStrict } from '../utils/state-manager';
+import { notifyCorruptStateAlert } from '../utils/admin-alert';
 import { updateRoleCountMessage } from '../utils/update-status-message';
 import { updateBotPresence } from '../utils/presence-helper';
 import { getGlobalApiStatus } from '../utils/global-api-status';
@@ -14,10 +15,15 @@ import {
 } from '../utils/global-scheduler';
 import { enqueueGuildUpdate } from '../utils/guild-update-queue';
 import { synchronizePlayersWithRoles } from '../utils/synchronize-players';
+import { enqueueRankSync } from '../services/rank-sync/rank-sync';
 
 /**
  * Inicializa un guild existente con configuración previa.
  * Configura actualizaciones periódicas, sincronización de datos y mensajes.
+ *
+ * Si `.bot-state` no existe, el guild se omite sin alerta. Si está corrupto o
+ * es ilegible, alerta al administrador de la app y no continúa como si no
+ * hubiera configuración.
  *
  * @param client - El cliente de Discord.
  * @param guild - El guild a inicializar.
@@ -26,8 +32,20 @@ export async function initializeExistingGuild(
   client: Client,
   guild: Guild
 ): Promise<void> {
-  const rolesState = await readRolesState(guild.id);
-  if (!rolesState?.guildId) return;
+  const stateResult = await readRolesStateStrict(guild.id);
+  if (stateResult.status === 'missing') return;
+
+  if (stateResult.status !== 'ok') {
+    await notifyCorruptStateAlert({
+      guildId: guild.id,
+      guildName: guild.name,
+      errorType: stateResult.status,
+    });
+    return;
+  }
+
+  const rolesState = stateResult.state;
+  if (!rolesState.guildId) return;
 
   // Obtener información del canal
   let channelInfo = '';
@@ -56,13 +74,14 @@ export async function initializeExistingGuild(
     enqueueGuildUpdate(
       guild,
       async () => {
-        await synchronizePlayersWithRoles(guild);
+        await synchronizePlayersAndEnqueueRankSync(guild, 'startup');
         await updateRoleCountMessage(guild);
         await updateBotPresence(client);
         logApp(
           `Actualización de roles y presencia ejecutada en guild ${guild.name} (${guild.id})`
         );
       },
+      'startup-refresh',
       1
     ); // Prioridad normal
   });
@@ -75,6 +94,45 @@ export async function initializeExistingGuild(
   // Verificar estado de API al inicio
   await checkApiHealth();
   logApiStatus();
+}
+
+/**
+ * Sincroniza los jugadores del guild y encola el rank sync cuando esa
+ * sincronización terminó.
+ *
+ * El rank sync se encola siempre después de que la sincronización de
+ * jugadores se resuelva, tanto en éxito como en fallo. Si falla, se encola
+ * con el error para que omita la reconstrucción del panel y notifique el
+ * problema en lugar de interpretar el fallo como un guild sin jugadores.
+ *
+ * No se espera al rank sync: el arranque no queda bloqueado y el rank sync
+ * nunca espera a la sincronización de jugadores, por lo que no hay riesgo de
+ * deadlock.
+ *
+ * @param guild - Guild cuya sincronización de jugadores se ejecuta.
+ * @param reason - Motivo que se reporta en el rank sync.
+ * @returns Una promesa que se resuelve cuando la sincronización de jugadores
+ *   terminó y el rank sync quedó encolado.
+ * @throws {Error} El error original de `synchronizePlayersWithRoles` si la
+ *   sincronización de jugadores falla.
+ */
+export async function synchronizePlayersAndEnqueueRankSync(
+  guild: Guild,
+  reason: string
+): Promise<void> {
+  try {
+    await synchronizePlayersWithRoles(guild);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logApp(
+      `[guild-sync] Sincronización de jugadores falló en guild ${guild.name} ` +
+        `(${guild.id}): ${message}`
+    );
+    enqueueRankSync(guild, { reason, playerSyncError: message });
+    throw error;
+  }
+
+  enqueueRankSync(guild, { reason });
 }
 
 /**

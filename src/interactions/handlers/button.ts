@@ -16,9 +16,13 @@ import { handleButtonInteraction } from '../../button-interactions';
 import { handlePlatformAssignment } from '../rank-management';
 
 /**
- * Maneja interacciones de botones
- * @param interaction La interacción del botón
- * @returns Promise<void>
+ * Maneja interacciones de botones.
+ *
+ * Las páginas efímeras de rango se reconocen antes de generar la card y el
+ * trabajo pesado se serializa con el resto de la aplicación.
+ *
+ * @param interaction - La interacción del botón.
+ * @returns Una promesa que se resuelve cuando la interacción fue procesada.
  */
 export async function handleButton(interaction: ButtonInteraction) {
   const isSeeMoreButton = /^rank_\w+_vermas$/.test(interaction.customId);

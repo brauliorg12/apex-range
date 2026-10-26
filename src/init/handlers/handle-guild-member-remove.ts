@@ -25,6 +25,7 @@ export async function handleGuildMemberRemove(
       await updateRoleCountMessage(member.guild);
       await updateBotPresence(client);
     },
+    'member-remove-refresh',
     2
   ); // Alta prioridad
 

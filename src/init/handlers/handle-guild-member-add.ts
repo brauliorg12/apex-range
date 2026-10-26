@@ -25,6 +25,7 @@ export async function handleGuildMemberAdd(
       await updateRoleCountMessage(member.guild);
       await updateBotPresence(client);
     },
+    'member-add-refresh',
     2
   ); // Alta prioridad para eventos de miembros
 

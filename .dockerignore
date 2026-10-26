@@ -7,3 +7,4 @@ dist/
 .bot-state
 *.log
 website/
+resources/

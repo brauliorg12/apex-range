@@ -1,6 +1,8 @@
 import { Guild } from 'discord.js';
-import { getPlayers, savePlayers } from './players-manager';
-import { PlayerData, PlayerRecord } from '../interfaces/player';
+import { getPlayers } from './players-manager';
+import { mutatePlayers, readPlayersStrict } from './state-manager';
+import type { PlayersReadResult } from './state-manager';
+import type { PlayerData, PlayerRecord } from '../interfaces/player';
 
 /**
  * Obtiene todos los jugadores registrados para un servidor específico.
@@ -12,15 +14,31 @@ export async function getPlayerData(guild: Guild): Promise<PlayerData> {
 }
 
 /**
+ * Obtiene un snapshot estricto de los jugadores registrados de un servidor,
+ * distinguiendo archivo ausente, JSON inválido y error de IO.
+ *
+ * @param guild - El servidor de Discord.
+ * @returns El resultado tipado de la lectura.
+ * @throws {Error} Si el guildId es inválido o no se puede preparar el directorio.
+ */
+export async function getPlayerDataSnapshot(
+  guild: Guild
+): Promise<PlayersReadResult> {
+  return readPlayersStrict(guild.id);
+}
+
+/**
  * Actualiza o crea el registro de un jugador en la base de datos del servidor.
- * Si el jugador ya existe, actualiza su fecha de asignación y opcionalmente su rango y plataforma.
- * Si no existe, crea un nuevo registro con todos los campos proporcionados.
+ * Si el jugador ya existe, actualiza su fecha de asignación y opcionalmente su
+ * rango y plataforma. Si no existe, crea un nuevo registro.
  *
  * @param guildId - ID del servidor de Discord
  * @param userId - ID del usuario de Discord
- * @param rank - Nombre del rango asignado (opcional, si no se proporciona mantiene el existente)
+ * @param rank - shortId del rango; `''` limpia el rango y `undefined` conserva
+ *   el existente
  * @param platform - Plataforma del jugador (por defecto 'PC')
  * @returns Promise que se resuelve cuando se completa la actualización
+ * @throws {Error} Si el archivo de jugadores no es legible o falla la escritura
  */
 export async function updatePlayerRankDate(
   guildId: string,
@@ -28,18 +46,19 @@ export async function updatePlayerRankDate(
   rank?: string,
   platform: string = 'PC'
 ): Promise<void> {
-  const data = await getPlayers(guildId);
-  const idx = data.findIndex((r: PlayerRecord) => r.userId === userId);
-  const now = new Date().toISOString();
+  await mutatePlayers(guildId, (players) => {
+    const player = players.find((record) => record.userId === userId);
+    const now = new Date().toISOString();
 
-  if (idx >= 0) {
-    data[idx].assignedAt = now;
-    if (rank) data[idx].rank = rank;
-    data[idx].platform = platform;
-  } else {
-    data.push({ userId, assignedAt: now, rank: rank || '', platform });
-  }
-  await savePlayers(guildId, data);
+    if (player) {
+      player.assignedAt = now;
+      if (rank !== undefined) player.rank = rank;
+      player.platform = platform;
+      return;
+    }
+
+    players.push({ userId, assignedAt: now, rank: rank || '', platform });
+  });
 }
 
 /**
@@ -64,22 +83,28 @@ export async function getPlayerPlatform(
  * @param userId - ID del usuario de Discord
  * @param platform - Nueva plataforma del jugador
  * @returns Promise que se resuelve cuando se completa la actualización
+ * @throws {Error} Si el archivo de jugadores no es legible o falla la escritura
  */
 export async function updatePlayerPlatform(
   guildId: string,
   userId: string,
   platform: string
 ): Promise<void> {
-  const data = await getPlayers(guildId);
-  const idx = data.findIndex((r: PlayerRecord) => r.userId === userId);
+  await mutatePlayers(guildId, (players) => {
+    const player = players.find((record) => record.userId === userId);
 
-  if (idx >= 0) {
-    data[idx].platform = platform;
-    await savePlayers(guildId, data);
-  } else {
-    // Si no existe registro, crear uno nuevo con fecha actual
-    await updatePlayerRankDate(guildId, userId, '', platform);
-  }
+    if (player) {
+      player.platform = platform;
+      return;
+    }
+
+    players.push({
+      userId,
+      assignedAt: new Date().toISOString(),
+      rank: '',
+      platform,
+    });
+  });
 }
 
 /**
@@ -87,16 +112,18 @@ export async function updatePlayerPlatform(
  * @param guildId - ID del servidor de Discord
  * @param userId - ID del usuario de Discord cuyo registro será eliminado
  * @returns Promise que se resuelve cuando se completa la eliminación
+ * @throws {Error} Si el archivo de jugadores no es legible o falla la escritura
  */
 export async function removePlayerRankDate(
   guildId: string,
   userId: string
 ): Promise<void> {
-  const data = await getPlayers(guildId);
-  const next = data.filter((r: PlayerRecord) => r.userId !== userId);
-  if (next.length !== data.length) {
-    await savePlayers(guildId, next);
-  }
+  await mutatePlayers(guildId, (players) => {
+    const idx = players.findIndex((record) => record.userId === userId);
+    if (idx >= 0) {
+      players.splice(idx, 1);
+    }
+  });
 }
 
 /**
@@ -104,16 +131,16 @@ export async function removePlayerRankDate(
  * @param guildId - ID del servidor de Discord
  * @param userId - ID del usuario de Discord
  * @returns Promise que se resuelve cuando se completa la eliminación
+ * @throws {Error} Si el archivo de jugadores no es legible o falla la escritura
  */
 export async function removePlayerPlatform(
   guildId: string,
   userId: string
 ): Promise<void> {
-  const data = await getPlayers(guildId);
-  const idx = data.findIndex((r: PlayerRecord) => r.userId === userId);
-
-  if (idx >= 0) {
-    data[idx].platform = '';
-    await savePlayers(guildId, data);
-  }
+  await mutatePlayers(guildId, (players) => {
+    const player = players.find((record) => record.userId === userId);
+    if (player) {
+      player.platform = '';
+    }
+  });
 }

@@ -45,7 +45,8 @@ export function registerInteractionHandler(client: Client) {
     } catch (error) {
       if (isUnknownInteractionError(error)) {
         await logApp(
-          '[Interacción] Interacción expirada o ya respondida; se ignora.'
+          `[Interacción] Interacción expirada o ya respondida; se ignora ` +
+            `(customId=${interaction.isButton() ? interaction.customId : 'n/a'}).`
         ).catch(() => {});
         return;
       }

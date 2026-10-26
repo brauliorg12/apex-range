@@ -12,6 +12,7 @@ import {
 } from '../utils/button-helper';
 import { getRankEmoji } from '../utils/emoji-helper';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { pickHighestRank } from '../helpers/rank-priority';
 import { getPlayerData } from '../utils/player-data-manager';
 import { PlayerRecord } from '../interfaces/player';
 import {
@@ -37,7 +38,7 @@ export const data = new ContextMenuCommandBuilder()
  *
  * - Busca el miembro objetivo en el servidor.
  * - Si el usuario es un bot, muestra un mensaje especial.
- * - Si el usuario tiene un rol de rango de Apex, muestra su rango y botones de gestión.
+ * - Si el usuario tiene roles de rango, muestra el de mayor tier y botones de gestión.
  * - Si no tiene rango, muestra botones para seleccionar rango (solo si es el propio usuario).
  * - El mensaje es efímero y solo visible para el usuario que ejecuta el comando.
  * - Maneja errores mostrando mensajes claros al usuario.
@@ -59,11 +60,9 @@ export async function execute(interaction: UserContextMenuCommandInteraction) {
       return;
     }
 
-    // Busca si tiene algún rol de rango (usar roles mapeados)
+    // Resuelve el rango canónico de mayor tier (roles mapeados)
     const ranks = getApexRanksForGuild(interaction.guild.id, interaction.guild);
-    const userRank = ranks.find((rank) =>
-      member.roles.cache.some((role) => role.name === rank.roleName)
-    );
+    const userRank = pickHighestRank(ranks, member.roles.cache.values());
 
     // Obtener datos del jugador para mostrar plataforma
     const playerData = await getPlayerData(interaction.guild);

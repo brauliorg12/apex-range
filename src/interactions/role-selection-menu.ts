@@ -7,6 +7,7 @@ import {
   ButtonInteraction,
 } from 'discord.js';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getAllRanks } from '../models/rank-catalog';
 import { COUNTRY_NAME_TO_ISO } from '../utils/country-flag';
 import { APEX_PLATFORMS } from '../models/constants';
 import { getServerLogger } from '../utils/server-logger';
@@ -26,12 +27,18 @@ export async function createRoleSelectionMenu(
 
   // Obtener todos los roles y filtrar los permitidos (sin excluir los ya excluidos)
   const allRoles = guild.roles.cache.map((r: any) => r);
-  const ranks = getApexRanksForGuild(guild.id, guild);
+  const activeRankRoleNames = new Set(
+    getApexRanksForGuild(guild.id, guild).map((rank) => rank.roleName)
+  );
+  const allRankRoleNames = new Set(
+    getAllRanks().map((rank) => rank.roleName)
+  );
   const countryNames = Object.keys(COUNTRY_NAME_TO_ISO);
   const filteredRoles = allRoles.filter(
     (role: any) =>
       role.name !== '@everyone' &&
-      !ranks.some((rank) => rank.roleName === role.name) &&
+      !activeRankRoleNames.has(role.name) &&
+      !allRankRoleNames.has(role.name) &&
       !APEX_PLATFORMS.some((platform) => platform.roleName === role.name) &&
       !countryNames.includes(role.name.toUpperCase())
   );

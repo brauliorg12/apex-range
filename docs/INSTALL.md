@@ -7,8 +7,8 @@ Esta guía proporciona instrucciones detalladas para instalar y configurar Apex 
 ### 1. Clona el repositorio
 
 ```bash
-git clone https://github.com/brauliorg12/discord-apex.git
-cd discord-apex
+git clone https://github.com/brauliorg12/apex-range.git
+cd apex-range
 ```
 
 ### 2. Instala dependencias
@@ -30,13 +30,16 @@ CLIENT_ID=TU_CLIENT_ID
 API_URL=http://localhost:3001/health
 HEALTH_PORT=3001
 
-# APIs Externas
-TRACKER_API=TU_API_KEY_DE_APEX_TRACKER
+# API externa
 MOZA_API_KEY=TU_API_KEY_DE_MOZAMBIQUE
 MOZA_URL=https://api.mozambiquehe.re
 
-# Configuración Global
-EXCLUDED_ROLES=Admin,Apex,Server Booster,Moderador,Embajador,Illuminati
+# Alertas de infraestructura (opcional)
+ADMIN_ALERT_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Imagen inicial del panel (opcional; vacío = sin imagen)
+# En Docker: /app/assets/imgs/init.png
+INIT_IMAGE_PATH=
 ```
 
 ### 4. Compila el proyecto
@@ -64,8 +67,8 @@ npm run dev
 ### 1. Clona el repositorio
 
 ```bash
-git clone https://github.com/brauliorg12/discord-apex.git
-cd discord-apex
+git clone https://github.com/brauliorg12/apex-range.git
+cd apex-range
 ```
 
 ### 2. Instala dependencias
@@ -87,13 +90,16 @@ CLIENT_ID=TU_CLIENT_ID
 API_URL=http://localhost:3001/health
 HEALTH_PORT=3001
 
-# APIs Externas
-TRACKER_API=TU_API_KEY_DE_APEX_TRACKER
+# API externa
 MOZA_API_KEY=TU_API_KEY_DE_MOZAMBIQUE
 MOZA_URL=https://api.mozambiquehe.re
 
-# Configuración Global
-EXCLUDED_ROLES=Admin,Apex,Server Booster,Moderador,Embajador,Illuminati
+# Alertas de infraestructura (opcional)
+ADMIN_ALERT_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Imagen inicial del panel (opcional; vacío = sin imagen)
+# En Docker: /app/assets/imgs/init.png
+INIT_IMAGE_PATH=
 ```
 
 ### Variables de Entorno Detalladas
@@ -104,13 +110,54 @@ EXCLUDED_ROLES=Admin,Apex,Server Booster,Moderador,Embajador,Illuminati
 | `CLIENT_ID`      | ID de la aplicación Discord  | ✅        | `XXXXXXXXX`                    |
 | `API_URL`        | URL del health check interno | ❌        | `http://localhost:3001/health` |
 | `HEALTH_PORT`    | Puerto del servidor de salud | ❌        | `3001`                         |
-| `TRACKER_API`    | API Key de Apex Tracker      | ❌        | `XXXXXXXXX`                    |
 | `MOZA_API_KEY`   | API Key de Mozambique        | ❌        | `XXXXXXXXX`                    |
 | `MOZA_URL`       | URL de la API de Mozambique  | ❌        | `https://api.mozambiquehe.re`  |
-| `EXCLUDED_ROLES` | Roles a excluir en listados  | ❌        | `Admin,Apex,Server Booster`    |
+| `ADMIN_ALERT_WEBHOOK_URL` | Webhook para alertas de infraestructura | ❌ | `https://discord.com/api/webhooks/...` |
 | `BOT_OWNER_ID`   | ID del owner del bot         | ❌        | `123456789012345678`           |
+| `INIT_IMAGE_PATH` | Ruta de `init.png` dentro del contenedor o del proyecto. Vacío = sin imagen | ❌ | `/app/assets/imgs/init.png` |
 
 > **Nota**: Las variables específicas de servidor (como IDs de canales) ya no son necesarias ya que el bot las guarda automáticamente por servidor.
+
+### Imagen inicial del panel
+
+`INIT_IMAGE_PATH` es opcional. Si no se define, el panel de rangos se muestra
+sin imagen. El archivo debe ser PNG, pesar menos de 8 MB y estar disponible en
+la ruta configurada.
+
+En Docker o Portainer se monta la carpeta de assets como solo lectura:
+
+```yaml
+environment:
+  INIT_IMAGE_PATH: /app/assets/imgs/init.png
+
+volumes:
+  - ${APEX_ASSETS_DIR}:/app/assets/imgs:ro
+```
+
+El bot lee la imagen desde el mount y la envía como adjunto de Discord. No
+necesita una URL pública y la imagen no se copia a la imagen Docker. Si el
+archivo se reemplaza en el host, el próximo refresco lo detecta sin reconstruir
+el contenedor.
+
+Para desarrollo local alcanza con:
+
+```env
+INIT_IMAGE_PATH=assets/imgs/init.png
+```
+
+En esta versión `ENABLE_NEW_RANKS` está fijo en `false` por código: Esmeralda y
+Gran maestro no se publican, `rookie` se muestra como Rookie y no se crean esos
+roles. No se configura por variable de entorno. No borra roles ni jugadores y
+respeta los mapeos de `server-config`. `ENABLE_NEW_RANKS` es temporal y se
+habilita o elimina mediante una versión autorizada.
+
+`ADMIN_ALERT_WEBHOOK_URL` es opcional. Si está definido, el bot envía allí un
+resumen de alertas de infraestructura, como `.bot-state` corrupto o ilegible
+detectado en el arranque, la reincorporación, un evento de rol o el rank sync.
+No se envían tokens, stack traces ni datos de jugadores. Sin esta variable, la
+alerta queda solo en el log crítico. Un fallo de escritura de `.bot-state` se
+registra y se propaga, pero no genera esta alerta en esta versión. Ver
+[RANK-SYNC.md](RANK-SYNC.md#4-notificación).
 
 ### 4. Compila el proyecto
 
@@ -149,12 +196,15 @@ Si ya tienes roles de rangos con nombres personalizados:
 
 **Nombres estándar soportados:**
 
+- Hierro / Iron / Rookie / Principiante
 - Bronce / Bronze
 - Plata / Silver
 - Oro / Gold
 - Platino / Platinum
+- Esmeralda / Esmerald / Emerald (solo con `ENABLE_NEW_RANKS=true`)
 - Diamante / Diamond
 - Maestro / Master
+- Gran maestro / Grandmaster (solo con `ENABLE_NEW_RANKS=true`)
 - Apex Predator / Predator / Pred
 
 **Plataformas soportadas:**
@@ -165,6 +215,14 @@ Si ya tienes roles de rangos con nombres personalizados:
 - Nintendo Switch / Switch / Nintendo
 
 > **💡 Nota**: El bot reconoce automáticamente estas variantes sin necesidad de configuración adicional. Si tus roles tienen nombres diferentes, el sistema de coincidencia fuzzy intentará mapearlos automáticamente usando algoritmo de Levenshtein.
+
+Si preferís crear los roles manualmente porque el bot no tiene **Gestionar
+roles**, usá el nombre exacto o un alias reconocido, ubicalos debajo del rol más
+alto del bot y en orden de `tier` (Predator arriba, Hierro/Rookie abajo). El permiso
+sigue siendo necesario para que el autoservicio asigne o cambie rangos. El sync
+solo reordena los roles cuando crea al menos uno.
+
+Para el flujo automático de creación de roles y reconstrucción del panel, consulta **[RANK-SYNC.md](RANK-SYNC.md)**.
 
 ### Emojis personalizados
 
@@ -184,10 +242,15 @@ El bot incluye **detección automática mejorada de permisos faltantes** con men
 **Permisos requeridos:**
 
 - Gestionar roles
+- Gestionar canales
 - Enviar mensajes
 - Leer historial de mensajes
 - Usar emojis externos
 - Gestionar mensajes
+- Ver canales
+- Insertar enlaces
+- Adjuntar archivos
+- Usar comandos de aplicación
 
 Para información detallada sobre permisos, consulta **[PERMISSIONS.md](PERMISSIONS.md)**.
 
@@ -241,9 +304,9 @@ export async function initBot(client: Client): Promise<void> {
 
 #### `guild-events.ts` - Eventos de Miembros y Presencia
 
-- **Eventos Monitoreados**: `GuildMemberAdd`, `GuildMemberRemove`, `PresenceUpdate`
+- **Eventos Monitoreados**: `GuildMemberAdd`, `GuildMemberRemove`, `GuildMemberUpdate`, `PresenceUpdate` y eventos de rol
 - **Actualizaciones Prioritarias**: Sistema de cola para evitar sobrecarga
-- **Filtros Inteligentes**: Solo procesa cambios relevantes
+- **Filtros Inteligentes**: Solo procesa cambios relevantes; los cards se refrescan por rango afectado y las estadísticas/presencia global quedan al scheduler
 
 #### `new-guild-handler.ts` - Manejo de Nuevos Servidores
 
@@ -293,10 +356,13 @@ export async function initBot(client: Client): Promise<void> {
 
 #### Durante Caídas de Red
 
-- **Reintentos Automáticos**: Hasta 3 intentos por operación
-- **Cache Inteligente**: Uso de datos anteriores si API falla
-- **Notificaciones**: Alertas al canal de control o al owner sobre problemas
+- **Reintentos de API**: La consulta de estado de Apex usa hasta 3 intentos.
+  Otras operaciones no agregan reintentos propios.
+- **Cache Inteligente**: Uso de datos anteriores si la API falla.
+- **Notificaciones**: Alertas al canal de control o al owner para avisos
+  accionables; las alertas de infraestructura van al admin de la app.
 - **Recuperación Transparente**: Continúa funcionando con datos cacheados
+  cuando el flujo lo permite.
 
 #### Durante Mantenimiento de APIs
 
@@ -322,10 +388,12 @@ export async function initBot(client: Client): Promise<void> {
 
 ### Monitoreo de Inicialización
 
-- **Logs Detallados**: Seguimiento de cada paso del proceso
-- **Métricas de Rendimiento**: Tiempo de inicialización por componente
-- **Health Checks**: Endpoints para verificar estado de inicialización
-- **Alertas Automáticas**: Notificaciones si la inicialización falla
+- **Logs Detallados**: Seguimiento de cada paso del proceso.
+- **Métricas de Rendimiento**: El arranque registra tiempos de algunas
+  operaciones en los logs.
+- **Health Checks**: `/health`, `/instance` y `/api-status`.
+- **Fallos de inicialización**: Se registran en logs; no hay una alerta
+  automática garantizada para todos los casos.
 
 ## � **Reinicios del Bot y Recuperación de Estado**
 
@@ -341,19 +409,27 @@ El bot está diseñado para manejar reinicios del VPS/bot de manera robusta, man
   - Mensajes fijados y embeds
   - Lista de jugadores registrados
   - Tareas programadas del scheduler
-- **Tiempo de Recuperación**: Menos de 30 segundos para servidores típicos
+- **Tiempo de Recuperación**: No hay una métrica medida; depende de la cantidad
+  de guilds, la latencia de Discord y el estado de las APIs.
 
 #### 2. Caída Inesperada del Sistema
 
-- **Detección de Lock Obsoleto**: Sistema inteligente que identifica procesos muertos
-- **Limpieza Automática**: Elimina locks de instancias anteriores
-- **Restauración de Funcionalidad**: Todas las funciones se recuperan automáticamente
+- **Detección de Lock Obsoleto**: El arranque identifica procesos muertos y
+  limpia el lock.
+- **Limpieza Automática**: Elimina locks de instancias anteriores cuando el
+  proceso ya no existe.
+- **Restauración de Funcionalidad**: Se reintenta la inicialización de guilds;
+  no hay garantía de recuperación total si Discord o los archivos están
+  corruptos.
 
 #### 3. Reinicio por Actualización
 
-- **Zero Downtime**: El bot puede reiniciarse sin afectar servidores
-- **Migración de Datos**: Archivos JSON se actualizan automáticamente
-- **Compatibilidad**: Versiones nuevas mantienen compatibilidad con datos antiguos
+- **Corte de Servicio**: El reinicio implica una interrupción breve; no se
+  garantiza zero downtime.
+- **Migración de Datos**: Los archivos JSON existentes se siguen leyendo; no se
+  reescriben automáticamente.
+- **Compatibilidad**: Las versiones nuevas mantienen compatibilidad con los
+  formatos de datos documentados.
 
 ### Proceso de Recuperación Detallado
 
@@ -391,14 +467,19 @@ async function checkDuplicateInstance(): Promise<boolean> {
 #### Fase 2: Restauración de Configuración
 
 - **Lectura de Archivos JSON**: Carga configuración por servidor desde `db/` y `.bot-state/`
-- **Validación de Datos**: Verifica integridad de archivos y consistencia
-- **Sincronización con Discord**: Confirma que canales y mensajes aún existen
+- **Validación de Datos**: Distingue archivo ausente, JSON inválido y error de
+  lectura, y valida la forma de los campos conocidos de `.bot-state`. No hace una
+  validación semántica completa de todos los datos.
+- **Sincronización con Discord**: Valida canales y roles al inicializar. Los
+  mensajes del panel no se validan automáticamente; para referencias inválidas
+  usá `/cleanup-state`.
 
 #### Fase 3: Reconexión a APIs
 
-- **Reintentos Inteligentes**: Hasta 3 intentos por API con backoff exponencial
-- **Cache como Fallback**: Uso de datos anteriores si APIs fallan inicialmente
-- **Monitoreo Continuo**: Verificación periódica del estado de APIs
+- **Reintentos de API**: La consulta de estado de Apex usa hasta 3 intentos con
+  espera fija de 1.2 segundos.
+- **Cache como Fallback**: Uso de datos anteriores si la API falla.
+- **Monitoreo Continuo**: Verificación periódica del estado de la API.
 
 #### Fase 4: Restauración de Funcionalidad
 
@@ -406,7 +487,7 @@ async function checkDuplicateInstance(): Promise<boolean> {
 - **Event Listeners**: Re-registra todos los handlers de eventos
 - **Presence Global**: Actualiza estadísticas combinadas de todos los servidores
 
-### Sistema de Backup Automático
+### Conservación de archivos
 
 #### Archivos Críticos
 
@@ -415,19 +496,30 @@ async function checkDuplicateInstance(): Promise<boolean> {
 - **`db/server-config-{guildId}.json`**: Configuración de roles personalizados
 - **`.bot-lock`**: Control de instancias (temporal)
 
-#### Estrategia de Backup
+#### Estrategia
 
-- **Conservación por Defecto**: Todos los archivos se mantienen al salir de servidores
-- **Backup Automático**: Los archivos sirven como backup natural
-- **Recuperación Manual**: Comando `/cleanup-data` para limpieza opcional
+- **Conservación por Defecto**: Todos los archivos se mantienen al salir de servidores.
+- **Sin copias automáticas**: El bot no genera backups; los archivos originales
+  deben respaldarse por fuera del proceso.
+- **Recuperación Manual**: Comando `/cleanup-data` para limpieza opcional.
+
+Las escrituras de `.bot-state` son atómicas (temporal + `rename`) y se serializan
+por guild; las actualizaciones parciales preservan `apexStatus`, `botControl`,
+firmas y journal. El panel usa un journal de reconstrucción para no borrar
+mensajes activos y limpiar los retirados en el próximo sync. Ver
+[RANK-SYNC.md](RANK-SYNC.md#persistencia-de-bot-state) y
+[RANK-SYNC.md](RANK-SYNC.md#3-reconstrucción-del-panel).
 
 ### Monitoreo Durante Reinicios
 
 #### Health Checks
 
-- **`GET /health`**: Verificación básica de conectividad
-- **`GET /instance`**: Información detallada de la instancia actual
-- **`GET /api-status`**: Estado de APIs externas
+- **`GET /health`**: Verificación básica de conectividad. No cambia de estado
+  por problemas de `.bot-state`.
+- **`GET /instance`**: `uptime`, `version`, `timestamp` y `lastAdminAlert` con
+  solo `emittedAt`, `errorType` y `webhookDelivered`. No expone guild ID/nombre,
+  archivos, tokens, stack traces ni datos de jugadores.
+- **`GET /api-status`**: Estado de APIs externas.
 
 #### Logs de Recuperación
 
@@ -440,9 +532,15 @@ async function checkDuplicateInstance(): Promise<boolean> {
 
 #### Alertas de Problemas
 
-- **Notificaciones**: Alertas al canal de control o al owner si hay problemas durante la recuperación
-- **Fallback Automático**: El bot continúa funcionando con configuración mínima si hay errores
-- **Logging Detallado**: Todos los pasos se registran para debugging
+- **Notificaciones**: Los avisos accionables van al canal de control o al owner.
+  Las alertas de infraestructura, como `.bot-state` corrupto detectado en el
+  arranque, la reincorporación, un evento de rol o el rank sync, van al admin de
+  la app y nunca al owner del guild. Un fallo de escritura de `.bot-state` se
+  registra y se propaga, pero no genera alerta automática en esta versión.
+- **Fallback Automático**: El bot continúa funcionando con la configuración
+  disponible si hay errores, salvo que el estado del guild sea inválido.
+- **Logging Detallado**: Los pasos de inicialización y los errores se registran
+  para diagnóstico.
 
 ### Mejores Prácticas para Producción
 
@@ -500,8 +598,9 @@ WantedBy=multi-user.target
 
 #### "Mensajes no se actualizan"
 
-- **Causa**: IDs de mensajes inválidos después de reinicio
-- **Solución**: Ejecutar `/setup-roles` para recrear paneles
+- **Causa**: IDs de mensajes inválidos después de reinicio o mensajes borrados.
+- **Solución**: Ejecutar `/cleanup-state` para limpiar referencias inválidas y
+  esperar el próximo sync, o `/setup-roles` para recrear el panel.
 
 ### Métricas de Rendimiento
 
@@ -511,3 +610,6 @@ WantedBy=multi-user.target
 | Memoria al Inicio     | < 100MB      | > 200MB          |
 | CPU al Inicio         | < 20%        | > 50%            |
 | Tasa de Éxito de APIs | > 95%        | < 90%            |
+
+> Estos valores son orientativos y no fueron medidos en esta iteración. Ajustalos
+> según el tamaño del servidor y el entorno de despliegue.

@@ -1,5 +1,6 @@
 import { Role, Guild } from 'discord.js';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getAllRanks } from '../models/rank-catalog';
 import { loadServerConfig, saveServerConfig } from './server-config';
 import { APEX_PLATFORMS } from '../models/constants';
 
@@ -43,11 +44,15 @@ export function setExcludedRolesForGuild(
  */
 export function filterAllowedRoles(roles: Role[], guild: Guild): Role[] {
   const excluded = getExcludedRolesForGuild(guild.id);
-  const ranks = getApexRanksForGuild(guild.id, guild);
+  const activeRanks = getApexRanksForGuild(guild.id, guild);
+  const allRankRoleNames = new Set(
+    getAllRanks().map((rank) => rank.roleName)
+  );
   return roles.filter(
     (role) =>
       role.name !== '@everyone' &&
-      !ranks.some((rank) => rank.roleName === role.name) &&
+      !activeRanks.some((rank) => rank.roleName === role.name) &&
+      !allRankRoleNames.has(role.name) &&
       !APEX_PLATFORMS.some((platform) => platform.roleName === role.name) &&
       !excluded.includes(role.name)
   );
