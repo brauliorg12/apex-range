@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.21.0](https://github.com/brauliorg12/apex-range/compare/v1.20.3...v1.21.0) (2026-10-26)
+
+
+### Features
+
+* **ranks:** add Emerald/Grandmaster and harden automatic rank sync ([b810f98](https://github.com/brauliorg12/apex-range/commit/b810f982c94e4b000aca75fae714afb2e9bcdd79))
+
 ### [1.20.3](https://github.com/brauliorg12/apex-range/compare/v1.20.2...v1.20.3) (2026-10-26)
 
 
