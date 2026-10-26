@@ -18,6 +18,10 @@ Usar Conventional Commits:
 
 No usar `[skip ci]` en cambios normales. Solo para cambios de CI que no deban generar un release.
 
+## Código
+
+Seguir [docs/CODE-STYLE.md](docs/CODE-STYLE.md) para estilo, JSDoc y regiones.
+
 ## Release automático
 
 En cada push/merge a `main`, el workflow:

@@ -1,5 +1,5 @@
 import { TextChannel, Message } from 'discord.js';
-import { writeRolesState } from '../../utils/state-manager';
+import { updateRolesState } from '../../utils/state-manager';
 import { updateBotPresence } from '../../utils/presence-helper';
 import { updateRoleCountMessage } from '../../utils/update-status-message';
 import { sendOnlinePanel } from '../../utils/send-online-panel';
@@ -12,6 +12,9 @@ import { createManagementButtons } from '../../utils/button-helper';
  * junto con el ID del canal y del servidor, para permitir la actualización y gestión
  * posterior de los mensajes. Esto es crucial para mantener la funcionalidad del bot
  * después de reinicios o actualizaciones.
+ *
+ * La actualización es parcial: preserva `apexStatus`, `botControl` y cualquier
+ * otro campo que no administre el setup.
  *
  * @param roleCountMessage - El mensaje que muestra las estadísticas de roles y permite gestión.
  * @param roleSelectionMessage - El mensaje que permite a los usuarios seleccionar su rango.
@@ -29,13 +32,12 @@ export async function saveSetupState(
   logger.info('Guardando estado del bot...');
 
   try {
-    await writeRolesState({
+    await updateRolesState(guildId, () => ({
       roleCountMessageId: roleCountMessage.id,
       roleSelectionMessageId: roleSelectionMessage.id,
       channelId: channel.id,
-      guildId: guildId,
       rankCardMessageIds: {},
-    });
+    }));
     logger.info('Estado guardado correctamente');
   } catch (error) {
     logger.error('Error guardando estado', error);
@@ -89,7 +91,7 @@ export async function finalizeSetup(
   logger.info('Actualizando estadísticas...');
   let statsUpdated = false;
   try {
-    await updateRoleCountMessage(guild);
+    await updateRoleCountMessage(guild, undefined, true);
     statsUpdated = true;
     logger.info('Estadísticas actualizadas correctamente');
   } catch (error) {
@@ -156,8 +158,8 @@ export async function rerunManagementPanel(
   try {
     // Re-ejecutar panel online
     await sendOnlinePanel(channel, guild);
-    // Actualizar estadísticas
-    await updateRoleCountMessage(guild);
+    // Actualizar estadísticas y forzar el primer render del panel nuevo
+    await updateRoleCountMessage(guild, undefined, true);
     // Actualizar presencia global
     await updateBotPresence(client);
 

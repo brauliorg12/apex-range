@@ -9,13 +9,21 @@ export const RANK_ALIASES: Record<string, string[]> = {
     'Pred',
     'apex predator',
   ],
+  grandmaster: [
+    'Gran maestro',
+    'Gran Maestro',
+    'Granmaster',
+    'Grandmaster',
+    'Grand Master',
+  ],
   master: ['Maestro', 'Master'],
   diamond: ['Diamante', 'Diamond'],
+  emerald: ['Esmeralda', 'Esmerald', 'Emerald'],
   platinum: ['Platino', 'Platinum'],
   gold: ['Oro', 'Gold'],
   silver: ['Plata', 'Silver'],
   bronze: ['Bronce', 'Bronze', 'bronce'],
-  rookie: ['Rookie'],
+  rookie: ['Rookie', 'Hierro', 'Iron', 'Principiante'],
 };
 
 /**
@@ -36,7 +44,10 @@ export const PLATFORM_ALIASES: Record<string, string[]> = {
 export const ROLE_ALIASES: Record<string, string[]> = {
   // Rangos
   predator: ['apex predator', 'apexpredator', 'pred'],
+  grandmaster: ['gran maestro', 'granmaestro', 'granmaster', 'grandmaster'],
   master: ['maestro'],
+  emerald: ['esmeralda', 'esmerald', 'emerald'],
+  rookie: ['rookie', 'hierro', 'iron', 'principiante'],
 
   // Plataformas
   switch: ['nintendo switch', 'nintendoswitch', 'nintendo'],

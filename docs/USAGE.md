@@ -6,12 +6,16 @@ Esta guía explica cómo usar Apex Legends Rank Bot una vez instalado y configur
 
 | Comando / Acción   | Descripción                                                                                                                                                                                 | Permisos                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo. **4 opciones disponibles:** Automático, Manual, Canales Existentes, **Configurar Roles Excluidos** | Administrador (excepto roles excluidos) |
+| `/setup-roles`     | Configura el panel de selección de rango y mensaje de estadísticas con menú interactivo. **4 opciones disponibles:** Automático, Manual, Canales Existentes, **Configurar Roles Excluidos** | Administrador |
 | `/apex-status`     | Muestra el estado de Apex (mapas, Predator RP)                                                                                                                                              | Gestionar canales o Gestionar servidor  |
 | `/total-jugadores` | Muestra el número total de jugadores con rango                                                                                                                                              | Todos                                   |
+| `/api-status`      | Muestra el estado de la API externa                                                                                                                                                         | Todos                                   |
+| `/cleanup-state`   | Limpia referencias a mensajes del panel que ya no existen                                                                                                                                   | Todos                                   |
 | `/cleanup-data`    | [ADMIN] Limpia archivos JSON de servidores obsoletos                                                                                                                                        | Owner del Bot                           |
 
 > **Nota:** Los comandos `/setup-roles` y `/apex-status` son independientes y pueden configurarse en canales distintos. `/apex-status` define el canal canónico del panel; exige **Gestionar canales** en el canal o **Gestionar servidor** a nivel del servidor. La visibilidad puede restringirse además en **Configuración del servidor → Integraciones → Apex Range**. Cada ejecución exitosa intenta notificar al canal de control o al owner; si ambos fallan, queda el registro en logs. El comando de contexto aparece al hacer click derecho sobre un usuario.
+
+> **Panel de rangos:** los cards se ordenan por el `tier` de `APEX_RANKS`, no por la posición de los roles en Discord. Un miembro con varios rangos aparece solo en el card de su rango de mayor `tier`. El bot no detecta si se borra manualmente un card, el header o el panel de gestión. Para repararlo, ejecutá `/cleanup-state` y esperá el próximo sync, o `/setup-roles` como alternativa (puede dejar cards duplicados). Ver [RANK-SYNC.md](RANK-SYNC.md#eliminación-manual-de-mensajes-del-panel).
 
 ## 🎛️ **Menú Interactivo de Configuración**
 
@@ -21,15 +25,17 @@ El comando `/setup-roles` inicia un proceso interactivo inteligente que se adapt
 
 Al ejecutar `/setup-roles`, el bot verifica automáticamente si existen los roles necesarios para los rangos de Apex Legends:
 
-- **Roles de rango**: Bronce, Plata, Oro, Platino, Diamante, Maestro, Apex Predator
+- **Roles de rango**: Hierro/Rookie, Bronce, Plata, Oro, Platino, Diamante, Maestro, Apex Predator; Esmeralda y Gran maestro solo con `ENABLE_NEW_RANKS=true`.
 - **Roles de plataforma**: PC, PlayStation, Xbox, Nintendo Switch
+
+> En esta versión `ENABLE_NEW_RANKS` está fijo en `false`: el modo legacy oculta Esmeralda y Gran maestro y muestra `rookie` como Rookie. No borra roles ni jugadores existentes. El bot también sincroniza rangos automáticamente al iniciar y al detectar cambios de roles. Ver **[RANK-SYNC.md](RANK-SYNC.md)**.
 
 ### 🛠️ **Creación de Roles Faltantes**
 
 Si faltan roles, el bot ofrece opciones inteligentes:
 
-- **Creación automática**: Si el bot tiene permisos, crea todos los roles faltantes con colores y configuración óptima
-- **Instrucciones manuales**: Si el bot no puede crear roles, proporciona instrucciones detalladas para crearlos manualmente
+- **Creación automática**: Si el bot tiene permisos, crea los roles que sigan faltando después de aplicar los mapeos, con colores y configuración óptima.
+- **Instrucciones manuales**: Si el bot no puede crear roles, proporciona instrucciones detalladas para crearlos manualmente. Usá el nombre exacto o un alias, ubicalos debajo del rol del bot y en orden de `tier`; `Gestionar roles` sigue siendo necesario para que el autoservicio asigne rangos.
 
 ### 🎯 **Selección de Modo de Configuración**
 
@@ -62,9 +68,12 @@ El sistema reconoce estas variantes sin necesidad de configuración:
 **Rangos:**
 
 - "Predator", "Pred", "Apex Predator" → Apex Predator
+- "Grandmaster", "Granmaster", "Gran maestro" → Gran maestro (solo con `ENABLE_NEW_RANKS=true`)
 - "Master", "Maestro" → Master
 - "Diamond", "Diamante" → Diamante
+- "Emerald", "Esmerald", "Esmeralda" → Esmeralda (solo con `ENABLE_NEW_RANKS=true`)
 - "Platinum", "Platino" → Platino
+- "Iron", "Hierro", "Rookie", "Principiante" → Rookie con `ENABLE_NEW_RANKS=false`; Hierro con `true`
 - Y todas las demás variantes en español/inglés
 
 **Plataformas:**
@@ -121,7 +130,7 @@ Además del setup inicial, puedes gestionar los roles excluidos en cualquier mom
 La lista ya filtra automáticamente los roles del sistema:
 
 - `@everyone` (rol por defecto)
-- **Rangos de Apex**: Rookie, Bronce, Plata, Oro, Platino, Diamante, Maestro, Apex Predator
+- **Rangos de Apex**: Hierro/Rookie, Bronce, Plata, Oro, Platino, Diamante, Maestro, Apex Predator; Esmeralda y Gran maestro solo con `ENABLE_NEW_RANKS=true`.
 - **Plataformas**: PC, PlayStation, Xbox, Nintendo Switch
 - **Países**: Todos los países reconocidos (Argentina, España, México, etc.)
 
@@ -138,7 +147,7 @@ Después de configurar, los roles excluidos **NO aparecerán** en los paréntesi
 - **Sin excluir**: `@usuario (Moderador, VIP, 🇦🇷 Argentina)`
 - **Excluyendo "Moderador"**: `@usuario (VIP, 🇦🇷 Argentina)`
 
-> **💡 Nota**: Esta configuración es opcional y cualquier usuario puede ajustarla. No requiere permisos de administrador.
+> **💡 Nota**: Esta configuración es opcional. Se administra desde el flujo de `/setup-roles`, que requiere Administrador.
 
 ### 🚀 **Flujo de Configuración Completo**
 
@@ -172,8 +181,9 @@ Este comando está disponible para todos los usuarios y proporciona acceso rápi
 
 - **Botones para seleccionar rango**: Elige tu rango y el bot te asigna el rol correspondiente.
 - **Gestión de rango**: Cambia o elimina tu rango fácilmente.
-- **Estadísticas en tiempo real**: Ve cuántos jugadores hay por rango y quiénes están online.
+- **Estadísticas**: Ve cuántos jugadores hay por rango y quiénes están online; el resumen se actualiza periódicamente y los cards ante eventos relevantes.
 - **Cards visuales**: Avatares de los últimos registrados y listados por rango.
+- **Registro de jugadores**: `players_*.json` conserva a los desconectados; la sincronización solo agrega y actualiza, nunca borra por ausencia en caché. Quitar un rango es una acción explícita.
 
 ### 🔄 **Flujo de Selección de Rango y Plataforma**
 
@@ -243,6 +253,18 @@ Puedes usar este rol para mencionar a todos los jugadores registrados fácilment
 Consulta el estado de la API externa utilizada por el bot.  
 Muestra si la API está conectada y la última vez que se verificó.
 
+## Comando `/cleanup-state`
+
+Limpia las referencias a mensajes del panel que ya no existen en Discord. Se usa
+cuando un card, header o mensaje de gestión fue eliminado manualmente.
+
+- Verifica los IDs persistidos en `.bot-state` y elimina las referencias
+  inválidas.
+- Después de limpiar, el próximo arranque o evento de rol relacionado permite
+  que el rank sync detecte los IDs faltantes y reconstruya el panel.
+- No reemplaza a `/setup-roles`: el setup resetea los IDs y puede duplicar el
+  panel anterior.
+
 ## Comando de Contexto: Ver mi rango en Apex Range
 
 Permite consultar el rango de cualquier usuario (incluyéndote a ti mismo) desde el menú contextual:
@@ -263,6 +285,7 @@ Permite consultar el rango de cualquier usuario (incluyéndote a ti mismo) desde
   - Si el usuario no tiene rango, lo indica claramente.
 
 - El mensaje es privado (ephemeral) y solo visible para quien ejecuta el comando.
+- Si el usuario tiene varios roles de rango, se muestra el de mayor `tier` de `APEX_RANKS`.
 
 ## 🆕 Panel de Estado de Apex Legends y Perfil Interactivo
 
@@ -330,9 +353,10 @@ Cuando uses `/apex-status` o veas el panel de estado, ten en cuenta:
 
 - Si ves `⚠️ Datos en cache temporalmente` en alguna card, significa que la API no respondió y se está mostrando la última información válida.
 - **Panel de estado Apex**: Se actualiza automáticamente cada 5 minutos.
-- **Roles y presencia**: Se actualizan cada 2 minutos para mantener la información al día.
-- **Imágenes del embed**: Se refrescan cada 10 minutos para optimizar rendimiento.
+- **Roles y presencia**: El resumen se actualiza cada 2 minutos. Los cards de rango también reaccionan a eventos de rol y presencia, y omiten la edición si el contenido visible no cambió.
+- **Imagen de selección de rango**: Se actualiza cada 10 minutos para optimizar rendimiento.
 - Los emojis de estado de servidor indican si cada región está operativa, lenta o caída.
 - Si el panel de Apex es eliminado, el bot lo recrea automáticamente y limpia paneles viejos duplicados.
-- Los errores del panel se avisan solo al canal de control/admin o al owner. No se publican tarjetas de error en canales públicos.
+- Los errores del panel de Apex se avisan solo al canal de control/admin o al owner. No se publican tarjetas de error en canales públicos.
+- La corrupción o ilegibilidad de `.bot-state` detectada en el arranque, la reincorporación, un evento de rol o el rank sync se alerta al administrador de la app, no al owner; ver [RANK-SYNC.md](RANK-SYNC.md#4-notificación).
 - `/apex-status` responde de forma efímera al usuario; el panel público se publica como mensaje aparte.

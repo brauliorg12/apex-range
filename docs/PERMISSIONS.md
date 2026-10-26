@@ -8,13 +8,25 @@ Esta guía explica en detalle todos los permisos que necesita Apex Legends Rank 
 
 Crea estos roles en tu servidor (nombres exactos):
 
+- Hierro o Rookie
 - Bronce
 - Plata
 - Oro
 - Platino
+- Esmeralda (solo con `ENABLE_NEW_RANKS=true`)
 - Diamante
 - Maestro
+- Gran maestro (solo con `ENABLE_NEW_RANKS=true`)
 - Apex Predator
+
+> Si el bot no tiene **Gestionar roles**, podés crear estos roles manualmente.
+> Usá el nombre exacto o un alias reconocido, ubicalos debajo del rol más alto
+> del bot y en orden de `tier` (Predator arriba, Hierro/Rookie abajo). El
+> permiso sigue siendo necesario para que el autoservicio asigne o cambie
+> rangos. El sync solo reordena los roles cuando crea al menos uno.
+>
+> En esta versión `ENABLE_NEW_RANKS` está fijo en `false`: el bot no crea ni
+> muestra Esmeralda/Gran maestro y usa Rookie como nombre legible de `rookie`.
 
 ### Emojis personalizados
 
@@ -52,10 +64,11 @@ El bot requiere permisos específicos tanto a nivel de servidor como de canal. A
 
 #### **`ManageRoles`** - Gestionar Roles
 
-- **Descripción**: Permite al bot crear y asignar roles de rangos de Apex Legends
-- **Dónde se usa**: `setup-roles-handlers.ts`, `handleMissingRoles`, `setup-config-handler.ts`
-- **Crítico**: Sí - El setup falla completamente sin este permiso
+- **Descripción**: Permite al bot crear, asignar y reordenar roles de rangos de Apex Legends
+- **Dónde se usa**: `setup-roles-creation.ts`, `configs/handlers/create-missing-roles.ts`, `configs/handlers/proceed-create-roles.ts` y `services/rank-sync/rank-roles.ts`
+- **Crítico**: Sí para la creación automática y para el autoservicio. Sin este permiso el bot muestra instrucciones para crear los roles a mano, pero no puede asignar ni cambiar rangos.
 - **Por qué**: El bot crea automáticamente roles como "Bronce", "Plata", etc. cuando no existen
+- **Orden**: El sync crea los roles debajo del rol más alto del bot y los ordena por `tier` cuando crea al menos uno. Los cards usan `tier`, no la posición de Discord.
 
 #### **`UseApplicationCommands`** - Usar Comandos de Aplicación
 
@@ -83,7 +96,8 @@ El bot requiere permisos específicos tanto a nivel de servidor como de canal. A
 #### **`ManageMessages`** - Gestionar Mensajes
 
 - **Descripción**: Permite fijar mensajes importantes y limpiar mensajes antiguos
-- **Dónde se usa**: `setup-roles.ts` (pin messages), `cleanupExistingMessages`, `send-online-panel.ts`
+- **Dónde se usa**: `pinSetupMessages`, `cleanup-existing-messages.ts` y
+  `services/rank-sync/rank-panel-deletion.ts` (borrado de mensajes viejos).
 - **Crítico**: Moderadamente - El bot funciona sin él pero no puede fijar mensajes importantes
 - **Por qué**: Fija el panel de roles y estadísticas para mantenerlos visibles
 
@@ -97,7 +111,7 @@ El bot requiere permisos específicos tanto a nivel de servidor como de canal. A
 #### **`ReadMessageHistory`** - Leer Historial de Mensajes
 
 - **Descripción**: Permite verificar el estado del canal y limpiar mensajes existentes
-- **Dónde se usa**: `cleanupExistingMessages`, verificación de canal en `setup-roles.ts`
+- **Dónde se usa**: `cleanup-existing-messages.ts`, verificación de canal en `setup-roles.ts` y `/cleanup-state`
 - **Crítico**: Moderadamente - Afecta la limpieza automática de mensajes
 - **Por qué**: Necesario para identificar mensajes antiguos durante el setup
 
@@ -138,7 +152,7 @@ El bot necesita los siguientes permisos para funcionar correctamente:
   Crítico para crear roles de rangos de Apex Legends automáticamente cuando no existen, y asignarlos a usuarios.
 
   **Dónde se usa:** setup-roles-handlers.ts, handleMissingRoles, setup-config-handler.ts
-  **Crítico:** Sí - El setup falla completamente sin este permiso
+  **Crítico:** Sí para la creación automática; sin el permiso se muestran instrucciones manuales.
 
 • Adjuntar Archivos (canal)
   Esencial para adjuntar imágenes generadas como tarjetas de rango, gráficos de estadísticas y avatares.
@@ -180,6 +194,17 @@ informar problemas críticos sin publicar tarjetas de error en canales públicos
   servidor e instrucciones de recuperación.
 - **Frecuencia controlada**: Los errores transitorios tienen un cooldown de
   **1 hora** por tipo para limitar la frecuencia de avisos.
+
+El rank sync usa su propia deduplicación de 30 minutos por guild y no comparte
+este cooldown. Ver [RANK-SYNC.md](RANK-SYNC.md#4-notificación).
+
+La corrupción o ilegibilidad de `.bot-state` detectada en el arranque, la
+reincorporación, un evento de rol o el rank sync es una alerta de
+infraestructura: va al administrador de la app (log crítico y, si está
+configurado, `ADMIN_ALERT_WEBHOOK_URL`), nunca al owner ni al canal de control
+del guild. Un fallo de escritura de `.bot-state` se registra y se propaga, pero
+no genera esa alerta en esta versión. Ver
+[RANK-SYNC.md](RANK-SYNC.md#4-notificación).
 
 ### **Permisos del comando `/apex-status`**
 

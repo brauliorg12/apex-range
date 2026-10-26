@@ -1,88 +1,150 @@
-import { Guild, Role, GuildMember } from 'discord.js';
+import { Guild, Role } from 'discord.js';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { getPlayerDataSnapshot } from './player-data-manager';
+import { getServerLogger } from './server-logger';
 
 /**
- * Obtiene todos los miembros del servidor que tienen algún rol de rango de Apex.
- * @param guild Servidor Discord.
- * @returns Array de GuildMember con algún rol de rango.
+ * Datos del catálogo activo usados por las estadísticas.
  */
-async function getRankedMembers(guild: Guild): Promise<GuildMember[]> {
-  try {
-    const ranks = getApexRanksForGuild(guild.id, guild);
-
-    const rankRoleNames = new Set(ranks.map((rank) => rank.roleName));
-    const rankRoles = guild.roles.cache.filter((role) =>
-      rankRoleNames.has(role.name)
-    );
-
-    if (rankRoles.size === 0) {
-      return [];
-    }
-
-    // Intentar fetch de miembros con timeout y manejo de errores
-    try {
-      await guild.members.fetch();
-    } catch (error: any) {
-      console.warn(
-        'No se pudieron obtener todos los miembros del servidor, usando caché disponible:',
-        error.message
-      );
-      // Continuar con los miembros que ya están en caché
-    }
-
-    const uniqueMembers = new Map<string, GuildMember>();
-    rankRoles.forEach((role) => {
-      role.members.forEach((member) => {
-        if (!uniqueMembers.has(member.id)) {
-          uniqueMembers.set(member.id, member);
-        }
-      });
-    });
-
-    return Array.from(uniqueMembers.values());
-  } catch (error) {
-    console.error('Error en getRankedMembers:', error);
-    throw error;
-  }
+interface ActiveRankContext {
+  /** Nombres de roles de rango activos. */
+  roleNames: Set<string>;
+  /** shortIds y nombres de rol para leer datos históricos. */
+  keys: Set<string>;
 }
 
 /**
- * Obtiene estadísticas de jugadores con algún rango de Apex en el servidor.
- * Busca todos los miembros que tengan al menos un rol de rango definido en APEX_RANKS,
- * y calcula cuántos están conectados actualmente (status 'online').
+ * Construye el contexto de rangos activos con una sola lectura del catálogo.
  *
- * @param guild Servidor Discord.
- * @returns Un objeto con el total de jugadores con rango y la cantidad de jugadores en línea.
+ * @param guild - Servidor de Discord.
+ * @returns Nombres de rol y claves de rango activas.
+ */
+function getActiveRankContext(guild: Guild): ActiveRankContext {
+  const roleNames = new Set<string>();
+  const keys = new Set<string>();
+
+  for (const rank of getApexRanksForGuild(guild.id, guild)) {
+    roleNames.add(rank.roleName);
+    keys.add(rank.shortId);
+    keys.add(rank.roleName);
+  }
+
+  return { roleNames, keys };
+}
+
+/**
+ * Cuenta jugadores registrados con un rango activo.
+ *
+ * @param players - Registros deserializados de `players_*.json`.
+ * @param activeRankKeys - shortIds y nombres de rol activos.
+ * @returns Cantidad de registros con rango activo.
+ */
+function countRegisteredRankedPlayers(
+  players: readonly unknown[],
+  activeRankKeys: ReadonlySet<string>
+): number {
+  let total = 0;
+
+  for (const player of players) {
+    if (typeof player !== 'object' || player === null) continue;
+
+    const rank = (player as { rank?: unknown }).rank;
+    if (typeof rank === 'string' && activeRankKeys.has(rank)) {
+      total++;
+    }
+  }
+
+  return total;
+}
+
+/**
+ * Cuenta miembros cacheados con un rol activo.
+ *
+ * Es un fallback cuando `players_*.json` no se puede leer; no hace fetch de
+ * miembros para evitar rate limits del gateway.
+ *
+ * @param guild - Servidor de Discord.
+ * @param roleNames - Nombres de roles de rango activos.
+ * @returns Cantidad de miembros cacheados con algún rango.
+ */
+function countCachedRankedMembers(
+  guild: Guild,
+  roleNames: ReadonlySet<string>
+): number {
+  let total = 0;
+
+  for (const member of guild.members.cache.values()) {
+    if (member.roles.cache.some((role) => roleNames.has(role.name))) {
+      total++;
+    }
+  }
+
+  return total;
+}
+
+/**
+ * Cuenta miembros cacheados online con un rol activo.
+ *
+ * Usa presencia y caché de Discord; no hace `members.fetch()`.
+ *
+ * @param guild - Servidor de Discord.
+ * @param roleNames - Nombres de roles de rango activos.
+ * @returns Cantidad de miembros online con algún rango.
+ */
+function countCachedOnlineRankedMembers(
+  guild: Guild,
+  roleNames: ReadonlySet<string>
+): number {
+  let online = 0;
+
+  for (const member of guild.members.cache.values()) {
+    if (member.presence?.status !== 'online') continue;
+    if (member.roles.cache.some((role) => roleNames.has(role.name))) {
+      online++;
+    }
+  }
+
+  return online;
+}
+
+/**
+ * Obtiene estadísticas de jugadores con algún rango activo en el servidor.
+ *
+ * El total sale de `players_*.json` para no pedir la lista completa de miembros
+ * a Discord. Los online se cuentan desde la caché y la presencia. Si el archivo
+ * no se puede leer, el total cae a los miembros cacheados con rango.
+ *
+ * @param guild - Servidor de Discord.
+ * @returns El total registrado y la cantidad de jugadores online.
  */
 export async function getPlayerStats(guild: Guild) {
-  try {
-    const rankedMembers = await getRankedMembers(guild);
-    const onlineMembers = rankedMembers.filter(
-      (member) => member.presence?.status === 'online'
+  const { roleNames, keys } = getActiveRankContext(guild);
+  const snapshot = await getPlayerDataSnapshot(guild);
+  const cachedTotal = countCachedRankedMembers(guild, roleNames);
+  const online = countCachedOnlineRankedMembers(guild, roleNames);
+
+  if (snapshot.status === 'invalid' || snapshot.status === 'io-error') {
+    getServerLogger(guild.id, guild.name).warn(
+      `[player-stats] players_${guild.id}.json ${snapshot.status}: ` +
+        `${snapshot.error}. Se usa el conteo de caché.`
     );
 
-    return {
-      total: rankedMembers.length,
-      online: onlineMembers.length,
-    };
-  } catch (error: any) {
-    console.error('Error en getPlayerStats:', error);
-
-    // Proporcionar mensaje más específico según el tipo de error
-    if (error.message?.includes("Members didn't arrive in time")) {
-      throw new Error(
-        "Members didn't arrive in time. El servidor puede ser muy grande o tener problemas de conexión."
-      );
-    }
-
-    throw error;
+    return { total: cachedTotal, online };
   }
+
+  const total =
+    snapshot.status === 'ok'
+      ? countRegisteredRankedPlayers(snapshot.players, keys)
+      : cachedTotal;
+
+  return { total, online };
 }
 
 /**
  * Devuelve los miembros online de un rol de rango específico.
- * @param role Rol de rango de Apex.
- * @returns Colección de GuildMember que están online, idle o dnd.
+ *
+ * @param role - Rol de rango de Apex.
+ * @returns Miembros con estado online, idle o dnd.
  */
 export function getOnlineMembersByRole(role: Role) {
   return role.members.filter(

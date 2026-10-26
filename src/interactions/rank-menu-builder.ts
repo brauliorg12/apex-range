@@ -13,6 +13,7 @@ import { getPlayerPlatform } from '../utils/player-data-manager';
 import { logApp } from '../utils/logger';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
+import { pickHighestRank } from '../helpers/rank-priority';
 
 /**
  * Construye el payload (embed y botones) para el menú de gestión de rango privado de un usuario.
@@ -29,14 +30,7 @@ export async function buildManageRankPayload(
   const ranks = getApexRanksForGuild(guild.id, guild);
   const platforms = getApexPlatformsForGuild(guild.id, guild);
 
-  const memberRankRoles = member.roles.cache.filter((role) =>
-    ranks.some((rank) => rank.roleName === role.name)
-  );
-  const currentRank = ranks.find(
-    (rank) =>
-      memberRankRoles.size > 0 &&
-      rank.roleName === memberRankRoles.first()!.name
-  );
+  const currentRank = pickHighestRank(ranks, member.roles.cache.values());
 
   // Obtener plataforma actual del usuario
   const currentPlatform = await getPlayerPlatform(guild.id, member.id);
@@ -65,36 +59,25 @@ export async function buildManageRankPayload(
     .setTitle(title)
     .setDescription(description);
 
-  // Usar roles mapeados del servidor
-  const row1Buttons = ranks.slice(0, 4).map((rank) =>
-    new ButtonBuilder()
-      .setCustomId(rank.shortId)
-      .setLabel(rank.label)
-      .setEmoji(getRankEmoji(guild.client, rank))
-      .setStyle(
-        rank.shortId === currentRank?.shortId
-          ? ButtonStyle.Success
-          : ButtonStyle.Secondary
+  // Usar roles mapeados del servidor y repartirlos en filas de 5
+  const components: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let i = 0; i < ranks.length; i += 5) {
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        ranks.slice(i, i + 5).map((rank) =>
+          new ButtonBuilder()
+            .setCustomId(rank.shortId)
+            .setLabel(rank.label)
+            .setEmoji(getRankEmoji(guild.client, rank))
+            .setStyle(
+              rank.shortId === currentRank?.shortId
+                ? ButtonStyle.Success
+                : ButtonStyle.Secondary
+            )
+        )
       )
-  );
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(row1Buttons);
-
-  // Usar roles mapeados del servidor
-  const row2Buttons = ranks.slice(4).map((rank) =>
-    new ButtonBuilder()
-      .setCustomId(rank.shortId)
-      .setLabel(rank.label)
-      .setEmoji(getRankEmoji(guild.client, rank))
-      .setStyle(
-        rank.shortId === currentRank?.shortId
-          ? ButtonStyle.Success
-          : ButtonStyle.Secondary
-      )
-  );
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(row2Buttons);
-
-  // Crear filas adicionales para botones de acción de manera organizada
-  const components = [row1, row2];
+    );
+  }
 
   if (currentRank) {
     // Si tiene rango, crear fila para acciones de rango

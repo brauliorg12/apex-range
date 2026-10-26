@@ -117,9 +117,9 @@ Para adaptarse a las limitaciones de la API de Mozambique y evitar bloqueos, el 
 
 - **Sistema de cola global:**
 
-  - **Procesamiento priorizado**: Las actualizaciones se encolan por importancia (alta, normal, baja)
-  - **Control de concurrencia**: Máximo 3 servidores procesando simultáneamente
-  - **Eliminación de duplicados**: Evita actualizaciones redundantes del mismo tipo
+  - **Procesamiento priorizado**: Las actualizaciones se encolan por importancia (muy alta, alta, normal, baja)
+  - **Control de concurrencia**: Un servidor a la vez para proteger CPU y latencia
+  - **Eliminación de duplicados**: Clave estable por tipo de actualización
 
 - **Cumplimiento de rate limit:**
 

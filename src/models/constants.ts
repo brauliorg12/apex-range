@@ -4,6 +4,12 @@ import { ApexPlatform } from '../interfaces/apex-platform';
 // Parámetro global de aura para los canvas / pulse de los rangos
 export const COMMON_AURA_SIZE = 40;
 
+/**
+ * Umbral único para considerar lento un render o una actualización de canvas.
+ * Solo los casos que lo superan se registran como advertencia.
+ */
+export const SLOW_CANVAS_MS = 250;
+
 // Parámetro global para controlar el máximo de jugadores por card en panel principal rankeds
 export const MAX_PLAYERS_PER_CARD = 5;
 // Parámetro global para controlar el máximo de jugadores por página en "Ver más" y paginación de "Ver todos"
@@ -50,20 +56,22 @@ export const SELECT_EMOGI = '<:select:1418630526100836456>';
 export const SELECT_DOWN_EMOGI = '<:select_down:1418630564684234853>';
 export const SETTINGS_ALL_EMOGI = '<:settings_all:1418632423989838005>';
 
-// Lista de rangos de Apex Legends
+// Lista de rangos de Apex Legends ordenada por tier (Hierro=1, Predator=10)
 export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier0_Rookie:1417884499554996244>',
     shortId: 'rookie',
-    label: 'Rookie',
-    roleName: 'Rookie',
-    icon: '🐣',
-    color: '#eaccae',
-    apiName: 'Rookie',
+    tier: 1,
+    label: 'Hierro',
+    roleName: 'Hierro',
+    icon: '⚙️',
+    color: '#8A8F98',
+    apiName: 'Iron',
   },
   {
     id: '<:Ranked_Tier1_Bronze:1406723914633052296>',
     shortId: 'bronze',
+    tier: 2,
     label: 'Bronce',
     roleName: 'Bronce',
     icon: '🥉',
@@ -73,6 +81,7 @@ export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier2_Silver:1406723933608083599>',
     shortId: 'silver',
+    tier: 3,
     label: 'Plata',
     roleName: 'Plata',
     icon: '🥈',
@@ -82,6 +91,7 @@ export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier3_Gold:1406723943787925546>',
     shortId: 'gold',
+    tier: 4,
     label: 'Oro',
     roleName: 'Oro',
     icon: '🥇',
@@ -91,6 +101,7 @@ export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier4_Platinum:1406723955682705418>',
     shortId: 'platinum',
+    tier: 5,
     label: 'Platino',
     roleName: 'Platino',
     icon: '💠',
@@ -98,8 +109,19 @@ export const APEX_RANKS: ApexRank[] = [
     apiName: 'Platinum',
   },
   {
+    id: '<:Ranked_Tier4_5_Emerald:1562712340108021810>',
+    shortId: 'emerald',
+    tier: 6,
+    label: 'Esmeralda',
+    roleName: 'Esmeralda',
+    icon: '💚',
+    color: '#50C878',
+    apiName: 'Emerald',
+  },
+  {
     id: '<:Ranked_Tier5_Diamond:1406723964981612596>',
     shortId: 'diamond',
+    tier: 7,
     label: 'Diamante',
     roleName: 'Diamante',
     icon: '💎',
@@ -109,6 +131,7 @@ export const APEX_RANKS: ApexRank[] = [
   {
     id: '<:Ranked_Tier6_Master:1406723974313934968>',
     shortId: 'master',
+    tier: 8,
     label: 'Maestro',
     roleName: 'Maestro',
     icon: '🔮',
@@ -117,7 +140,18 @@ export const APEX_RANKS: ApexRank[] = [
   },
   {
     id: '<:Ranked_Tier7_Apex_Predator:1406723982887223416>',
+    shortId: 'grandmaster',
+    tier: 9,
+    label: 'Gran maestro',
+    roleName: 'Gran maestro',
+    icon: '👑',
+    color: '#C0392B',
+    apiName: 'Grandmaster',
+  },
+  {
+    id: '<:Ranked_Tier7_Apex_Predator:1406723982887223416>',
     shortId: 'predator',
+    tier: 10,
     label: 'Apex Predator',
     roleName: 'Apex Predator',
     icon: '👹',
@@ -125,6 +159,26 @@ export const APEX_RANKS: ApexRank[] = [
     apiName: 'Apex Predator',
   },
 ];
+
+/**
+ * Valida que los tiers del catálogo sean únicos, contiguos y estén ordenados.
+ *
+ * @param ranks - Catálogo de rangos a validar.
+ * @throws {Error} Si un tier falta, se repite o el catálogo no está ordenado.
+ */
+function assertRankTiers(ranks: readonly ApexRank[]): void {
+  ranks.forEach((rank, index) => {
+    if (rank.tier !== index + 1) {
+      throw new Error(
+        `APEX_RANKS debe estar ordenado por tier contiguo desde 1; ` +
+          `se esperaba ${index + 1} y se encontró ${rank.tier} ` +
+          `en "${rank.shortId}".`
+      );
+    }
+  });
+}
+
+assertRankTiers(APEX_RANKS);
 
 /**
  * Lista de plataformas soportadas por Apex Legends

@@ -1,9 +1,5 @@
-import { Client } from 'discord.js';
 import { readRolesState } from '../../utils/state-manager';
 import { logApp } from '../../utils/logger';
-import { enqueueGuildUpdate } from '../../utils/guild-update-queue';
-import { updateRoleCountMessage } from '../../utils/update-status-message';
-import { updateBotPresence } from '../../utils/presence-helper';
 import {
   updatePlayerRankDate,
   getPlayerPlatform,
@@ -11,6 +7,8 @@ import {
 } from '../../utils/player-data-manager';
 import { getApexRanksForGuild } from '../../helpers/get-apex-ranks-for-guild';
 import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-guild';
+import { buildRankResolver } from '../../helpers/rank-priority';
+import { requestRankCardRefresh } from '../../helpers/rank-card-refresh-queue';
 
 /**
  * Maneja cambios en miembros de servidores configurados, especialmente cambios de roles de Apex Legends.
@@ -19,8 +17,8 @@ import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-g
  * Se enfoca en detectar y procesar cambios en roles relacionados con Apex Legends, como rangos
  * (Bronce, Plata, Oro, etc.) y plataformas (PC, PlayStation, Xbox, Nintendo Switch).
  * Al detectar un cambio relevante, actualiza los datos persistentes del jugador, registra el evento
- * en los logs y encola una actualización asíncrona para refrescar los embeds de estadísticas,
- * mensajes de conteo de roles y la presencia global del bot.
+ * en los logs y solicita un refresco coalescido de los cards de los rangos afectados. Las
+ * estadísticas y la presencia global quedan a cargo del scheduler.
  *
  * **Flujo de ejecución:**
  * 1. **Validación inicial**: Verifica que el miembro pertenezca a un guild y que el guild esté configurado
@@ -36,16 +34,13 @@ import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-g
  *      y mantiene la plataforma actual. Registra el cambio en logs.
  *    - Si cambió solo la plataforma: Actualiza la plataforma usando el apiName correspondiente.
  *      Registra el cambio en logs.
- * 6. **Encoleo de actualización asíncrona**: Programa una tarea de alta prioridad para refrescar:
- *    - El mensaje de conteo de roles del guild.
- *    - La presencia global del bot.
- *    - Los mensajes de tarjetas de rango afectados en el canal configurado.
+ * 6. **Refresco de cards**: Solicita a la cola un refresco coalescido de los cards de los rangos
+ *    anterior y nuevo. No recalcula estadísticas ni presencia global por evento.
  *
  * Esta función asegura la consistencia entre los roles asignados manualmente en Discord y los datos
- * persistentes del bot, permitiendo que los embeds y estadísticas reflejen cambios en tiempo real
- * sin necesidad de reinicios o comandos manuales.
+ * persistentes del bot, permitiendo que los cards de rango reflejen los cambios sin necesidad de
+ * reinicios o comandos manuales.
  *
- * @param client - El cliente de Discord, utilizado para acceder a datos globales y actualizar presencia.
  * @param oldMember - El objeto GuildMember representando el estado del miembro antes del cambio.
  * @param newMember - El objeto GuildMember representando el estado del miembro después del cambio.
  * @returns Promise que se resuelve cuando se completa el manejo del evento (incluyendo encolado de actualizaciones).
@@ -53,11 +48,10 @@ import { getApexPlatformsForGuild } from '../../helpers/get-apex-platforms-for-g
  * @example
  * // Se llama automáticamente por el evento GuildMemberUpdate de Discord.js
  * client.on('guildMemberUpdate', (oldMember, newMember) => {
- *   handleGuildMemberUpdate(client, oldMember, newMember);
+ *   handleGuildMemberUpdate(oldMember, newMember);
  * });
  */
 export async function handleGuildMemberUpdate(
-  client: Client,
   oldMember: any,
   newMember: any
 ): Promise<void> {
@@ -76,19 +70,25 @@ export async function handleGuildMemberUpdate(
   // Paso 3: Filtrado de roles Apex - Identificar cambios en roles de rango y plataforma
   // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
   const ranks = getApexRanksForGuild(newMember.guild.id, newMember.guild);
+  const resolver = buildRankResolver(ranks);
   const platforms = getApexPlatformsForGuild(
     newMember.guild.id,
     newMember.guild
   );
-  const apexRoleNames = ranks.map((rank) => rank.roleName);
-  const platformRoleNames = platforms.map((platform) => platform.roleName);
-  const allApexRoleNames = [...apexRoleNames, ...platformRoleNames];
+  const apexRoleNames = new Set(ranks.map((rank) => rank.roleName));
+  const platformRoleNames = new Set(
+    platforms.map((platform) => platform.roleName)
+  );
+  const allApexRoleNames = new Set([
+    ...apexRoleNames,
+    ...platformRoleNames,
+  ]);
 
   const oldApexRoles = oldRoles.filter((role: any) =>
-    allApexRoleNames.includes(role.name)
+    allApexRoleNames.has(role.name)
   );
   const newApexRoles = newRoles.filter((role: any) =>
-    allApexRoleNames.includes(role.name)
+    allApexRoleNames.has(role.name)
   );
 
   // Si no hay cambios en roles de Apex (rank o plataforma), no hacer nada
@@ -100,32 +100,30 @@ export async function handleGuildMemberUpdate(
 
   // Paso 4: Determinación del tipo de cambio - Analizar si cambió rango, plataforma o ambos
   const oldRankRoles = oldRoles.filter((role: any) =>
-    apexRoleNames.includes(role.name)
+    apexRoleNames.has(role.name)
   );
   const newRankRoles = newRoles.filter((role: any) =>
-    apexRoleNames.includes(role.name)
+    apexRoleNames.has(role.name)
   );
 
   const oldPlatformRoles = oldRoles.filter((role: any) =>
-    platformRoleNames.includes(role.name)
+    platformRoleNames.has(role.name)
   );
   const newPlatformRoles = newRoles.filter((role: any) =>
-    platformRoleNames.includes(role.name)
+    platformRoleNames.has(role.name)
   );
 
   // Paso 5: Actualización de datos del jugador - Procesar cambios en rango y/o plataforma
-  let rankChanged = !oldRankRoles.equals(newRankRoles);
-  let platformChanged = !oldPlatformRoles.equals(newPlatformRoles);
+  const rankChanged = !oldRankRoles.equals(newRankRoles);
+  const platformChanged = !oldPlatformRoles.equals(newPlatformRoles);
 
   if (rankChanged || platformChanged) {
     // Si cambió el rank, actualizar fecha y rank
     if (rankChanged) {
       let newRank: string | undefined;
       if (newRankRoles.size > 0) {
-        const newRankRole = newRankRoles.first();
-        // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
-        const rankInfo = ranks.find((r) => r.roleName === newRankRole.name);
-        newRank = rankInfo?.shortId;
+        const highestRank = resolver.pickHighest(newRankRoles.values());
+        newRank = highestRank?.shortId;
       } else {
         // Rank removido
         newRank = '';
@@ -170,13 +168,14 @@ export async function handleGuildMemberUpdate(
     }
   }
 
-  // Paso 6: Encolado de actualización asíncrona - Refrescar embeds, estadísticas y presencia
-  enqueueGuildUpdate(
-    newMember.guild,
-    async () => {
-      await updateRoleCountMessage(newMember.guild);
-      await updateBotPresence(client);
-    },
-    3 // Alta prioridad para cambios de roles
-  );
+  // Paso 6: Refresco coalescido de solo los cards de los rangos old/new
+  const affectedRanks = new Set<string>();
+  const oldHighestRank = resolver.pickHighest(oldRankRoles.values());
+  const newHighestRank = resolver.pickHighest(newRankRoles.values());
+  if (oldHighestRank) affectedRanks.add(oldHighestRank.shortId);
+  if (newHighestRank) affectedRanks.add(newHighestRank.shortId);
+
+  if (affectedRanks.size > 0) {
+    requestRankCardRefresh(newMember.guild, affectedRanks, 3);
+  }
 }

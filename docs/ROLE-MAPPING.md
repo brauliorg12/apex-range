@@ -40,14 +40,16 @@ El bot mantiene diccionarios de **alias conocidos** para cada rango y plataforma
 
 ```typescript
 const RANK_ALIASES = {
-  predator: ['Apex Predator', 'ApexPredator', 'Predator', 'Pred'],
+  predator: ['Apex Predator', 'ApexPredator', 'Predator', 'Pred', 'apex predator'],
+  grandmaster: ['Gran maestro', 'Gran Maestro', 'Granmaster', 'Grandmaster', 'Grand Master'],
   master: ['Maestro', 'Master'],
   diamond: ['Diamante', 'Diamond'],
+  emerald: ['Esmeralda', 'Esmerald', 'Emerald'],
   platinum: ['Platino', 'Platinum'],
   gold: ['Oro', 'Gold'],
   silver: ['Plata', 'Silver'],
   bronze: ['Bronce', 'Bronze', 'bronce'],
-  rookie: ['Rookie'],
+  rookie: ['Rookie', 'Hierro', 'Iron', 'Principiante'],
 };
 ```
 
@@ -67,53 +69,58 @@ const PLATFORM_ALIASES = {
 Cuando no hay coincidencia exacta, el bot utiliza **distancia de Levenshtein** para calcular similitud:
 
 ```typescript
-function stringSimilarity(str1: string, str2: string): number {
-  // 1. Normalizar texto (minúsculas, sin acentos)
-  const s1 = normalizeText(str1);
-  const s2 = normalizeText(str2);
+// Resumen de matchTermToRole en suggest-role-mapping.ts
+const normalizedTerm = normalizeText(term);
+const normalizedRole = normalizeText(roleName);
 
-  // 2. Verificar coincidencia exacta
-  if (s1 === s2) return 1.0;
-
-  // 3. Verificar si son alias conocidos
-  if (areAliases(str1, str2)) return 1.0;
-
-  // 4. Verificar si uno contiene al otro
-  if (s1.includes(s2) || s2.includes(s1)) return 0.9;
-
-  // 5. Calcular distancia de Levenshtein
-  const distance = levenshteinDistance(s1, s2);
-  return (longer.length - distance) / longer.length;
+if (normalizedTerm === normalizedRole) {
+  return { score: 1, matchType: 'exact' };
 }
+
+if (areAliases(term, roleName)) {
+  return { score: 1, matchType: 'alias' };
+}
+
+const score = calculateNormalizedSimilarity(normalizedTerm, normalizedRole);
+if (score < SIMILARITY_THRESHOLD) return null;
+
+return { score, matchType: 'similar' };
 ```
+
+`normalizeText` pasa a minúsculas, quita acentos y caracteres no alfanuméricos.
+`calculateNormalizedSimilarity` devuelve `0.9` cuando un texto contiene al otro
+y, en el resto de los casos, aplica distancia de Levenshtein.
 
 **Umbral de similitud:** 70% (0.7)
 
 ### 4. Flujo de Búsqueda en Runtime
 
-Cuando el bot necesita encontrar un rol durante el funcionamiento:
+Cuando el bot necesita encontrar un rol durante el funcionamiento, el helper de
+rangos usa un índice normalizado que se arma una vez por guild:
 
 ```typescript
 function findRoleWithAliases(
-  guild: Guild,
+  roleNameIndex: Map<string, string>,
   shortId: string,
   primaryName: string
 ): string {
   // 1. Intentar con el nombre mapeado en configuración
-  const primaryRole = guild.roles.cache.find((r) => r.name === primaryName);
-  if (primaryRole) return primaryName;
+  const primaryRole = roleNameIndex.get(normalizeRoleName(primaryName));
+  if (primaryRole) return primaryRole;
 
   // 2. Buscar entre los alias conocidos
-  const aliases = RANK_ALIASES[shortId] || [];
-  for (const alias of aliases) {
-    const role = guild.roles.cache.find((r) => r.name === alias);
-    if (role) return role.name;
+  for (const alias of RANK_ALIASES[shortId] || []) {
+    const roleName = roleNameIndex.get(normalizeRoleName(alias));
+    if (roleName) return roleName;
   }
 
   // 3. Si no encuentra nada, devolver nombre primario
   return primaryName;
 }
 ```
+
+El helper de plataformas (`getApexPlatformsForGuild`) resuelve contra
+`guild.roles.cache` porque no comparte el índice de rangos.
 
 ---
 
@@ -154,28 +161,30 @@ function findRoleWithAliases(
 
 1. **Detección**: El bot analiza los roles del servidor
 2. **Coincidencias**:
-   - "Apex Champion" → 75% similitud con "Apex Predator"
-   - "Pro Gamer" → Baja similitud, no se mapea
-   - "Elite Player" → Baja similitud, no se mapea
-3. **Sugerencia**: Solo sugiere mapear "Apex Champion" → "Apex Predator"
-4. **Confirmación**: Usuario acepta la sugerencia
-5. **Creación**: Bot crea roles faltantes con nombres estándar
+   - "Apex Champion" → no alcanza el umbral de similitud con "Apex Predator"
+   - "Pro Gamer" → no se mapea
+   - "Elite Player" → no se mapea
+3. **Sugerencia**: No hay mapeos automáticos; el bot ofrece crear los roles
+   estándar.
+4. **Alternativa**: Agregar "Apex Champion" como alias o mapearlo manualmente en
+   `server-config`.
+5. **Resultado**: No se fuerza un mapeo incorrecto.
 
 ### Ejemplo 3: Servidor con Variaciones de Plataformas
 
 **Roles existentes en tu servidor:**
 
 - 🖥️ PC Gamers
-- 🎮 PS5 Players
+- 🎮 PlayStation Players
 - 🎮 Switch Users
 
 **Proceso del bot:**
 
 1. **Detección**: El bot analiza los roles de plataforma
 2. **Coincidencias**:
-   - "PS5 Players" → Contiene "PS5", 90% similitud con "PlayStation"
-   - "Switch Users" → Contiene "Switch", 90% similitud con "Nintendo Switch"
-   - "PC Gamers" → Contiene "PC", 90% similitud con "PC"
+   - "PlayStation Players" → contiene "PlayStation", 90% similitud
+   - "Switch Users" → contiene "Switch", 90% similitud
+   - "PC Gamers" → contiene "PC", 90% similitud
 3. **Sugerencia**: Mapea las tres plataformas
 4. **Confirmación**: Usuario acepta
 5. **Resultado**: Bot usa roles personalizados para plataformas
@@ -190,38 +199,89 @@ Los mapeos se guardan en `db/server-config-{guildId}.json`:
 
 ```json
 {
-  "guildId": "1234567890123456789",
   "ranks": {
-    "predator": "🏆 Predator",
-    "master": "Maestro",
-    "diamond": "Diamante",
-    "platinum": "Platino",
-    "gold": "Oro",
-    "silver": "Plata",
+    "rookie": "Hierro",
     "bronze": "Bronce",
-    "rookie": "Rookie",
-    "switch": "Switch Users",
-    "ps4": "PS5 Players",
+    "silver": "Plata",
+    "gold": "Oro",
+    "platinum": "Platino",
+    "emerald": "Esmeralda",
+    "diamond": "Diamante",
+    "master": "Maestro",
+    "grandmaster": "Gran maestro",
+    "predator": "🏆 Predator",
     "pc": "PC Gamers",
-    "xbox": "Xbox"
+    "ps4": "PS5 Players",
+    "xbox": "Xbox",
+    "switch": "Switch Users"
   },
-  "excludedRoles": ["Moderador", "VIP"],
-  "setupCompleted": true
+  "excludedRoles": ["Moderador", "VIP"]
 }
 ```
+
+> `rookie` es la clave interna estable del rango Hierro/Rookie; se conserva para no romper jugadores, mapeos ni mensajes ya guardados. El ejemplo usa `Hierro` con `ENABLE_NEW_RANKS` habilitado; en esta versión el nombre activo es `Rookie`. Las claves `emerald` y `grandmaster` solo se usan con ese flag. `ENABLE_NEW_RANKS` es temporal y se elimina al cerrar el rollout. El bloque `ranks` también guarda los nombres de roles de plataforma (`pc`, `ps4`, `xbox`, `switch`), como lee `getApexPlatformsForGuild`.
+
+### Migración Rookie → Hierro
+
+El `shortId` interno `rookie` no cambia. Con `ENABLE_NEW_RANKS=false` el nombre
+visible es `Rookie`; con `ENABLE_NEW_RANKS=true` es `Hierro`. Los alias
+`Rookie`, `Principiante` e `Iron` se siguen aceptando para no romper servidores
+existentes. El flag no renombra ni borra roles.
+
+- **Solo existe `Rookie`**: no hace falta crear otro rol. El bot lo resuelve por
+  alias. Para `ENABLE_NEW_RANKS=true`, renombrá el rol a `Hierro`; así se
+  conservan ID y miembros.
+- **Existen `Rookie` y el nombre activo a la vez**: el sync reporta la
+  ambigüedad y no crea, renombra ni borra esos roles automáticamente. Unificá
+  los miembros en un único rol y resolvé el duplicado de forma manual.
+- **No existe ninguno**: cuando la creación está habilitada (arranque,
+  reincorporación o rol nuevo), el sync crea el nombre activo (`Rookie` con
+  `ENABLE_NEW_RANKS=false`, `Hierro` con `true`) si no hay un rol candidato.
+
+> No crees un rol nuevo si todavía existe un `Rookie` con miembros: duplicaría
+> el rango y dejaría a esos miembros fuera del panel.
+
+### Rango canónico y multi-rango
+
+El panel, `/show-my-rank`, el badge de avatares y `players_*.json` usan el
+rango de mayor `tier` de `APEX_RANKS`. No usan el primer rol del cache ni
+`role.position`.
+
+- El autoservicio reemplaza los roles de rango anteriores al asignar uno nuevo.
+- Un admin puede dejar roles extra; el sync no los borra y el panel muestra
+  solo el mayor.
+- El orden de los roles en Discord solo afecta asignación y permisos; el orden
+  visual de los cards se decide por `tier`.
+
+### Creación manual de roles
+
+- Usá el nombre exacto del rango o un alias conocido; la resolución de rangos
+  compara sin distinguir mayúsculas/minúsculas y también acepta alias.
+- Ubicá los roles debajo del rol más alto del bot y en orden de `tier`
+  (Predator arriba, Hierro/Rookie abajo).
+- El sync solo reordena los roles cuando crea al menos uno; si todos existían,
+  conserva las posiciones actuales.
+- Si el bot no tiene `Gestionar roles`, podés crear los roles manualmente. El
+  aviso lista los faltantes, pero el permiso sigue siendo necesario para que el
+  autoservicio asigne o cambie roles.
+- Los roles creados por el sync usan `colors.primaryColor` y `mentionable`.
 
 ### Funciones Principales
 
 #### `getApexRanksForGuild(guildId, guild?)`
 
-Retorna la lista de rangos con nombres de roles personalizados para un servidor específico:
+Retorna la lista de rangos con nombres de roles personalizados para un servidor
+específico, ordenada por `tier` ascendente:
 
 ```typescript
 const ranks = getApexRanksForGuild(guildId, guild);
 // [
-//   { shortId: 'predator', roleName: '🏆 Predator', label: 'Apex Predator', ... },
-//   { shortId: 'master', roleName: 'Maestro', label: 'Master', ... },
+//   { shortId: 'rookie', tier: 1, roleName: 'Hierro', label: 'Hierro', ... },
+//   { shortId: 'bronze', roleName: 'Bronce', label: 'Bronce', ... },
+//   { shortId: 'silver', roleName: 'Plata', label: 'Plata', ... },
+//   { shortId: 'gold', roleName: 'Oro', label: 'Oro', ... },
 //   ...
+//   { shortId: 'predator', roleName: '🏆 Predator', label: 'Apex Predator', ... },
 // ]
 ```
 
@@ -252,15 +312,37 @@ const suggestions = suggestRoleMappings(guildId, existingRoles);
 // }
 ```
 
+#### `findRankRoleCandidate(rank, existingRoleNames, catalogRanks)`
+
+Busca un rol existente que podría corresponder a un rango faltante, sin
+modificar roles, configuración ni estado:
+
+```typescript
+const candidate = findRankRoleCandidate(rank, existingRoleNames, ranks);
+// { roleName: 'Esmerald', matchType: 'alias', score: 1 } | null
+```
+
+Comparte el motor de normalización, aliases y umbral de `suggestRoleMappings`
+(70 %). Reglas de desempate:
+
+1. Mayor puntaje de similitud.
+2. Exacto > alias > similar.
+3. Nombre normalizado alfabéticamente.
+
+Un empate devuelve un candidato, nunca `null`, para que el sync lo reporte en
+lugar de crear un rol duplicado. Se ignoran el rol común `Apex` y los roles que
+coinciden de forma exacta o por alias con otro rango (por ejemplo, `Maestro` no
+se propone como candidato de `Gran maestro`).
+
 ---
 
 ## 🎨 Personalización
 
 ### Agregar Nuevos Alias
 
-Para agregar nuevos alias reconocidos, edita los archivos:
+Todos los alias se definen en `src/models/constants-roles.ts`:
 
-**Para rangos:** `src/helpers/get-apex-ranks-for-guild.ts`
+**Para rangos:** `RANK_ALIASES`
 
 ```typescript
 const RANK_ALIASES: Record<string, string[]> = {
@@ -269,7 +351,7 @@ const RANK_ALIASES: Record<string, string[]> = {
 };
 ```
 
-**Para plataformas:** `src/helpers/get-apex-platforms-for-guild.ts`
+**Para plataformas:** `PLATFORM_ALIASES`
 
 ```typescript
 const PLATFORM_ALIASES: Record<string, string[]> = {
@@ -278,7 +360,7 @@ const PLATFORM_ALIASES: Record<string, string[]> = {
 };
 ```
 
-**Para sugerencias:** `src/helpers/suggest-role-mapping.ts`
+**Para sugerencias:** `ROLE_ALIASES`
 
 ```typescript
 const ROLE_ALIASES: Record<string, string[]> = {
@@ -296,7 +378,7 @@ Para cambiar qué tan "parecidos" deben ser los nombres para considerarse coinci
 **Archivo:** `src/helpers/suggest-role-mapping.ts`
 
 ```typescript
-const SIMILARITY_THRESHOLD = 0.7; // 70% de similitud
+export const SIMILARITY_THRESHOLD = 0.7; // 70% de similitud
 // Valores más bajos = más permisivo (ej: 0.6 = 60%)
 // Valores más altos = más estricto (ej: 0.8 = 80%)
 ```
@@ -323,15 +405,12 @@ Si necesitas reconfigurar los mapeos:
 2. Ejecuta `/setup-roles` nuevamente
 3. El bot volverá a analizar y sugerir mapeos
 
-### Logs de Mapeo
+### Registro de mapeos
 
-El bot registra todas las operaciones de mapeo en los logs:
-
-```
-[2025-10-03T10:00:00.000Z] [App] Sugerencias de mapeo generadas para servidor 123456
-[2025-10-03T10:00:01.000Z] [App] Mapeo confirmado: predator → 🏆 Predator
-[2025-10-03T10:00:02.000Z] [App] Rol "Diamante" encontrado para shortId diamond
-```
+El setup muestra las sugerencias en Discord y guarda los mapeos en
+`db/server-config-{guildId}.json`. Los errores de los handlers se registran en
+la consola y en los logs del bot; no hay un log específico por cada mapeo
+individual.
 
 ### Problemas Comunes
 
@@ -361,24 +440,15 @@ El bot registra todas las operaciones de mapeo en los logs:
 
 ---
 
-## 📊 Métricas de Rendimiento
-
-| Operación                 | Tiempo Típico | Cache |
-| ------------------------- | ------------- | ----- |
-| Análisis de roles         | < 100ms       | No    |
-| Generación de sugerencias | < 200ms       | No    |
-| Búsqueda con alias        | < 10ms        | Sí    |
-| Carga de configuración    | < 50ms        | Sí    |
-
----
-
 ## 🔗 Archivos Relacionados
 
 - **`src/helpers/get-apex-ranks-for-guild.ts`** - Sistema de alias para rangos
 - **`src/helpers/get-apex-platforms-for-guild.ts`** - Sistema de alias para plataformas
 - **`src/helpers/suggest-role-mapping.ts`** - Algoritmo de sugerencias
-- **`src/utils/role-resolver.ts`** - Utilidades de resolución de roles
+- **`src/utils/role-resolver.ts`** - Validación de roles mapeados
 - **`src/configs/handlers/confirm-mappings.ts`** - Handler de confirmación de mapeos
+- **`src/services/rank-sync/`** - Sincronización automática de roles y panel
+- **`docs/RANK-SYNC.md`** - Flujo automático de sincronización
 
 ---
 

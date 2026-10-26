@@ -3,6 +3,8 @@ import { GuildMember } from 'discord.js';
 export interface Player {
   member: GuildMember;
   rankName: string;
+  /** Indica si el miembro tiene más de un rol de rango. */
+  hasMultipleRankRoles?: boolean;
 }
 
 export interface PlayerRecord {

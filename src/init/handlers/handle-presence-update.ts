@@ -1,49 +1,23 @@
-import { Client } from 'discord.js';
-import { readRolesState } from '../../utils/state-manager';
-import { enqueueGuildUpdate } from '../../utils/guild-update-queue';
-import { updateRoleCountMessage } from '../../utils/update-status-message';
-import { updateBotPresence } from '../../utils/presence-helper';
-import { logApp } from '../../utils/logger';
+import { requestPresenceCardRefresh } from '../../helpers/rank-card-refresh-queue';
 
 /**
  * Maneja cambios en la presencia de miembros en servidores configurados.
- * Solo actualiza si el estado de presencia realmente cambió.
  *
- * @param client - El cliente de Discord.
+ * Solo solicita el refresco coalescido del card del rango más alto del
+ * miembro. La presencia global y las estadísticas quedan a cargo del scheduler.
+ *
  * @param oldPresence - La presencia anterior.
  * @param newPresence - La nueva presencia.
  */
 export async function handlePresenceUpdate(
-  client: Client,
   oldPresence: any,
   newPresence: any
 ): Promise<void> {
-  if (!newPresence.guild) return;
-
-  const rolesState = await readRolesState(newPresence.guild.id);
-  if (!rolesState) return;
+  if (!newPresence.guild || !newPresence.member) return;
 
   const oldStatus = oldPresence?.status;
   const newStatus = newPresence.status;
+  if (oldStatus === newStatus) return;
 
-  if (oldStatus !== newStatus) {
-    enqueueGuildUpdate(
-      newPresence.guild,
-      async () => {
-        await updateRoleCountMessage(newPresence.guild);
-        await updateBotPresence(client);
-      },
-      1
-    ); // Prioridad normal para presencia
-
-    // Log deshabilitado para evitar spam en servidores grandes
-    // Si necesitas debuggear, descomenta temporalmente:
-    // logApp(
-    //   `PresenceUpdate: ${newPresence.user?.tag ?? ''} (${
-    //     newPresence.user?.id ?? ''
-    //   }) cambió de ${oldStatus} a ${newStatus} en guild ${
-    //     newPresence.guild.name
-    //   } (${newPresence.guild.id})`
-    // );
-  }
+  requestPresenceCardRefresh(newPresence.guild, newPresence.member.id, 1);
 }

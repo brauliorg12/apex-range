@@ -1,12 +1,22 @@
 import { Guild } from 'discord.js';
 
+/** Tarea de actualización encolada para un guild. */
 type UpdateTask = {
+  /** Guild al que pertenece la tarea. */
   guild: Guild;
+  /** Trabajo a ejecutar. */
   task: () => Promise<void>;
-  priority: number; // 0 = low, 1 = normal, 2 = high
+  /** Prioridad: 0 = baja, 1 = normal, 2 = alta, 3 = muy alta. */
+  priority: number;
+  /** Momento de encolado, usado para ordenar tareas de igual prioridad. */
   timestamp: number;
+  /** Clave estable para deduplicar tareas equivalentes. */
+  key: string;
 };
 
+/**
+ * Cola de actualizaciones por guild con concurrencia limitada.
+ */
 class GuildUpdateQueue {
   private queues: Map<string, UpdateTask[]> = new Map();
   private processing: Set<string> = new Set();
@@ -14,17 +24,23 @@ class GuildUpdateQueue {
 
   /**
    * Agrega una tarea a la cola del guild.
-   * Si ya existe una tarea similar, la reemplaza con la de mayor prioridad.
+   *
+   * Si ya existe una tarea con la misma clave, conserva la de mayor prioridad.
+   * La clave debe ser estable entre llamadas equivalentes.
+   *
+   * @param guildId - El ID único del servidor de Discord.
+   * @param task - Tarea a encolar.
    */
   enqueue(guildId: string, task: UpdateTask): void {
-    if (!this.queues.has(guildId)) {
-      this.queues.set(guildId, []);
+    let queue = this.queues.get(guildId);
+    if (!queue) {
+      queue = [];
+      this.queues.set(guildId, queue);
     }
 
-    const queue = this.queues.get(guildId)!;
-
-    // Remover tareas duplicadas (mismo tipo de actualización)
-    const existingIndex = queue.findIndex((t) => t.task === task.task);
+    const existingIndex = queue.findIndex(
+      (queued) => queued.key === task.key
+    );
     if (existingIndex !== -1) {
       if (queue[existingIndex].priority < task.priority) {
         queue[existingIndex] = task;
@@ -38,26 +54,27 @@ class GuildUpdateQueue {
   }
 
   /**
-   * Inicia tareas pendientes hasta llenar la concurrencia disponible.
+   * Inicia tantos guilds como permita la concurrencia máxima.
    */
   private drain(): void {
-    while (this.processing.size < this.maxConcurrency) {
-      let nextGuildId: string | undefined;
+    if (this.processing.size >= this.maxConcurrency) return;
 
-      for (const [guildId, queue] of this.queues) {
-        if (!this.processing.has(guildId) && queue.length > 0) {
-          nextGuildId = guildId;
-          break;
-        }
+    for (const [guildId, queue] of this.queues) {
+      if (this.processing.size >= this.maxConcurrency) break;
+      if (queue.length === 0) {
+        this.queues.delete(guildId);
+        continue;
       }
+      if (this.processing.has(guildId)) continue;
 
-      if (!nextGuildId) return;
-      void this.processQueue(nextGuildId);
+      void this.processQueue(guildId);
     }
   }
 
   /**
    * Procesa la cola del guild si no está siendo procesada.
+   *
+   * @param guildId - El ID único del servidor de Discord.
    */
   private async processQueue(guildId: string): Promise<void> {
     if (
@@ -68,12 +85,14 @@ class GuildUpdateQueue {
     }
 
     const queue = this.queues.get(guildId);
-    if (!queue || queue.length === 0) return;
+    if (!queue || queue.length === 0) {
+      this.queues.delete(guildId);
+      return;
+    }
 
     this.processing.add(guildId);
 
     try {
-      // Ordenar por prioridad (mayor primero) y timestamp (menor primero)
       queue.sort((a, b) => {
         if (a.priority !== b.priority) return b.priority - a.priority;
         return a.timestamp - b.timestamp;
@@ -90,17 +109,14 @@ class GuildUpdateQueue {
           );
         }
 
-        // Pequeña pausa entre tareas para no sobrecargar
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
     } finally {
       this.processing.delete(guildId);
-
       if (queue.length === 0) {
         this.queues.delete(guildId);
       }
-
-      this.drain();
+      setImmediate(() => this.drain());
     }
   }
 
@@ -108,6 +124,8 @@ class GuildUpdateQueue {
    * Cancela todas las tareas pendientes de un guild.
    *
    * No interrumpe una tarea en curso; su `finally` libera el slot.
+   *
+   * @param guildId - El ID único del servidor de Discord.
    */
   cancelGuild(guildId: string): void {
     this.queues.delete(guildId);
@@ -118,6 +136,8 @@ class GuildUpdateQueue {
 
   /**
    * Obtiene estadísticas de la cola.
+   *
+   * @returns Cantidad de tareas pendientes por guild.
    */
   getStats(): { [guildId: string]: number } {
     const stats: { [guildId: string]: number } = {};
@@ -133,10 +153,16 @@ export const globalUpdateQueue = new GuildUpdateQueue();
 
 /**
  * Función helper para encolar actualizaciones de roles y presencia.
+ *
+ * @param guild - Guild al que pertenece la actualización.
+ * @param updateFn - Trabajo a ejecutar.
+ * @param key - Clave estable de deduplicación dentro del guild.
+ * @param priority - Prioridad de la tarea.
  */
 export function enqueueGuildUpdate(
   guild: Guild,
   updateFn: () => Promise<void>,
+  key: string,
   priority: number = 1
 ): void {
   globalUpdateQueue.enqueue(guild.id, {
@@ -144,5 +170,6 @@ export function enqueueGuildUpdate(
     task: updateFn,
     priority,
     timestamp: Date.now(),
+    key,
   });
 }

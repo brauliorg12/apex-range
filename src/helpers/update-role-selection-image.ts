@@ -1,7 +1,10 @@
 import { EmbedBuilder, TextChannel, Client } from 'discord.js';
 import { logApp } from '../utils/logger';
-import { imagesConfig } from '../configs/images';
+import { resolveInitImage } from '../configs/images';
 import { SELECT_EMOGI } from '../models/constants';
+
+// Evita reenviar el mismo adjunto en cada actualización periódica.
+const lastImageFingerprint = new Map<string, string>();
 
 // Constante para el texto del embed de selección de rango (centralizada para evitar duplicación)
 export const ROLE_SELECTION_EMBED_TEXT = [
@@ -34,12 +37,13 @@ export async function updateInitRoleSelectionImage(
       return;
     }
 
-    // Leer la imagen directamente de la configuración
-    let currentImage = '';
-    try {
-      currentImage = imagesConfig.initRoleSelectionImage;
-    } catch (error) {
-      logApp(`Error leyendo configuración de imágenes: ${error}`);
+    const initImage = resolveInitImage();
+    if (initImage.warning) {
+      logApp(initImage.warning);
+    }
+
+    const fingerprint = initImage.fingerprint ?? '';
+    if (lastImageFingerprint.get(guildId) === fingerprint) {
       return;
     }
 
@@ -51,17 +55,23 @@ export async function updateInitRoleSelectionImage(
       rolesState.roleSelectionMessageId
     );
 
-    // Crear el embed actualizado con la nueva imagen y texto centralizado
+    // Crear el embed actualizado con la imagen configurada y el texto centralizado
     const updatedEmbed = new EmbedBuilder()
       .setColor('#f1c40f')
       .setTitle(SELECT_EMOGI + ' SELECCIONA TU RANGO DE APEX LEGENDS')
-      .setDescription(ROLE_SELECTION_EMBED_TEXT)
-      .setImage(currentImage); // Usar la imagen leída del JSON
+      .setDescription(ROLE_SELECTION_EMBED_TEXT);
+
+    if (initImage.imageUrl) {
+      updatedEmbed.setImage(initImage.imageUrl);
+    }
 
     await message.edit({
       embeds: [updatedEmbed],
       components: message.components, // Mantener los botones existentes
+      files: initImage.file ? [initImage.file] : [],
     });
+
+    lastImageFingerprint.set(guildId, fingerprint);
 
     logApp(
       `Imagen del embed de selección de rango actualizada para guild ${guildId}`

@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { sendMessageWithTimeout } from '../set-message-timeout';
 import { ROLE_SELECTION_EMBED_TEXT } from '../update-role-selection-image';
-import { imagesConfig } from '../../configs/images';
+import { resolveInitImage } from '../../configs/images';
 import {
   createManagementButtons,
   createRankButtons,
@@ -32,11 +32,19 @@ export async function createRoleSelectionMessage(
 ): Promise<Message> {
   logger.info('Creando mensaje de selección de rango...');
 
+  const initImage = resolveInitImage();
+  if (initImage.warning) {
+    logger.warn(initImage.warning);
+  }
+
   const roleSelectionEmbed = new EmbedBuilder()
     .setColor('#f1c40f')
     .setTitle(SELECT_EMOGI + ' SELECCIONA TU RANGO DE APEX LEGENDS')
-    .setDescription(ROLE_SELECTION_EMBED_TEXT)
-    .setImage(imagesConfig.initRoleSelectionImage);
+    .setDescription(ROLE_SELECTION_EMBED_TEXT);
+
+  if (initImage.imageUrl) {
+    roleSelectionEmbed.setImage(initImage.imageUrl);
+  }
 
   try {
     const message = await sendMessageWithTimeout(
@@ -44,6 +52,7 @@ export async function createRoleSelectionMessage(
       {
         embeds: [roleSelectionEmbed],
         components: createRankButtons(channel.client, channel.guild),
+        files: initImage.file ? [initImage.file] : [],
       },
       15000
     );

@@ -14,68 +14,76 @@ import { renderRankCardCanvas } from '../utils/rank-card-canvas';
 import { buildOnlineEmbedForRank } from '../utils/build-online-embed-rank';
 import { createSeeMoreButtonRow } from '../utils/online-embed-helper';
 import { getServerLogger } from '../utils/server-logger';
-import { getApexRanksForGuild } from './get-apex-ranks-for-guild';
+import { isUnknownMessageError } from '../utils/message-reference';
+import {
+  buildCardFingerprint,
+  forgetCardFingerprint,
+  getCardFingerprint,
+  rememberCardFingerprint,
+} from './rank-card-fingerprint';
+import type { ApexRank } from '../interfaces/apex-rank';
+import type { PlayerRecord } from '../interfaces/player';
+import type { RankResolver } from './rank-priority';
 
 // Cache global para buffers de cards de rangos
 const rankCardCache = new Map<string, Buffer>();
 
-// Cache global para embeds de rangos (simple, sin TTL por ahora)
-const rankEmbedCache = new Map<string, any>();
+/** Resultado del intento de actualización de un card. */
+export type RankCardUpdateResult = 'edited' | 'skipped' | 'unavailable';
+
+/** Datos compartidos para renderizar un card sin releer jugadores. */
+export interface RankCardRenderContext {
+  /** Snapshot de jugadores del guild. */
+  playerData: PlayerRecord[];
+  /** Resolvedor canónico de rangos. */
+  resolver: RankResolver;
+  /** Fuerza la edición aunque el fingerprint coincida. */
+  force?: boolean;
+}
 
 /**
  * Actualiza solo el mensaje del card de un rango específico en el canal.
- * @param guild Servidor Discord.
- * @param channel Canal donde están los cards.
- * @param rankShortId El shortId del rango a actualizar.
- * @param messageId El ID del mensaje del card a actualizar.
+ *
+ * Omite la edición cuando el contenido visible no cambió, salvo que `force`
+ * esté activo. Nunca registra un log por omisión; el agregado lo hace el
+ * refresco.
+ *
+ * @param guild - Servidor Discord.
+ * @param channel - Canal donde están los cards.
+ * @param rank - Rango a actualizar.
+ * @param messageId - El ID del mensaje del card a actualizar.
+ * @param context - Snapshot de jugadores, resolvedor y opción de forzar.
+ * @returns `edited`, `skipped` o `unavailable`.
  */
 export async function updateRankCardMessage(
   guild: Guild,
   channel: TextChannel,
-  rankShortId: string,
-  messageId: string
-) {
+  rank: ApexRank,
+  messageId: string,
+  context: RankCardRenderContext
+): Promise<RankCardUpdateResult> {
   const serverLogger = getServerLogger(guild.id, guild.name);
-  const startTime = performance.now();
-  serverLogger.debug(`Iniciando updateRankCardMessage para ${rankShortId}`);
-
-  // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
-  const ranks = getApexRanksForGuild(guild.id, guild);
-  const rank = ranks.find((r) => r.shortId === rankShortId);
-  if (!rank) {
-    serverLogger.warn(`Rank no encontrado: ${rankShortId}`);
-    return;
-  }
 
   const role: Role | undefined = guild.roles.cache.find(
     (r): r is Role => r.name === rank.roleName
   );
   if (!role) {
     serverLogger.warn(
-      `Role de Discord no encontrado: ${rank.roleName} para ${rankShortId}`
+      `Role de Discord no encontrado: ${rank.roleName} para ${rank.shortId}`
     );
-    return;
+    return 'unavailable';
   }
 
-  serverLogger.debug(
-    `Actualizando card para ${rank.label} (${rank.roleName}) - Role ID: ${role.id}`
+  const allMembers = getAllMembersByRole(
+    guild,
+    role,
+    context.playerData,
+    context.resolver
   );
-
-  // Obtén todos los jugadores del rango usando playerData
-  const { getPlayerData } = await import('../utils/player-data-manager');
-  const playerData = await getPlayerData(guild);
-  serverLogger.debug(
-    `PlayerData obtenido para ${rankShortId}: ${Math.round(
-      performance.now() - startTime
-    )}ms`
-  );
-
-  const allMembers = getAllMembersByRole(guild, role, playerData);
-  const sortedMembers = sortMembersByPriority(allMembers, playerData);
+  const sortedMembers = sortMembersByPriority(allMembers, context.playerData);
 
   const pageMembers = sortedMembers.slice(0, MAX_PLAYERS_PER_CARD);
 
-  // Obtener URL del emoji grande
   const emojiMatch =
     typeof rank.id === 'string' && rank.id.match(/^<a?:\w+:(\d+)>$/);
   let emojiUrl = undefined;
@@ -84,27 +92,17 @@ export async function updateRankCardMessage(
     emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.png?size=96&quality=lossless`;
   }
 
-  // Genera la imagen (solo logo pulse + texto de rango)
   let cardUrl = undefined;
-  let files: AttachmentBuilder[] = [];
+  const files: AttachmentBuilder[] = [];
   if (emojiUrl) {
-    let cardBuffer = rankCardCache.get(rankShortId);
+    let cardBuffer = rankCardCache.get(rank.shortId);
     if (!cardBuffer) {
       cardBuffer = await renderRankCardCanvas(emojiUrl, rank.color, rank.label);
-      rankCardCache.set(rankShortId, cardBuffer);
-      serverLogger.debug(
-        `Imagen generada para ${rankShortId}: ${Math.round(
-          performance.now() - startTime
-        )}ms`
-      );
-    } else {
-      serverLogger.debug(`Imagen cacheada para ${rankShortId}`);
+      rankCardCache.set(rank.shortId, cardBuffer);
     }
+
     const cardName = `rankcard_${rank.shortId}.png`;
-    const cardAttachment = new AttachmentBuilder(cardBuffer, {
-      name: cardName,
-    });
-    files.push(cardAttachment);
+    files.push(new AttachmentBuilder(cardBuffer, { name: cardName }));
     cardUrl = `attachment://${cardName}`;
   }
 
@@ -113,47 +111,58 @@ export async function updateRankCardMessage(
     rank,
     pageMembers,
     cardUrl,
-    sortedMembers.length, // totalCount para el footer
-    1, // página actual (puedes ajustar si tienes paginación)
+    sortedMembers.length,
+    1,
     MAX_PLAYERS_PER_CARD,
-    false, // showNumbers (solo true en efímeros)
-    allMembers as GuildMember[] // <-- aquí pasas todos los miembros del rango
-  );
-  serverLogger.debug(
-    `Embed construido para ${rankShortId}: ${Math.round(
-      performance.now() - startTime
-    )}ms`
+    false,
+    allMembers as GuildMember[]
   );
 
-  // Edita el mensaje del card
+  const components = createSeeMoreButtonRow(
+    rank,
+    sortedMembers.length,
+    MAX_PLAYERS_PER_CARD,
+    guild.client
+  );
+  const fingerprint = buildCardFingerprint(
+    messageId,
+    embed,
+    components,
+    files
+  );
+
+  if (
+    !context.force &&
+    getCardFingerprint(guild.id, messageId) === fingerprint
+  ) {
+    return 'skipped';
+  }
+
   try {
     const msg = await channel.messages.fetch(messageId);
     await msg.edit({
       embeds: [embed],
       files,
-      components: createSeeMoreButtonRow(
-        rank,
-        sortedMembers.length,
-        MAX_PLAYERS_PER_CARD,
-        guild.client
-      ),
+      components,
     });
-    serverLogger.debug(
-      `Mensaje editado para ${rankShortId}: ${Math.round(
-        performance.now() - startTime
-      )}ms`
-    );
-  } catch (err: any) {
-    if (err.code === 10008) {
+
+    rememberCardFingerprint(guild.id, messageId, fingerprint);
+    return 'edited';
+  } catch (error) {
+    forgetCardFingerprint(guild.id, messageId);
+
+    if (isUnknownMessageError(error)) {
       serverLogger.warn(
-        `El mensaje del card de rango ${rankShortId} no existe. Ejecuta el comando de setup para restaurar el panel.`
+        `El mensaje del card de rango ${rank.shortId} no existe. ` +
+          'Ejecuta el comando de setup para restaurar el panel.'
       );
-      return; // No recrea el mensaje, solo advierte
     } else {
       serverLogger.error(
-        `Error inesperado al editar el mensaje del card:`,
-        err
+        'Error inesperado al editar el mensaje del card:',
+        error
       );
     }
+
+    return 'unavailable';
   }
 }

@@ -21,7 +21,9 @@ import { logApp } from './utils/logger';
 export async function initBot(client: Client): Promise<void> {
   client.once(Events.ClientReady, async (readyClient) => {
     try {
-      logApp('Iniciando configuración del bot...');
+      logApp(
+        `Iniciando configuración del bot (${readyClient.guilds.cache.size} guilds)...`
+      );
 
       // Inicializar guilds existentes con configuración previa
       await initializeExistingGuilds(readyClient);
