@@ -10,7 +10,7 @@ type UpdateTask = {
 class GuildUpdateQueue {
   private queues: Map<string, UpdateTask[]> = new Map();
   private processing: Set<string> = new Set();
-  private maxConcurrency = 3; // Máximo de guilds procesando simultáneamente
+  private maxConcurrency = 1; // Prioriza estabilidad de CPU sobre paralelismo
 
   /**
    * Agrega una tarea a la cola del guild.
@@ -29,11 +29,31 @@ class GuildUpdateQueue {
       if (queue[existingIndex].priority < task.priority) {
         queue[existingIndex] = task;
       }
+      this.drain();
       return;
     }
 
     queue.push(task);
-    this.processQueue(guildId);
+    this.drain();
+  }
+
+  /**
+   * Inicia tareas pendientes hasta llenar la concurrencia disponible.
+   */
+  private drain(): void {
+    while (this.processing.size < this.maxConcurrency) {
+      let nextGuildId: string | undefined;
+
+      for (const [guildId, queue] of this.queues) {
+        if (!this.processing.has(guildId) && queue.length > 0) {
+          nextGuildId = guildId;
+          break;
+        }
+      }
+
+      if (!nextGuildId) return;
+      void this.processQueue(nextGuildId);
+    }
   }
 
   /**
@@ -75,19 +95,25 @@ class GuildUpdateQueue {
       }
     } finally {
       this.processing.delete(guildId);
-      // Si quedan tareas, procesar la siguiente
-      if (queue.length > 0) {
-        setImmediate(() => this.processQueue(guildId));
+
+      if (queue.length === 0) {
+        this.queues.delete(guildId);
       }
+
+      this.drain();
     }
   }
 
   /**
    * Cancela todas las tareas pendientes de un guild.
+   *
+   * No interrumpe una tarea en curso; su `finally` libera el slot.
    */
   cancelGuild(guildId: string): void {
     this.queues.delete(guildId);
-    this.processing.delete(guildId);
+    if (!this.processing.has(guildId)) {
+      this.drain();
+    }
   }
 
   /**

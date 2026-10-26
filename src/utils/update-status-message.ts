@@ -12,6 +12,7 @@ import { updateRankCardMessage } from '../helpers/update-rank-card-message';
 import { notifySetupRolesError } from './error-notifier';
 import { getServerLogger } from './server-logger';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
+import { runHeavyTask } from './heavy-task-queue';
 
 // Map para encadenar actualizaciones secuenciales por guild
 const updateLocks = new Map<string, Promise<void>>();
@@ -27,26 +28,35 @@ export async function fetchChannel(guild: Guild, channelId: string) {
 }
 
 /**
- * Actualiza los mensajes de selección de roles, estadísticas de jugadores y cards de rangos en el canal configurado.
- * Esta función lee el estado de roles del guild, obtiene estadísticas de jugadores, y actualiza los mensajes correspondientes.
- * Maneja errores como mensajes no encontrados y notifica al usuario si es necesario.
- * @param guild El objeto Guild de Discord para el servidor donde se actualizan los mensajes.
- * @returns Una promesa que se resuelve cuando todas las actualizaciones se completan.
+ * Actualiza los mensajes de selección de roles, estadísticas de jugadores y
+ * cards de rangos en el canal configurado.
+ *
+ * Las actualizaciones del mismo guild se serializan. El trabajo pesado se
+ * encola globalmente para evitar picos de CPU entre guilds e interacciones.
+ *
+ * @param guild - El guild cuyos mensajes se actualizan.
+ * @returns Una promesa que se resuelve cuando la actualización termina.
+ * @throws {Error} Si falla la actualización del guild.
  */
 export async function updateRoleCountMessage(guild: Guild) {
   const guildId = guild.id;
+  const previous = updateLocks.get(guildId) ?? Promise.resolve();
+  let release!: () => void;
+  const lock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
 
-  // Obtener la promesa actual o inicializar con resolved
-  const currentPromise = updateLocks.get(guildId) || Promise.resolve();
+  updateLocks.set(guildId, lock);
+  await previous.catch(() => {});
 
-  // Encadenar la nueva actualización
-  const newPromise = currentPromise.then(() => performUpdate(guild));
-
-  // Actualizar el lock
-  updateLocks.set(guildId, newPromise);
-
-  // Esperar a que se complete
-  await newPromise;
+  try {
+    await runHeavyTask(() => performUpdate(guild));
+  } finally {
+    release();
+    if (updateLocks.get(guildId) === lock) {
+      updateLocks.delete(guildId);
+    }
+  }
 }
 
 async function performUpdate(guild: Guild) {

@@ -10,6 +10,7 @@ import {
 } from '../../configs/setup-roles-handlers';
 import { logInteraction, logApp } from '../../utils/logger';
 import { getRankPageEmbed } from '../../utils/online-embed-helper';
+import { runHeavyTask } from '../../utils/heavy-task-queue';
 import { MAX_PLAYERS_PER_PAGE } from '../../models/constants';
 import { handleButtonInteraction } from '../../button-interactions';
 import { handlePlatformAssignment } from '../rank-management';
@@ -20,6 +21,17 @@ import { handlePlatformAssignment } from '../rank-management';
  * @returns Promise<void>
  */
 export async function handleButton(interaction: ButtonInteraction) {
+  const isSeeMoreButton = /^rank_\w+_vermas$/.test(interaction.customId);
+  const isRankPaginationButton =
+    /^rank_\w+_(prev|next)_\d+$/.test(interaction.customId);
+
+  // Reconocer antes de cualquier I/O evita el límite de 3 segundos de Discord.
+  if (isSeeMoreButton) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  } else if (isRankPaginationButton) {
+    await interaction.deferUpdate();
+  }
+
   await logInteraction({
     type: 'Button',
     userTag: interaction.user.tag,
@@ -84,12 +96,14 @@ export async function handleButton(interaction: ButtonInteraction) {
         }) | ` + `RankId: ${rankId} | Usuario: ${interaction.user.tag}`
       );
 
-      const pageResult = await getRankPageEmbed(
-        interaction.guild!,
-        rankId,
-        1,
-        MAX_PLAYERS_PER_PAGE, // cantidad por página efímera
-        true
+      const pageResult = await runHeavyTask(() =>
+        getRankPageEmbed(
+          interaction.guild!,
+          rankId,
+          1,
+          MAX_PLAYERS_PER_PAGE, // cantidad por página efímera
+          true
+        )
       );
 
       if (!pageResult) {
@@ -101,10 +115,9 @@ export async function handleButton(interaction: ButtonInteraction) {
             `Posibles causas: 1) playerData vacío, 2) rol no encontrado, 3) no hay jugadores con ese rango.`
         );
 
-        return await interaction.reply({
+        return await interaction.editReply({
           content:
             '⚠️ No hay datos disponibles. Puede que la sincronización aún no se haya ejecutado (espera 2 minutos) o no hay jugadores con este rango.',
-          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -112,11 +125,10 @@ export async function handleButton(interaction: ButtonInteraction) {
         `[Button Ver más] ✅ Mostrando página con ${pageResult.page}/${pageResult.totalPages} páginas`
       );
 
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [pageResult.embed],
         files: pageResult.files,
         components: pageResult.components,
-        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -132,20 +144,21 @@ export async function handleButton(interaction: ButtonInteraction) {
       // provocaba saltos (ej: 1 -> 3). Usar directamente el número embebido.
       const targetPage = parseInt(pagMatch[3], 10);
 
-      const pageResult = await getRankPageEmbed(
-        interaction.guild!,
-        rankId,
-        targetPage, // usar la página objetivo indicada por el botón
-        MAX_PLAYERS_PER_PAGE,
-        true
+      const pageResult = await runHeavyTask(() =>
+        getRankPageEmbed(
+          interaction.guild!,
+          rankId,
+          targetPage, // usar la página objetivo indicada por el botón
+          MAX_PLAYERS_PER_PAGE,
+          true
+        )
       );
       if (!pageResult)
-        return await interaction.reply({
+        return await interaction.editReply({
           content: 'No hay datos.',
-          flags: MessageFlags.Ephemeral,
         });
 
-      await interaction.update({
+      await interaction.editReply({
         embeds: [pageResult.embed],
         files: pageResult.files,
         components: pageResult.components,

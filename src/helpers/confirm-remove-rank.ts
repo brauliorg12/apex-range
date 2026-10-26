@@ -3,7 +3,6 @@ import {
   ButtonInteraction,
   GuildMember,
   EmbedBuilder,
-  TextChannel,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -15,8 +14,6 @@ import {
   removePlayerPlatform,
 } from '../utils/player-data-manager';
 import { removeCommonApexRoleIfNoRank } from '../utils/role-helper';
-import { readRolesState } from '../utils/state-manager';
-import { updateRankCardMessage } from './update-rank-card-message';
 import { logApp } from '../utils/logger';
 import { getApexRanksForGuild } from './get-apex-ranks-for-guild';
 import { getApexPlatformsForGuild } from './get-apex-platforms-for-guild';
@@ -152,25 +149,6 @@ export async function confirmRemoveRank(interaction: ButtonInteraction) {
           // Actualizaciones
           if (guild) {
             await updateRoleCountMessage(guild);
-            const rolesState = await readRolesState(guild.id);
-            if (rolesState && rolesState.channelId) {
-              const channel = guild.channels.cache.get(
-                rolesState.channelId
-              ) as TextChannel;
-              // Usar roles mapeados del servidor
-              const ranksForUpdate = getApexRanksForGuild(guild.id, guild);
-              for (const rank of ranksForUpdate) {
-                const msgId = rolesState.rankCardMessageIds?.[rank.shortId];
-                if (msgId) {
-                  await updateRankCardMessage(
-                    guild,
-                    channel,
-                    rank.shortId,
-                    msgId
-                  );
-                }
-              }
-            }
           }
 
           collector.stop();
