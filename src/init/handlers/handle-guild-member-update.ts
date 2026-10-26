@@ -4,7 +4,6 @@ import { logApp } from '../../utils/logger';
 import { enqueueGuildUpdate } from '../../utils/guild-update-queue';
 import { updateRoleCountMessage } from '../../utils/update-status-message';
 import { updateBotPresence } from '../../utils/presence-helper';
-import { updateRankCardMessage } from '../../helpers/update-rank-card-message';
 import {
   updatePlayerRankDate,
   getPlayerPlatform,
@@ -177,30 +176,6 @@ export async function handleGuildMemberUpdate(
     async () => {
       await updateRoleCountMessage(newMember.guild);
       await updateBotPresence(client);
-
-      // Actualizar cards de rangos afectados
-      const channel = newMember.guild.channels.cache.get(
-        rolesState.channelId
-      ) as any;
-      if (channel) {
-        // 👇 USAR ROLES MAPEADOS DEL SERVIDOR
-        // Actualizar todos los rangos que podrían haber cambiado
-        const ranksForUpdate = getApexRanksForGuild(
-          newMember.guild.id,
-          newMember.guild
-        );
-        for (const rank of ranksForUpdate) {
-          const rankMessageId = rolesState.rankCardMessageIds?.[rank.shortId];
-          if (rankMessageId) {
-            await updateRankCardMessage(
-              newMember.guild,
-              channel,
-              rank.shortId,
-              rankMessageId
-            );
-          }
-        }
-      }
     },
     3 // Alta prioridad para cambios de roles
   );
