@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.20.3](https://github.com/brauliorg12/apex-range/compare/v1.20.2...v1.20.3) (2026-10-26)
+
+
+### Bug Fixes
+
+* **interactions:** acknowledge rank buttons before heavy card work ([be262dc](https://github.com/brauliorg12/apex-range/commit/be262dc61d3fea6cef34b9f88e91aa6028bcafb7))
+
 ### [1.20.2](https://github.com/brauliorg12/apex-range/compare/v1.20.1...v1.20.2) (2026-10-24)
 
 
