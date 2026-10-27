@@ -1,6 +1,10 @@
 import * as fs from 'fs/promises';
 import type { PlayerRecord } from '../interfaces/player';
 import {
+  cachePlayersSnapshot,
+  invalidatePlayersCache,
+} from './players-cache';
+import {
   describeError,
   getPlayersFile,
   isNotFoundError,
@@ -42,27 +46,38 @@ function ensureGuildId(
  * - `io-error`: falló la lectura por un error del sistema de archivos.
  */
 export type PlayersReadResult =
-  | { status: 'ok'; players: unknown[] }
+  | { status: 'ok'; players: unknown[]; raw: string }
   | { status: 'missing' }
   | { status: 'invalid'; error: string }
   | { status: 'io-error'; error: string };
 
 /**
+ * Serializa los jugadores con indentación de 2 espacios.
+ *
+ * Conserva la legibilidad de `players_*.json` para inspección y restauración
+ * manual. La comparación de `mutatePlayers` usa esta misma representación para
+ * evitar serializar el array más de una vez por mutación.
+ *
+ * @param players - Jugadores a serializar.
+ * @returns El JSON indentado.
+ */
+function serializePlayers(players: readonly unknown[]): string {
+  return JSON.stringify(players, null, 2);
+}
+
+/**
  * Escribe la base de jugadores con la misma escritura atómica que `.bot-state`.
  *
  * @param guildId - El ID único del servidor de Discord.
- * @param players - Jugadores a persistir.
+ * @param payload - Contenido JSON ya serializado.
  * @throws {Error} Si falla la escritura temporal o la escritura final.
  */
 async function writePlayersFile(
   guildId: string,
-  players: unknown[]
+  payload: string
 ): Promise<void> {
   await fs.mkdir(PLAYERS_DIR, { recursive: true });
-  await writeFileAtomic(
-    getPlayersFile(guildId),
-    JSON.stringify(players, null, 2)
-  );
+  await writeFileAtomic(getPlayersFile(guildId), payload);
 }
 
 /**
@@ -70,7 +85,8 @@ async function writePlayersFile(
  * JSON inválido y error de IO.
  *
  * No cambia el comportamiento tolerante de `readPlayers`; existe para los
- * flujos que necesitan abortar cuando los datos no son confiables.
+ * flujos que necesitan abortar cuando los datos no son confiables. El estado
+ * `ok` incluye el texto original para compararlo sin volver a serializar.
  *
  * @param guildId - El ID único del servidor de Discord.
  * @returns El resultado tipado de la lectura.
@@ -106,7 +122,7 @@ export async function readPlayersStrict(
     };
   }
 
-  return { status: 'ok', players: data };
+  return { status: 'ok', players: data, raw };
 }
 
 /**
@@ -134,6 +150,10 @@ export async function readPlayers(guildId: string): Promise<any[]> {
  * `invalid` o `io-error`, no se sobrescribe el archivo y se propaga un error.
  * Solo se escribe cuando la mutación cambia el contenido serializado.
  *
+ * La comparación usa el `raw` leído y una única serialización con indentación
+ * de 2 espacios. Si el contenido no cambió, el archivo no se reescribe. Al
+ * terminar, la cache se actualiza o se invalida si el archivo no se puede leer.
+ *
  * @typeParam T - Resultado que devuelve el mutador.
  * @param guildId - El ID único del servidor de Discord.
  * @param mutator - Función que muta el array en sitio y devuelve un resultado.
@@ -151,6 +171,7 @@ export async function mutatePlayers<T>(
     const result = await readPlayersStrict(guildId);
 
     if (result.status === 'invalid' || result.status === 'io-error') {
+      invalidatePlayersCache(guildId);
       throw new Error(
         `No se actualizó players_${guildId}.json: ` +
           `${result.status}: ${result.error}`
@@ -159,12 +180,19 @@ export async function mutatePlayers<T>(
 
     const players =
       result.status === 'ok' ? (result.players as PlayerRecord[]) : [];
-    const before = JSON.stringify(players);
+    const before = result.status === 'ok' ? result.raw : serializePlayers([]);
     const value = await mutator(players);
-
-    if (JSON.stringify(players) !== before) {
-      await writePlayersFile(guildId, players);
+    const after = serializePlayers(players);
+    if (after !== before) {
+      try {
+        await writePlayersFile(guildId, after);
+      } catch (error) {
+        invalidatePlayersCache(guildId);
+        throw error;
+      }
     }
+
+    await cachePlayersSnapshot(guildId, players, after);
 
     return value;
   });

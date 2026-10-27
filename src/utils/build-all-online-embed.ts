@@ -14,24 +14,23 @@ import {
 import { renderRankCardCanvas } from './rank-card-canvas';
 import { buildOnlineEmbedForRank } from './build-online-embed-rank';
 import { createSeeMoreButtonRow } from './online-embed-helper';
+import {
+  buildPlayerLookup,
+  getPlayerData,
+} from './player-data-manager';
+import { buildPlatformIconByApiName } from '../helpers/get-apex-platforms-for-guild';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 import {
   buildRankResolver,
   sortRanksByTier,
 } from '../helpers/rank-priority';
 import type { ApexRank } from '../interfaces/apex-rank';
+import type { PlayerRecord } from '../interfaces/player';
 import { getServerLogger } from './server-logger';
 import {
-  getAllMembersByRole,
-  getAllMembersByRoleWithProxies,
+  buildRankMemberIndex,
   sortMembersByPriority,
 } from './online-members';
-
-export {
-  getAllMembersByRole,
-  getAllMembersByRoleWithProxies,
-  sortMembersByPriority,
-};
 
 /**
  * Genera todos los embeds y archivos de imagen para mostrar los jugadores por
@@ -61,16 +60,21 @@ export async function buildAllOnlineEmbeds(
   const componentsList: ActionRowBuilder<ButtonBuilder>[][] = [];
   const cardRanks: ApexRank[] = [];
 
-  let playerData = playerDataSnapshot;
-  if (!playerData) {
-    const { getPlayerData } = await import('./player-data-manager');
-    playerData = await getPlayerData(guild);
-  }
+  const players =
+    (playerDataSnapshot as PlayerRecord[] | undefined) ??
+    (await getPlayerData(guild));
 
   const ranks = sortRanksByTier(
     expectedRanks ?? getApexRanksForGuild(guild.id, guild)
   );
   const resolver = buildRankResolver(ranks);
+  const lookup = {
+    ...buildPlayerLookup(players),
+    platformIconByApiName: buildPlatformIconByApiName(guild.id, guild),
+  };
+  const memberIndex = buildRankMemberIndex(guild, players, resolver, {
+    ranks,
+  });
 
   for (const rank of ranks) {
     const role: Role | undefined = guild.roles.cache.find(
@@ -87,8 +91,13 @@ export async function buildAllOnlineEmbeds(
       continue;
     }
 
-    const allMembers = getAllMembersByRole(guild, role, playerData, resolver);
-    const sortedMembers = sortMembersByPriority(allMembers, playerData);
+    const allMembers =
+      memberIndex.cachedByRank.get(rank.roleName) ?? [];
+    const sortedMembers = sortMembersByPriority(
+      allMembers,
+      players,
+      lookup.assignedAtByUserId
+    );
 
     const pageMembers = sortedMembers.slice(0, maxPerCard);
 
@@ -125,7 +134,8 @@ export async function buildAllOnlineEmbeds(
       1,
       maxPerCard,
       false,
-      allMembers as GuildMember[]
+      allMembers as GuildMember[],
+      lookup
     );
 
     embeds.push(embed);

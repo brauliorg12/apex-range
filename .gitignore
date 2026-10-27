@@ -54,3 +54,6 @@ key_ssh_public.pub
 
 # Local config (no versionar)
 server-config.md
+
+# Backups
+/backups

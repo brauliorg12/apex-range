@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { invalidatePlayersCache } from '../utils/state-manager';
 
 /**
  * Definición del comando /cleanup-data para Discord.
@@ -114,6 +115,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         .unlink(playersFile)
         .then(() => true)
         .catch(() => false);
+
+      invalidatePlayersCache(guildId);
 
       if (stateDeleted || playersDeleted) {
         cleanedCount++;

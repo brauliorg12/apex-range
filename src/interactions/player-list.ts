@@ -7,8 +7,12 @@ import {
 } from 'discord.js';
 import { ALL_PLAYERS_EMOGI, MAX_PLAYERS_PER_PAGE } from '../models/constants';
 import { createCloseButtonRow } from '../utils/button-helper';
-import { getPlayerData } from '../utils/player-data-manager';
+import {
+  buildPlayerLookup,
+  getPlayerData,
+} from '../utils/player-data-manager';
 import { PlayerRecord } from '../interfaces/player';
+import { buildPlatformIconByApiName } from '../helpers/get-apex-platforms-for-guild';
 import { getApexRanksForGuild } from '../helpers/get-apex-ranks-for-guild';
 import { buildRankResolver } from '../helpers/rank-priority';
 import { logApp } from '../utils/logger';
@@ -73,6 +77,11 @@ export async function handleShowAllPlayersMenu(
 
     const playerDateById = new Map<string, string>(
       (playerData as PlayerRecord[]).map((p) => [p.userId, p.assignedAt])
+    );
+    const lookup = buildPlayerLookup(playerData as PlayerRecord[]);
+    const platformIconByApiName = buildPlatformIconByApiName(
+      interaction.guild.id,
+      interaction.guild
     );
 
     let filteredRanks = allRanks;
@@ -147,6 +156,8 @@ export async function handleShowAllPlayersMenu(
           ranksByUser: ranksByUser,
           showRankEmoji: true,
           useDisplayName: true,
+          platformByUserId: lookup.platformByUserId,
+          platformIconByApiName,
         }
       );
 

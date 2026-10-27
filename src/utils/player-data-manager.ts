@@ -1,11 +1,25 @@
 import { Guild } from 'discord.js';
 import { getPlayers } from './players-manager';
-import { mutatePlayers, readPlayersStrict } from './state-manager';
+import {
+  mutatePlayers,
+  readPlayersCached,
+  readPlayersCachedStrict,
+} from './state-manager';
 import type { PlayersReadResult } from './state-manager';
 import type { PlayerData, PlayerRecord } from '../interfaces/player';
 
+export type { PlayerLookup } from './player-lookup';
+export {
+  buildAssignedAtByUserId,
+  buildPlayerLookup,
+} from './player-lookup';
+
 /**
  * Obtiene todos los jugadores registrados para un servidor específico.
+ *
+ * Reutiliza el snapshot cacheado mientras el archivo conserve su `mtimeMs` y
+ * `size`. El array devuelto es de solo lectura y no debe mutarse.
+ *
  * @param guild - El servidor de Discord para el cual obtener los datos de jugadores
  * @returns Promise que resuelve a un array de registros de jugadores (PlayerRecord[])
  */
@@ -17,6 +31,10 @@ export async function getPlayerData(guild: Guild): Promise<PlayerData> {
  * Obtiene un snapshot estricto de los jugadores registrados de un servidor,
  * distinguiendo archivo ausente, JSON inválido y error de IO.
  *
+ * Reutiliza la cache por guild mientras el archivo conserve su `mtimeMs` y
+ * `size`; una restauración o edición externa fuerza una relectura. El array
+ * devuelto es de solo lectura.
+ *
  * @param guild - El servidor de Discord.
  * @returns El resultado tipado de la lectura.
  * @throws {Error} Si el guildId es inválido o no se puede preparar el directorio.
@@ -24,7 +42,7 @@ export async function getPlayerData(guild: Guild): Promise<PlayerData> {
 export async function getPlayerDataSnapshot(
   guild: Guild
 ): Promise<PlayersReadResult> {
-  return readPlayersStrict(guild.id);
+  return readPlayersCachedStrict(guild.id);
 }
 
 /**
@@ -63,6 +81,10 @@ export async function updatePlayerRankDate(
 
 /**
  * Obtiene la plataforma de juego de un usuario específico en un servidor.
+ *
+ * Usa la lectura cacheada para las consultas puntuales. Si hay registros
+ * duplicados gana el primero, igual que el `find` histórico.
+ *
  * @param guildId - ID del servidor de Discord
  * @param userId - ID del usuario de Discord
  * @returns Promise que resuelve al nombre de la plataforma ('PC', 'PS4', 'X1', 'SWITCH') o '' si no se encuentra
@@ -71,9 +93,9 @@ export async function getPlayerPlatform(
   guildId: string,
   userId: string
 ): Promise<string> {
-  const data = await getPlayers(guildId);
-  const player = data.find((r: PlayerRecord) => r.userId === userId);
-  return player?.platform || ''; // Por defecto vacío si no se encuentra
+  const data = await readPlayersCached(guildId);
+  const player = data.find((record) => record.userId === userId);
+  return player?.platform || '';
 }
 
 /**

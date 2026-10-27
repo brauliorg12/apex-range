@@ -34,7 +34,13 @@ El objetivo es mantener cada archivo en 250 líneas o menos, incluido el JSDoc.
   `online-embed-buttons.ts`, `online-embed-members.ts`,
   `recent-avatars-draw.ts`, `recent-avatars-avatar.ts`,
   `rank-roles-types.ts`, `rank-role-detection.ts` y `rank-role-order.ts`)
-  quedan por debajo de 250 líneas.
+  quedan por debajo de 250 líneas. La cache de snapshots
+  (`players-cache.ts`, `players-snapshot.ts`), el índice de miembros por rango
+  (`rank-member-index.ts`) y los helpers de lookup, paginación y búsqueda
+  (`player-lookup.ts`, `player-pagination-platform.ts`,
+  `player-pagination-content.ts`, `player-pagination-error.ts`,
+  `player-search-modal.ts`, `player-search-navigation.ts`,
+  `player-search-query-cache.ts`) también respetan el límite.
 
 ## Regiones
 

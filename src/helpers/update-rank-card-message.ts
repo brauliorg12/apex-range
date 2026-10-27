@@ -6,10 +6,7 @@ import {
   GuildMember,
 } from 'discord.js';
 import { MAX_PLAYERS_PER_CARD } from '../models/constants';
-import {
-  getAllMembersByRole,
-  sortMembersByPriority,
-} from '../utils/build-all-online-embed';
+import { sortMembersByPriority } from '../utils/online-members';
 import { renderRankCardCanvas } from '../utils/rank-card-canvas';
 import { buildOnlineEmbedForRank } from '../utils/build-online-embed-rank';
 import { createSeeMoreButtonRow } from '../utils/online-embed-helper';
@@ -23,6 +20,7 @@ import {
 } from './rank-card-fingerprint';
 import type { ApexRank } from '../interfaces/apex-rank';
 import type { PlayerRecord } from '../interfaces/player';
+import type { PlayerLookup } from '../utils/player-data-manager';
 import type { RankResolver } from './rank-priority';
 
 // Cache global para buffers de cards de rangos
@@ -35,8 +33,12 @@ export type RankCardUpdateResult = 'edited' | 'skipped' | 'unavailable';
 export interface RankCardRenderContext {
   /** Snapshot de jugadores del guild. */
   playerData: PlayerRecord[];
+  /** Miembros agrupados por rol de su rango más alto. */
+  membersByRank: ReadonlyMap<string, GuildMember[]>;
   /** Resolvedor canónico de rangos. */
   resolver: RankResolver;
+  /** Plataformas, fechas e íconos precomputados para el card. */
+  lookup: PlayerLookup;
   /** Fuerza la edición aunque el fingerprint coincida. */
   force?: boolean;
 }
@@ -52,7 +54,7 @@ export interface RankCardRenderContext {
  * @param channel - Canal donde están los cards.
  * @param rank - Rango a actualizar.
  * @param messageId - El ID del mensaje del card a actualizar.
- * @param context - Snapshot de jugadores, resolvedor y opción de forzar.
+ * @param context - Snapshot, miembros por rango, lookup y opción de forzar.
  * @returns `edited`, `skipped` o `unavailable`.
  */
 export async function updateRankCardMessage(
@@ -74,13 +76,12 @@ export async function updateRankCardMessage(
     return 'unavailable';
   }
 
-  const allMembers = getAllMembersByRole(
-    guild,
-    role,
+  const allMembers = context.membersByRank.get(rank.roleName) ?? [];
+  const sortedMembers = sortMembersByPriority(
+    allMembers,
     context.playerData,
-    context.resolver
+    context.lookup.assignedAtByUserId
   );
-  const sortedMembers = sortMembersByPriority(allMembers, context.playerData);
 
   const pageMembers = sortedMembers.slice(0, MAX_PLAYERS_PER_CARD);
 
@@ -115,7 +116,8 @@ export async function updateRankCardMessage(
     1,
     MAX_PLAYERS_PER_CARD,
     false,
-    allMembers as GuildMember[]
+    allMembers as GuildMember[],
+    context.lookup
   );
 
   const components = createSeeMoreButtonRow(

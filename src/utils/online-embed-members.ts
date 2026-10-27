@@ -1,7 +1,14 @@
 import { AttachmentBuilder, Guild, GuildMember, Role } from 'discord.js';
 import { getActiveRanks } from '../models/rank-catalog';
+import { buildPlatformIconByApiName } from '../helpers/get-apex-platforms-for-guild';
+import { buildRankResolver } from '../helpers/rank-priority';
 import { renderRankCardCanvas } from './rank-card-canvas';
+import {
+  buildRankMemberIndex,
+  sortMembersByPriority,
+} from './online-members';
 import type { ApexRank } from '../interfaces/apex-rank';
+import type { PlayerLookup } from './player-data-manager';
 
 /** Datos resueltos para renderizar una página de un rango. */
 export interface RankPageData {
@@ -23,6 +30,8 @@ export interface RankPageData {
   files: AttachmentBuilder[];
   /** URL del adjunto del card. */
   cardUrl?: string;
+  /** Plataformas, fechas e íconos precomputados para la página. */
+  lookup: PlayerLookup;
 }
 
 /**
@@ -44,9 +53,15 @@ export async function loadRankPageData(
   page: number,
   maxPerCard: number
 ): Promise<RankPageData | null> {
-  const { getPlayerData } = await import('./player-data-manager');
+  const { buildPlayerLookup, getPlayerData } = await import(
+    './player-data-manager'
+  );
   const { logApp } = await import('./logger');
   const playerData = await getPlayerData(guild);
+  const lookup: PlayerLookup = {
+    ...buildPlayerLookup(playerData),
+    platformIconByApiName: buildPlatformIconByApiName(guild.id, guild),
+  };
 
   await logApp(
     `[getRankPageEmbed] Guild: ${guild.name} (${guild.id}) | RankId: ${rankId} | PlayerData: ${playerData.length} registros`
@@ -95,15 +110,14 @@ export async function loadRankPageData(
     } detectado (${playerData.length} jugadores registrados)`
   );
 
-  const {
-    getAllMembersByRole,
-    getAllMembersByRoleWithProxies,
-    sortMembersByPriority,
-  } = await import('./build-all-online-embed');
-
-  const allMembers = (isLargeServer
-    ? getAllMembersByRoleWithProxies(guild, role, playerData)
-    : getAllMembersByRole(guild, role, playerData)) as GuildMember[];
+  const resolver = buildRankResolver(serverRanks);
+  const memberIndex = buildRankMemberIndex(guild, playerData, resolver, {
+    includeProxies: isLargeServer,
+    ranks: serverRanks,
+  });
+  const allMembers = isLargeServer
+    ? memberIndex.withProxiesByRank?.get(role.name) ?? []
+    : memberIndex.cachedByRank.get(role.name) ?? [];
 
   if (allMembers.length === 0) {
     await logApp(
@@ -120,8 +134,9 @@ export async function loadRankPageData(
 
   const sortedMembers = sortMembersByPriority(
     allMembers,
-    playerData
-  ) as GuildMember[];
+    playerData,
+    lookup.assignedAtByUserId
+  );
 
   const totalPages = Math.ceil(sortedMembers.length / maxPerCard);
   const pageNum = Math.max(1, Math.min(page, totalPages));
@@ -161,5 +176,6 @@ export async function loadRankPageData(
     totalPages,
     files,
     cardUrl,
+    lookup,
   };
 }

@@ -9,6 +9,7 @@ import { forgetRankCardRefreshes } from '../helpers/rank-card-refresh-queue';
 import { forgetRankCardFingerprints } from '../helpers/rank-card-fingerprint';
 import { globalUpdateQueue } from '../utils/guild-update-queue';
 import { logApp } from '../utils/logger';
+import { invalidatePlayersCache } from '../utils/state-manager';
 
 /**
  * Configura el evento para cuando el bot es removido de un servidor.
@@ -40,6 +41,7 @@ async function handleGuildDelete(guild: any): Promise<void> {
   forgetRankSyncNotifications(guild.id);
   forgetRankCardRefreshes(guild.id);
   forgetRankCardFingerprints(guild.id);
+  invalidatePlayersCache(guild.id);
   globalUpdateQueue.cancelGuild(guild.id);
 
   // Los archivos JSON se conservan para preservar datos históricos
