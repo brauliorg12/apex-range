@@ -48,6 +48,7 @@ export async function getRankPageEmbed(
     totalPages,
     files,
     cardUrl,
+    lookup,
   } = data;
 
   // =============================================
@@ -67,7 +68,8 @@ export async function getRankPageEmbed(
       pageNum,
       maxPerCard,
       showNumbers,
-      allMembers
+      allMembers,
+      lookup
     );
 
     const totalCount = sortedMembers.length;
@@ -141,6 +143,8 @@ export async function getRankPageEmbed(
     showPresence: true,
     showPlatform: true,
     showRoles: true,
+    platformByUserId: lookup.platformByUserId,
+    platformIconByApiName: lookup.platformIconByApiName,
   });
 
   return {

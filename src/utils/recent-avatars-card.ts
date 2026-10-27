@@ -11,6 +11,52 @@ import { logCanvas } from './logger';
 import { renderRecentAvatarsCanvas } from './recent-avatars-canvas';
 import { prepareRecentAvatarItems } from './recent-avatars-items';
 import type { AvatarItemMetrics } from './recent-avatars-items';
+import type { PlayerRecord } from '../interfaces/player';
+
+/**
+ * Selecciona los jugadores con la fecha de asignación más reciente.
+ *
+ * Mantiene como máximo `limit` elementos ordenados de forma descendente en una
+ * sola pasada. En empate conserva el orden original, igual que el `sort`
+ * estable histórico. Las fechas inválidas se tratan como `0`.
+ *
+ * @param players - Registros de jugadores en su orden original.
+ * @param limit - Cantidad máxima de jugadores a devolver.
+ * @returns Los jugadores más recientes en orden descendente.
+ */
+export function selectMostRecentPlayers(
+  players: readonly PlayerRecord[],
+  limit: number
+): PlayerRecord[] {
+  if (limit <= 0) return [];
+
+  const selected: Array<{ player: PlayerRecord; timestamp: number }> = [];
+
+  for (const player of players) {
+    const parsed = Date.parse(player.assignedAt);
+    const timestamp = Number.isFinite(parsed) ? parsed : 0;
+    const last = selected[selected.length - 1];
+
+    if (last && selected.length >= limit && timestamp <= last.timestamp) {
+      continue;
+    }
+
+    let insertAt = selected.length;
+    for (let index = 0; index < selected.length; index++) {
+      if (selected[index].timestamp < timestamp) {
+        insertAt = index;
+        break;
+      }
+    }
+
+    selected.splice(insertAt, 0, { player, timestamp });
+    if (selected.length > limit) {
+      selected.pop();
+    }
+  }
+
+  return selected.map((entry) => entry.player);
+}
 
 /**
  * Genera un card visual con los avatares y rangos de los últimos 5 usuarios
@@ -32,12 +78,7 @@ export async function buildRecentAvatarsCard(guild: Guild) {
     return null;
   }
 
-  const recent = [...playerData]
-    .sort(
-      (a, b) =>
-        new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime()
-    )
-    .slice(0, 5);
+  const recent = selectMostRecentPlayers(playerData, 5);
 
   const { items, descriptions, metrics, counters } =
     await prepareRecentAvatarItems(guild, recent, ranks);

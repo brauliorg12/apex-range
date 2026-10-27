@@ -1,11 +1,9 @@
 import { Guild, GuildMember } from 'discord.js';
 import { PC_ONLY_EMOGI } from '../models/constants';
-import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
 import type { ApexRank } from '../interfaces/apex-rank';
 import { getStatusIcon } from '../interfaces/status-icon';
 import { getCountryFlag } from './country-flag';
 import { getRankEmoji } from './emoji-helper';
-import { getPlayerPlatform } from './player-data-manager';
 import { filterAllowedRoles } from './role-filter';
 
 /** Opciones de una línea de jugador en la paginación. */
@@ -26,6 +24,10 @@ export interface PlayerLineOptions {
   showDates: boolean;
   /** Fechas de asignación por userId. */
   assignedDates?: Map<string, string>;
+  /** Plataforma por userId; si se omite, se consulta la cache por jugador. */
+  platformByUserId?: ReadonlyMap<string, string>;
+  /** Ícono por apiName de plataforma; si se omite, se resuelve por jugador. */
+  platformIconByApiName?: ReadonlyMap<string, string>;
 }
 
 /**
@@ -69,10 +71,9 @@ export async function buildPlayerLine(
 
     if (options.showPlatform) {
       try {
-        const platforms = getApexPlatformsForGuild(guild.id, guild);
-        const platform = await getPlayerPlatform(guild.id, member.id);
-        const platformInfo = platforms.find((p) => p.apiName === platform);
-        const platformIcon = platformInfo?.id || PC_ONLY_EMOGI;
+        const platform = options.platformByUserId?.get(member.id) ?? '';
+        const platformIcon =
+          options.platformIconByApiName?.get(platform) || PC_ONLY_EMOGI;
         line += `${platformIcon} `;
       } catch {
         line += `${PC_ONLY_EMOGI} `;

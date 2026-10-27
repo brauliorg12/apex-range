@@ -10,8 +10,12 @@ import { getRankEmoji } from './emoji-helper';
 import { getStatusIcon } from '../interfaces/status-icon';
 import { filterAllowedRoles } from './role-filter';
 import { getCountryFlag } from './country-flag';
-import { getPlayerPlatform } from './player-data-manager';
-import { getApexPlatformsForGuild } from '../helpers/get-apex-platforms-for-guild';
+import {
+  buildPlayerLookup,
+  getPlayerData,
+} from './player-data-manager';
+import type { PlayerLookup } from './player-data-manager';
+import { buildPlatformIconByApiName } from '../helpers/get-apex-platforms-for-guild';
 import { ApexRank } from '../interfaces/apex-rank';
 
 /**
@@ -31,6 +35,7 @@ import { ApexRank } from '../interfaces/apex-rank';
  * @param maxPerCard - (Opcional) Máximo número de jugadores por página (usado para calcular índices).
  * @param showNumbers - (Opcional) Si es true, numera los jugadores en la lista (ej: 1., 2.).
  * @param allRankMembers - (Opcional) Array completo de todos los miembros del rango (usado para contar en línea totales).
+ * @param lookup - (Opcional) Mapas precomputados de plataforma e íconos. Si se omite, se construye un lookup con la lectura cacheada.
  * @returns Un objeto EmbedBuilder listo para enviar en Discord, con descripción, color y posibles imagen/footer.
  */
 export async function buildOnlineEmbedForRank(
@@ -42,9 +47,15 @@ export async function buildOnlineEmbedForRank(
   pageNum?: number,
   maxPerCard?: number,
   showNumbers?: boolean,
-  allRankMembers?: GuildMember[] // <-- Todos los del rango
+  allRankMembers?: GuildMember[], // <-- Todos los del rango
+  lookup?: PlayerLookup
 ) {
   const count = members.length;
+  const resolvedLookup =
+    lookup ?? buildPlayerLookup(await getPlayerData(guild));
+  const platformIconByApiName =
+    resolvedLookup.platformIconByApiName ??
+    buildPlatformIconByApiName(guild.id, guild);
 
   // Obtiene el emoji del rango
   const rankEmoji = getRankEmoji(guild.client, rank);
@@ -98,12 +109,12 @@ export async function buildOnlineEmbedForRank(
           (member.presence?.status as PresenceStatus) || 'offline';
         const icon = getStatusIcon(status);
 
-        // Obtener ícono de plataforma (usar roles mapeados)
-        const platforms = getApexPlatformsForGuild(guild.id, guild);
-        const platform = await getPlayerPlatform(guild.id, member.id);
-        const platformInfo = platforms.find((p) => p.apiName === platform);
+        // Obtener ícono de plataforma desde el mapa precomputado
+        const platform =
+          resolvedLookup.platformByUserId.get(member.id) ?? '';
         // Siendo id el icono en la constante // TODO mejorar
-        const platformIcon = platformInfo?.id || PC_ONLY_EMOGI;
+        const platformIcon =
+          platformIconByApiName.get(platform) || PC_ONLY_EMOGI;
 
         // Verificar si el miembro está en caché después del fetch
         const cachedMember = guild.members.cache.get(member.id);

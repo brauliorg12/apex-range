@@ -13,12 +13,18 @@ export {
   readRolesStateStrict,
   updateRolesState,
 } from './roles-state';
+export type { CachedPlayersSnapshot } from './players-cache';
+export { invalidatePlayersCache } from './players-cache';
 export type { PlayersReadResult } from './players-state';
 export {
   mutatePlayers,
   readPlayers,
   readPlayersStrict,
 } from './players-state';
+export {
+  readPlayersCached,
+  readPlayersCachedStrict,
+} from './players-snapshot';
 export {
   readApexStatusState,
   readBotControlState,

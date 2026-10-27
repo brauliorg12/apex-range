@@ -1,5 +1,12 @@
 import { Guild, TextChannel } from 'discord.js';
-import { getPlayerDataSnapshot } from '../utils/player-data-manager';
+import type { GuildMember } from 'discord.js';
+import { buildRankMemberIndex } from '../utils/online-members';
+import {
+  buildPlayerLookup,
+  getPlayerDataSnapshot,
+} from '../utils/player-data-manager';
+import type { PlayerLookup } from '../utils/player-data-manager';
+import { buildPlatformIconByApiName } from './get-apex-platforms-for-guild';
 import { readRolesState } from '../utils/state-manager';
 import { getServerLogger } from '../utils/server-logger';
 import { isUnknownMessageError } from '../utils/message-reference';
@@ -19,18 +26,21 @@ export interface RankCardRefreshContext {
   channel: TextChannel;
   /** Snapshot de jugadores usado por todos los cards. */
   playerData: PlayerRecord[];
+  /** Miembros agrupados por el rol de su rango más alto. */
+  membersByRank: ReadonlyMap<string, GuildMember[]>;
   /** Catálogo indexado por shortId. */
   rankByShortId: Map<string, ApexRank>;
   /** Resolvedor canónico de rangos. */
   resolver: RankResolver;
+  /** Plataformas, fechas e íconos precomputados para todos los cards. */
+  lookup: PlayerLookup;
 }
 
 /**
  * Prepara los datos necesarios para refrescar cards con una sola lectura de
  * estado y un solo snapshot de jugadores.
  *
- * Si el estado no tiene canal, el canal no existe o el archivo de jugadores es
- * inválido/ilegible, devuelve `null` sin editar cards.
+ * Si falta el canal o el archivo de jugadores no es válido, devuelve `null`.
  *
  * @param guild - Servidor de Discord.
  * @param rolesState - Estado ya leído, si el llamador lo tiene.
@@ -50,9 +60,7 @@ export async function loadRankCardRefreshContext(
     targetChannel = channel;
   } else {
     try {
-      targetChannel = (await guild.channels.fetch(
-        state.channelId
-      )) as TextChannel;
+      targetChannel = (await guild.channels.fetch(state.channelId)) as TextChannel;
     } catch (error) {
       getServerLogger(guild.id, guild.name).warn(
         `[rank-card-refresh] No se pudo obtener el canal ${state.channelId}:`,
@@ -71,19 +79,25 @@ export async function loadRankCardRefreshContext(
     return null;
   }
 
-  const playerData =
-    snapshot.status === 'ok' ? (snapshot.players as PlayerRecord[]) : [];
+  const playerData = snapshot.status === 'ok' ? (snapshot.players as PlayerRecord[]) : [];
   const ranks = getApexRanksForGuild(guild.id, guild);
-  const rankByShortId = new Map(
-    ranks.map((rank) => [rank.shortId, rank] as const)
-  );
+  const rankByShortId = new Map(ranks.map((rank) => [rank.shortId, rank] as const));
+  const resolver = buildRankResolver(ranks);
+  const lookup: PlayerLookup = {
+    ...buildPlayerLookup(playerData),
+    platformIconByApiName: buildPlatformIconByApiName(guild.id, guild),
+  };
+  const membersByRank = buildRankMemberIndex(guild, playerData, resolver, { ranks })
+    .cachedByRank;
 
   return {
     rolesState: state,
     channel: targetChannel,
     playerData,
+    membersByRank,
     rankByShortId,
-    resolver: buildRankResolver(ranks),
+    resolver,
+    lookup,
   };
 }
 
@@ -130,7 +144,9 @@ export async function refreshRankCards(
         messageId,
         {
           playerData: context.playerData,
+          membersByRank: context.membersByRank,
           resolver: context.resolver,
+          lookup: context.lookup,
           force,
         }
       );

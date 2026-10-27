@@ -4,10 +4,14 @@ import {
   GuildMember,
   ColorResolvable,
 } from 'discord.js';
-import { createCloseButtonRow } from './button-helper';
-import { getRankEmoji } from './emoji-helper';
 import { logApp } from './logger';
-import { buildPlayerLine } from './player-pagination-line';
+import { buildPlayerPaginationError } from './player-pagination-error';
+import {
+  buildPaginationDescription,
+  buildPaginationMemberLines,
+  fetchPaginationMembers,
+} from './player-pagination-content';
+import { resolvePlayerPlatformMaps } from './player-pagination-platform';
 import {
   buildPlayerPaginationComponents,
   calculatePlayerPagination,
@@ -52,6 +56,10 @@ export interface PlayerPaginationConfig {
   showRankEmoji?: boolean;
   /** Usar displayName en lugar de menciones */
   useDisplayName?: boolean;
+  /** Plataforma por userId para evitar lecturas por jugador. */
+  platformByUserId?: ReadonlyMap<string, string>;
+  /** Ícono por apiName de plataforma para evitar lecturas por jugador. */
+  platformIconByApiName?: ReadonlyMap<string, string>;
 }
 
 /**
@@ -87,7 +95,17 @@ export async function createPlayerPaginationEmbed(
       showDates = false,
       ranksByUser,
       showRankEmoji = false,
+      platformByUserId,
+      platformIconByApiName,
     } = config;
+
+    const platformMaps = showPlatform
+      ? await resolvePlayerPlatformMaps(
+          guild,
+          platformByUserId,
+          platformIconByApiName
+        )
+      : undefined;
 
     const {
       totalPlayers,
@@ -98,65 +116,38 @@ export async function createPlayerPaginationEmbed(
       pageMembers,
     } = calculatePlayerPagination(members, page, playersPerPage);
 
-    let description = '';
-
-    if (rank) {
-      const rankEmoji = getRankEmoji(guild.client, rank);
-      const onlineCount = members.filter(
-        (m) => m.presence && m.presence.status === 'online'
-      ).length;
-      const jugadoresLabel = onlineCount === 1 ? '_jugador_' : '_jugadores_';
-
-      if (onlineCount > 0) {
-        description = `> ${rankEmoji} **${onlineCount}** ${jugadoresLabel} en línea de **${totalPlayers}**`;
-      } else {
-        description = `> ${rankEmoji} ${onlineCount} jugadores en línea de **${totalPlayers}**`;
-      }
-    }
-
-    await logApp(
-      `[createPlayerPaginationEmbed] 🔄 Haciendo fetch de ${pageMembers.length} miembros para resolver menciones...`
+    let description = buildPaginationDescription(
+      guild,
+      rank,
+      members,
+      totalPlayers
     );
-    try {
-      const fetchPromises = pageMembers.map(async (m) => {
-        if (!guild.members.cache.has(m.id)) {
-          try {
-            await guild.members.fetch(m.id);
-          } catch {
-            // Ignorar errores individuales (usuario pudo haberse ido del servidor)
-          }
-        }
-      });
-      await Promise.all(fetchPromises);
-      await logApp(
-        `[createPlayerPaginationEmbed] ✅ Fetch completado para página ${pageNum}`
-      );
-    } catch (fetchError) {
-      await logApp(
-        `[createPlayerPaginationEmbed] ⚠️ Error al hacer fetch: ${fetchError}`
-      );
-    }
+
+    await fetchPaginationMembers(guild, pageMembers, pageNum);
 
     if (pageMembers.length > 0) {
-      const memberLines = await Promise.all(
-        pageMembers.map((member, idx) =>
-          buildPlayerLine(guild, member, startIdx + idx + 1, {
-            showNumbers,
-            showRankEmoji,
-            ranksByUser,
-            showPresence,
-            showPlatform,
-            showRoles,
-            showDates,
-            assignedDates,
-          })
-        )
+      const memberLines = await buildPaginationMemberLines(
+        guild,
+        pageMembers,
+        startIdx,
+        {
+          showNumbers,
+          showRankEmoji,
+          ranksByUser,
+          showPresence,
+          showPlatform,
+          showRoles,
+          showDates,
+          assignedDates,
+          platformByUserId: platformMaps?.platformByUserId,
+          platformIconByApiName: platformMaps?.platformIconByApiName,
+        }
       );
 
       if (description) {
         description += '\n\n';
       }
-      description += memberLines.join('\n');
+      description += memberLines;
     } else {
       if (description) {
         description += '\n\n';
@@ -203,29 +194,6 @@ export async function createPlayerPaginationEmbed(
       totalPlayers,
     };
   } catch (error) {
-    await logApp(
-      `[createPlayerPaginationEmbed] ❌ ERROR al generar lista de jugadores: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-    await logApp(
-      `[createPlayerPaginationEmbed] Stack trace: ${
-        error instanceof Error ? error.stack : 'N/A'
-      }`
-    );
-
-    const errorEmbed = new EmbedBuilder()
-      .setColor('#e74c3c')
-      .setTitle('❌ Error al generar lista')
-      .setDescription('Hubo un error al procesar la lista de jugadores.')
-      .setTimestamp();
-
-    return {
-      embed: errorEmbed,
-      components: [createCloseButtonRow()],
-      page: 1,
-      totalPages: 1,
-      totalPlayers: 0,
-    };
+    return buildPlayerPaginationError(error);
   }
 }

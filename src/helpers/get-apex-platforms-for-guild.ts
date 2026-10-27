@@ -68,3 +68,29 @@ export function getApexPlatformsForGuild(
     };
   });
 }
+
+/**
+ * Construye el mapa de íconos por `apiName` de plataforma para un guild.
+ *
+ * Se arma una sola vez por refresco y evita leer `server-config` por cada
+ * miembro. Si hubiera `apiName` duplicados, conserva el primero, igual que el
+ * `find` histórico.
+ *
+ * @param guildId - ID del servidor de Discord.
+ * @param guild - Guild para validar roles y alias.
+ * @returns El mapa de `apiName` a emoji de plataforma.
+ */
+export function buildPlatformIconByApiName(
+  guildId: string,
+  guild?: Guild
+): ReadonlyMap<string, string> {
+  const platformIconByApiName = new Map<string, string>();
+
+  for (const platform of getApexPlatformsForGuild(guildId, guild)) {
+    if (!platformIconByApiName.has(platform.apiName)) {
+      platformIconByApiName.set(platform.apiName, platform.id);
+    }
+  }
+
+  return platformIconByApiName;
+}
